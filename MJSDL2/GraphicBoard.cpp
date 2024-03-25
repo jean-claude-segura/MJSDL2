@@ -55,7 +55,7 @@ GraphicBoard::GraphicBoard()
 	}
 
 	LoadResources();
-	plateau.FillBoard();
+	
 	Refresh();
 
 	/*screenSurface = SDL_GetWindowSurface(window);

@@ -62,9 +62,11 @@ Board::Board()
 		}
 	}
 	/**/
+
+	InitBoard();
 }
 
-void Board::FillBoard()
+void Board::InitBoard()
 {
 	std::random_device r;
 	std::default_random_engine e1(r());
