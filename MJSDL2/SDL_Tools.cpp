@@ -8,15 +8,23 @@ void SDL_UpperBlitInverted(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordo
 		SDL_LockSurface(invert);
 	std::cout << "Lock" << std::endl;
 	Uint32* bufferZ = (Uint32*)invert->pixels;
+	auto Amask = src->format->Amask;
+	auto RGBmask = 0xFFFFFFFF & ~Amask;
 	if (src->format->BitsPerPixel == 32)
 	{
 		for (int pixel = 0; pixel < invert->h * invert->w; ++pixel, ++bufferZ)
 		{
-			Uint32 red = src->format->Rmask ^ *bufferZ & src->format->Rmask;
+			/*Uint32 red = src->format->Rmask ^ *bufferZ & src->format->Rmask;
 			Uint32 green = src->format->Gmask ^ *bufferZ & src->format->Gmask;
-			Uint32 blue = src->format->Bmask ^ *bufferZ & src->format->Bmask;
-			Uint32 alpha = *bufferZ & src->format->Amask;
-			*bufferZ = red | green | blue | alpha;
+			Uint32 blue = src->format->Bmask ^ *bufferZ & src->format->Bmask;*/
+			
+			Uint32 alpha = *bufferZ & Amask;
+
+			Uint32 rgb = RGBmask ^ *bufferZ & RGBmask;
+
+			//*bufferZ = red | green | blue | alpha;
+
+			*bufferZ = rgb | alpha;
 		}
 	}
 	std::cout << "Xored" << std::endl;
