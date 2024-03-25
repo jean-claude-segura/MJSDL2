@@ -23,8 +23,8 @@ GraphicBoard::GraphicBoard()
 		"Mah Jongg SDL2",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 		DM.w, DM.h,
-		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_VULKAN // SDL_WINDOW_SHOWN
-		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_OPENGL // SDL_WINDOW_SHOWN
+		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_VULKAN
+		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_OPENGL
 		SDL_WINDOW_SHOWN
 	);
 	if (window == NULL) {
@@ -33,8 +33,6 @@ GraphicBoard::GraphicBoard()
 	}
 
 
-	//background = SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 0);
-	//dominos = std::make_unique<SDL_Surface * []>(42);
 	renderer = SDL_CreateRenderer(window, -1, 0);
 	if (renderer == NULL)
 	{
@@ -132,8 +130,8 @@ void GraphicBoard::LoadResources()
 
 void GraphicBoard::setClicked(int x, int y)
 {
-	auto tWidth = (Width - (dominos[0]->w - 40) * 12) / 2;
-	auto tHeight = (Height - (dominos[0]->h - 40) * 8) / 2;
+	auto tWidth = (Width - (dominos[0]->w - 40) * 12) >> 1;
+	auto tHeight = (Height - (dominos[0]->h - 40) >> 3) >> 1;
 	//coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
 	//coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
 
@@ -149,8 +147,8 @@ void GraphicBoard::Refresh()
 	// placement des dominos :
 	SDL_Rect coordonnees;
 
-	auto tWidth = (Width - (dominos[0]->w - 40) * 12) / 2;
-	auto tHeight = (Height - (dominos[0]->h - 40) * 8) / 2;
+	auto tWidth = (Width - (dominos[0]->w - 40) * 12) >> 1;
+	auto tHeight = (Height - (dominos[0]->h - 40) >> 3) >> 1;
 
 	coordonnees.x = -1 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
 	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
@@ -262,9 +260,9 @@ void GraphicBoard::WhatsLeft()
 	for (int index = 0; index < 140; ++index)
 	{
 		int domino = std::get<3>(plateau.getBoard()[index]);
-		coordonnees.x = (domino >> 3) * (dominos[0]->h) + marques[domino] * 40 + (domino >> 3) * tWitdh;
+		coordonnees.x = (domino >> 3) * (dominos[0]->h) + marques[domino] * 40 + (domino >> 3) * tWitdh; // >> 3 <=> / 8
 		++marques[domino];
-		coordonnees.y = (domino % 8) * (dominos[0]->h - 40);
+		coordonnees.y = (domino & 0b111) * (dominos[0]->h - 40); // & 0b111 <=> % 8
 		SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
 	}
 	for (int index = 0; index < 4; ++index)
@@ -272,7 +270,7 @@ void GraphicBoard::WhatsLeft()
 		int domino = plateau.getSpeciaux()[index];
 		coordonnees.x = (domino >> 3) * (dominos[0]->h) + marques[domino] * 40 + (domino >> 3) * tWitdh;
 		++marques[domino];
-		coordonnees.y = (domino % 8) * (dominos[0]->h - 40);
+		coordonnees.y = (domino & 0b111) * (dominos[0]->h - 40);
 		SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
 	}
 	/**/
