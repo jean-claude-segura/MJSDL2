@@ -141,9 +141,9 @@ void GraphicBoard::setClicked(int x, int y)
 
 void GraphicBoard::Refresh()
 {
-	SDL_Surface* tampon = SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 0);
+	SDL_Surface* virtualscreen = SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 0);
 	// copie du fond :
-	SDL_UpperBlit(background, NULL, tampon, NULL);
+	SDL_UpperBlit(background, NULL, virtualscreen, NULL);
 
 	/**/
 	// placement des dominos :
@@ -154,7 +154,7 @@ void GraphicBoard::Refresh()
 
 	coordonnees.x = -1 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
 	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-	SDL_UpperBlit(dominos[plateau.getSpeciaux()[0]], NULL, tampon, &coordonnees);
+	SDL_UpperBlit(dominos[plateau.getSpeciaux()[0]], NULL, virtualscreen, &coordonnees);
 
 	for (int z = 0; z < 5; ++z)
 	{
@@ -175,7 +175,7 @@ void GraphicBoard::Refresh()
 				{
 					coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
 					coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
-					SDL_UpperBlit(dominos[std::get<3>(plateau.getBoard()[index])], NULL, tampon, &coordonnees);
+					SDL_UpperBlit(dominos[std::get<3>(plateau.getBoard()[index])], NULL, virtualscreen, &coordonnees);
 				}
 			}
 		}
@@ -183,17 +183,17 @@ void GraphicBoard::Refresh()
 
 	coordonnees.x = 12 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
 	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-	SDL_UpperBlit(dominos[plateau.getSpeciaux()[1]], NULL, tampon, &coordonnees);
+	SDL_UpperBlit(dominos[plateau.getSpeciaux()[1]], NULL, virtualscreen, &coordonnees);
 
 	coordonnees.x = 13 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
 	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-	SDL_UpperBlit(dominos[plateau.getSpeciaux()[2]], NULL, tampon, &coordonnees);
+	SDL_UpperBlit(dominos[plateau.getSpeciaux()[2]], NULL, virtualscreen, &coordonnees);
 
 
 	coordonnees.x = 5.5 * (dominos[0]->w - 40) - 4 * 40 + tWidth;
 	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 4 * 40 + tHeight;
-	//SDL_UpperBlit(dominos[plateau.getSpeciaux()[3]], NULL, tampon, &coordonnees);
-	SDL_UpperBlitInverted(dominos[plateau.getSpeciaux()[3]], tampon, coordonnees);		
+	//SDL_UpperBlit(dominos[plateau.getSpeciaux()[3]], NULL, virtualscreen, &coordonnees);
+	SDL_UpperBlitInverted(dominos[plateau.getSpeciaux()[3]], virtualscreen, coordonnees);		
 
 	/**/
 	/*
@@ -210,21 +210,21 @@ void GraphicBoard::Refresh()
 			{
 				coordonnees.x = x * (dominos[0]->w - 40 ) - z * 40 + tWidth;
 				coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
-				SDL_UpperBlit(dominos[i++], NULL, tampon, &coordonnees);
+				SDL_UpperBlit(dominos[i++], NULL, virtualscreen, &coordonnees);
 			}
 		}
 	}
 	/**/
-	SDL_Surface* virtualscreen = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
+	SDL_Surface* tampon = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
 
-	SDL_BlitScaled(tampon, NULL, virtualscreen, &ScreenRect);
+	SDL_BlitScaled(virtualscreen, NULL, tampon, &ScreenRect);
 
 	SDL_RenderClear(renderer);
-	auto texture = SDL_CreateTextureFromSurface(renderer, virtualscreen);
+	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
 	if (renderer == NULL)
 	{
-		SDL_FreeSurface(virtualscreen);
 		SDL_FreeSurface(tampon);
+		SDL_FreeSurface(virtualscreen);
 
 		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 		throw;
@@ -243,50 +243,50 @@ void GraphicBoard::Refresh()
 
 	SDL_ShowCursor(true ? SDL_ENABLE : SDL_DISABLE);
 
-	SDL_FreeSurface(virtualscreen);
-
 	SDL_FreeSurface(tampon);
+
+	SDL_FreeSurface(virtualscreen);
 }
 
 void GraphicBoard::WhatsLeft()
 {
-	SDL_Surface* tampon = SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 0);
+	SDL_Surface* virtualscreen = SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 0);
 	// copie du fond :
-	SDL_UpperBlit(background, NULL, tampon, NULL);
+	SDL_UpperBlit(background, NULL, virtualscreen, NULL);
 	/**/
 	int marques[42];
 	for (int m = 0; m < 42; ++m) marques[m] = 0;
 	
-	auto tWitdh = (Width - (dominos[0]->h + 40 * 3)) / 8;
+	auto tWitdh = (Width - (dominos[0]->h + 40 * 3)) >> 3;
 	SDL_Rect coordonnees;
 	for (int index = 0; index < 140; ++index)
 	{
 		int domino = std::get<3>(plateau.getBoard()[index]);
-		coordonnees.x = (domino / 8) * (dominos[0]->h) + marques[domino] * 40 + (domino / 8) * tWitdh;
+		coordonnees.x = (domino >> 3) * (dominos[0]->h) + marques[domino] * 40 + (domino >> 3) * tWitdh;
 		++marques[domino];
 		coordonnees.y = (domino % 8) * (dominos[0]->h - 40);
-		SDL_UpperBlit(dominos[domino], NULL, tampon, &coordonnees);
+		SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
 	}
 	for (int index = 0; index < 4; ++index)
 	{
 		int domino = plateau.getSpeciaux()[index];
-		coordonnees.x = (domino / 8) * (dominos[0]->h) + marques[domino] * 40 + (domino / 8) * tWitdh;
+		coordonnees.x = (domino >> 3) * (dominos[0]->h) + marques[domino] * 40 + (domino >> 3) * tWitdh;
 		++marques[domino];
 		coordonnees.y = (domino % 8) * (dominos[0]->h - 40);
-		SDL_UpperBlit(dominos[domino], NULL, tampon, &coordonnees);
+		SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
 	}
 	/**/
 
-	SDL_Surface* virtualscreen = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
+	SDL_Surface* tampon = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
 
-	SDL_BlitScaled(tampon, NULL, virtualscreen, &ScreenRect);
+	SDL_BlitScaled(virtualscreen, NULL, tampon, &ScreenRect);
 
 	SDL_RenderClear(renderer);
-	auto texture = SDL_CreateTextureFromSurface(renderer, virtualscreen);
+	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
 	if (renderer == NULL)
 	{
-		SDL_FreeSurface(virtualscreen);
 		SDL_FreeSurface(tampon);
+		SDL_FreeSurface(virtualscreen);
 
 		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 		throw;
@@ -305,8 +305,8 @@ void GraphicBoard::WhatsLeft()
 
 	SDL_ShowCursor(true ? SDL_ENABLE : SDL_DISABLE);
 
-	SDL_FreeSurface(virtualscreen);
 	SDL_FreeSurface(tampon);
+	SDL_FreeSurface(virtualscreen);
 }
 
 void GraphicBoard::Loop()
