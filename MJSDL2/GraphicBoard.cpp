@@ -283,7 +283,7 @@ void GraphicBoard::Refresh()
 
 	SDL_RenderClear(renderer);
 	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
-	if (renderer == NULL)
+	if (texture == NULL)
 	{
 		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 		ThrowException(1);
@@ -333,7 +333,7 @@ void GraphicBoard::WhatsLeft()
 
 	SDL_RenderClear(renderer);
 	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
-	if (renderer == NULL)
+	if (texture == NULL)
 	{
 		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 		ThrowException(1);
