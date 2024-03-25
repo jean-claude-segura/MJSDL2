@@ -9,23 +9,24 @@ GraphicBoard::GraphicBoard()
 		throw;
 	}
 
-	/*SDL_DisplayMode DM;
+	SDL_DisplayMode DM;
 	SDL_GetCurrentDisplayMode(0, &DM);
-	Width = DM.w;
-	Height = DM.h;*/
+	Width = 3840;
+	Height = 2160;
 
-	SDL_GetDisplayMode(0, 0, &displayCapabilities);
-	Height = displayCapabilities.h;
-	Width = displayCapabilities.w;
+	//SDL_GetDisplayMode(0, 0, &displayCapabilities);
+	ScreenRect.h = DM.h;
+	ScreenRect.w = DM.w;
+	ScreenRect.x = 0;
+	ScreenRect.y = 0;
 	window = SDL_CreateWindow(
 		"Mah Jongg SDL2",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		Width / 2, Height / 2 ,
+		DM.w, DM.h,
 		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_VULKAN // SDL_WINDOW_SHOWN
 		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_OPENGL // SDL_WINDOW_SHOWN
 		SDL_WINDOW_SHOWN
 	);
-
 	if (window == NULL) {
 		std::cout << stderr << "could not create window: " << SDL_GetError() << std::endl;
 		throw;
@@ -214,11 +215,15 @@ void GraphicBoard::Refresh()
 		}
 	}
 	/**/
+	SDL_Surface* virtualscreen = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
+
+	SDL_BlitScaled(tampon, NULL, virtualscreen, &ScreenRect);
 
 	SDL_RenderClear(renderer);
-	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
+	auto texture = SDL_CreateTextureFromSurface(renderer, virtualscreen);
 	if (renderer == NULL)
 	{
+		SDL_FreeSurface(virtualscreen);
 		SDL_FreeSurface(tampon);
 
 		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
@@ -237,6 +242,8 @@ void GraphicBoard::Refresh()
 	SDL_RenderPresent(renderer);
 
 	SDL_ShowCursor(true ? SDL_ENABLE : SDL_DISABLE);
+
+	SDL_FreeSurface(virtualscreen);
 
 	SDL_FreeSurface(tampon);
 }
@@ -270,15 +277,21 @@ void GraphicBoard::WhatsLeft()
 	}
 	/**/
 
+	SDL_Surface* virtualscreen = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
+
+	SDL_BlitScaled(tampon, NULL, virtualscreen, &ScreenRect);
+
 	SDL_RenderClear(renderer);
-	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
+	auto texture = SDL_CreateTextureFromSurface(renderer, virtualscreen);
 	if (renderer == NULL)
 	{
+		SDL_FreeSurface(virtualscreen);
 		SDL_FreeSurface(tampon);
 
 		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 		throw;
 	}
+
 	if (SDL_RenderCopy(renderer, texture, NULL, NULL) < 0)
 	{
 		SDL_DestroyTexture(texture);
@@ -292,6 +305,7 @@ void GraphicBoard::WhatsLeft()
 
 	SDL_ShowCursor(true ? SDL_ENABLE : SDL_DISABLE);
 
+	SDL_FreeSurface(virtualscreen);
 	SDL_FreeSurface(tampon);
 }
 

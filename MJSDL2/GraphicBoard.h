@@ -35,4 +35,5 @@ private:
 	SDL_Surface* dominos[42];
 	Board plateau;
 	std::tuple<double, double, bool> clicked[2] = { {0,0,false}, {0,0,false} };
+	SDL_Rect ScreenRect;
 };
