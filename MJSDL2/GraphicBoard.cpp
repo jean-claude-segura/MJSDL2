@@ -305,29 +305,6 @@ void GraphicBoard::WhatsLeft()
 {
 	// copie du fond :
 	SDL_UpperBlit(background, NULL, virtualscreen, NULL);
-	/*
-	int marques[42];
-	for (int m = 0; m < 42; ++m) marques[m] = 0;
-	
-	auto tWitdh = (Width - (dominos[0]->h + 40 * 3)) >> 3;
-	SDL_Rect coordonnees;
-	for (int index = 0; index < 140; ++index)
-	{
-		int domino = std::get<3>(plateau.getBoard()[index]);
-		coordonnees.x = (domino >> 3) * (dominos[0]->h) + marques[domino] * 40 + (domino >> 3) * tWitdh; // >> 3 <=> / 8
-		++marques[domino];
-		coordonnees.y = (domino & 0b111) * (dominos[0]->h - 40); // & 0b111 <=> % 8
-		SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
-	}
-	for (int index = 0; index < 4; ++index)
-	{
-		int domino = plateau.getSpeciaux()[index];
-		coordonnees.x = (domino >> 3) * (dominos[0]->h) + marques[domino] * 40 + (domino >> 3) * tWitdh;
-		++marques[domino];
-		coordonnees.y = (domino & 0b111) * (dominos[0]->h - 40);
-		SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
-	}
-	/**/
 	/**/
 	auto tWitdh = (Width - (dominos[0]->h + 40 * 3)) >> 3;
 	SDL_Rect coordonnees;
@@ -350,14 +327,10 @@ void GraphicBoard::WhatsLeft()
 		++board[y][x];
 	}
 	
-	int domino = 0;
 	for (int x = 0; x < 6; ++x)
-		for (int y = 0; y < 8; ++y)
+		for (int y = 7; y >= 0; --y)
 		{
-			// (0;0)->0
-			// (0;7)->7
-			// (1;0)->8
-			// (2;0)->16
+			int domino = y + x * 8;
 			int t = board[y][x];
 			for (int z = 0; z < board[y][x]; ++z)
 			{
@@ -365,7 +338,6 @@ void GraphicBoard::WhatsLeft()
 				coordonnees.y = y * (dominos[0]->h - 40);
 				SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
 			}
-			++domino;
 		}
 	/**/
 
