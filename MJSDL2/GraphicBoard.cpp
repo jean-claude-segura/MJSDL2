@@ -6,7 +6,7 @@ GraphicBoard::GraphicBoard()
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		std::cout << stderr << "could not initialize sdl2 : " << SDL_GetError() << std::endl;
-		throw;
+		ThrowException(1);
 	}
 
 	SDL_DisplayMode DM;
@@ -29,7 +29,7 @@ GraphicBoard::GraphicBoard()
 	);
 	if (window == NULL) {
 		std::cout << stderr << "could not create window: " << SDL_GetError() << std::endl;
-		throw;
+		ThrowException(1);
 	}
 
 
@@ -37,7 +37,21 @@ GraphicBoard::GraphicBoard()
 	if (renderer == NULL)
 	{
 		std::cout << stderr << "could not create renderer: " << SDL_GetError() << std::endl;
-		throw;
+		ThrowException(1);
+	}
+	
+	virtualscreen = SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 0);
+	if(virtualscreen == NULL)
+	{
+		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+
+	tampon = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
+	if (tampon == NULL)
+	{
+		std::cout << stderr << "could not create buffer: " << SDL_GetError() << std::endl;
+		ThrowException(1);
 	}
 
 	LoadResources();
@@ -51,13 +65,30 @@ GraphicBoard::GraphicBoard()
 
 GraphicBoard::~GraphicBoard()
 {
+	FreeResources();
+}
+
+void GraphicBoard::ThrowException(int i)
+{
+	FreeResources();
+	throw i;
+}
+
+void GraphicBoard::FreeResources()
+{
+	if (tampon != NULL)
+		SDL_FreeSurface(tampon);
+	if (virtualscreen != NULL)
+		SDL_FreeSurface(virtualscreen);
+	if (renderer != NULL)
+		SDL_DestroyRenderer(renderer);
 	for (int i = 0; i < 42; ++i)
 	{
-		if(dominos[i] != NULL)
+		if (dominos[i] != NULL)
 			SDL_FreeSurface(dominos[i]);
 	}
-
-	SDL_FreeSurface(background);
+	if (background != NULL)
+		SDL_FreeSurface(background);
 	if (window != NULL)
 		SDL_DestroyWindow(window);
 	SDL_Quit();
@@ -72,6 +103,11 @@ void GraphicBoard::LoadResources()
 		path += '1' + i;
 		path += "-.svg";
 		dominos[i] = IMG_Load(path.c_str());
+		if (dominos[i] == NULL)
+		{
+			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
 	}
 	// Bambous : 9*4
 	for (int i = 9; i < 18; ++i)
@@ -80,6 +116,11 @@ void GraphicBoard::LoadResources()
 		path += '1' + i - 9;
 		path += "-.svg";
 		dominos[i] = IMG_Load(path.c_str());
+		if (dominos[i] == NULL)
+		{
+			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
 	}
 	// Caractères : 9*4
 	for (int i = 18; i < 27; ++i)
@@ -88,6 +129,11 @@ void GraphicBoard::LoadResources()
 		path += '1' + i - 18;
 		path += "-.svg";
 		dominos[i] = IMG_Load(path.c_str());
+		if (dominos[i] == NULL)
+		{
+			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
 	}
 	// Saisons : 1 * 4
 	for (int i = 27; i < 31; ++i)
@@ -96,6 +142,11 @@ void GraphicBoard::LoadResources()
 		path += '1' + i - 27;
 		path += "-.svg";
 		dominos[i] = IMG_Load(path.c_str());
+		if (dominos[i] == NULL)
+		{
+			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
 	}
 	// Fleurs : 1 * 4
 	for (int i = 31; i < 35; ++i)
@@ -104,6 +155,11 @@ void GraphicBoard::LoadResources()
 		path += '1' + i - 27;
 		path += "-.svg";
 		dominos[i] = IMG_Load(path.c_str());
+		if (dominos[i] == NULL)
+		{
+			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
 	}
 	// Honeurs : 4*4
 	for (int i = 35; i < 39; ++i)
@@ -112,6 +168,11 @@ void GraphicBoard::LoadResources()
 		path += '1' + i - 35;
 		path += "-.svg";
 		dominos[i] = IMG_Load(path.c_str());
+		if (dominos[i] == NULL)
+		{
+			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
 	}
 	// Dragons : 3*4
 	for (int i = 39; i < 42; ++i)
@@ -120,11 +181,16 @@ void GraphicBoard::LoadResources()
 		path += '1' + i - 39;
 		path += "-.svg";
 		dominos[i] = IMG_Load(path.c_str());
+		if (dominos[i] == NULL)
+		{
+			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
 	}
 	background = IMG_Load("./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg");
 	if (background == NULL) {
 		std::cout << stderr << "could not create surface: " << SDL_GetError() << std::endl;
-		throw 1;
+		ThrowException(1);
 	}
 }
 
@@ -139,7 +205,6 @@ void GraphicBoard::setClicked(int x, int y)
 
 void GraphicBoard::Refresh()
 {
-	SDL_Surface* virtualscreen = SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 0);
 	// copie du fond :
 	SDL_UpperBlit(background, NULL, virtualscreen, NULL);
 
@@ -213,7 +278,6 @@ void GraphicBoard::Refresh()
 		}
 	}
 	/**/
-	SDL_Surface* tampon = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
 
 	SDL_BlitScaled(virtualscreen, NULL, tampon, &ScreenRect);
 
@@ -221,18 +285,13 @@ void GraphicBoard::Refresh()
 	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
 	if (renderer == NULL)
 	{
-		SDL_FreeSurface(tampon);
-		SDL_FreeSurface(virtualscreen);
-
 		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
-		throw;
+		ThrowException(1);
 	}
 	if (SDL_RenderCopy(renderer, texture, NULL, NULL) < 0)
 	{
-		SDL_DestroyTexture(texture);
-
 		std::cout << stderr << "could not copy renderer: " << SDL_GetError() << std::endl;
-		throw;
+		ThrowException(1);
 	}
 
 	SDL_DestroyTexture(texture);
@@ -240,15 +299,10 @@ void GraphicBoard::Refresh()
 	SDL_RenderPresent(renderer);
 
 	SDL_ShowCursor(true ? SDL_ENABLE : SDL_DISABLE);
-
-	SDL_FreeSurface(tampon);
-
-	SDL_FreeSurface(virtualscreen);
 }
 
 void GraphicBoard::WhatsLeft()
 {
-	SDL_Surface* virtualscreen = SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 0);
 	// copie du fond :
 	SDL_UpperBlit(background, NULL, virtualscreen, NULL);
 	/**/
@@ -275,26 +329,21 @@ void GraphicBoard::WhatsLeft()
 	}
 	/**/
 
-	SDL_Surface* tampon = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
-
 	SDL_BlitScaled(virtualscreen, NULL, tampon, &ScreenRect);
 
 	SDL_RenderClear(renderer);
 	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
 	if (renderer == NULL)
 	{
-		SDL_FreeSurface(tampon);
-		SDL_FreeSurface(virtualscreen);
-
 		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
-		throw;
+		ThrowException(1);
 	}
 
 	if (SDL_RenderCopy(renderer, texture, NULL, NULL) < 0)
 	{
 		SDL_DestroyTexture(texture);
 		std::cout << stderr << "could not copy to renderer: " << SDL_GetError() << std::endl;
-		throw;
+		ThrowException(1);
 	}
 
 	SDL_DestroyTexture(texture);
@@ -302,9 +351,6 @@ void GraphicBoard::WhatsLeft()
 	SDL_RenderPresent(renderer);
 
 	SDL_ShowCursor(true ? SDL_ENABLE : SDL_DISABLE);
-
-	SDL_FreeSurface(tampon);
-	SDL_FreeSurface(virtualscreen);
 }
 
 void GraphicBoard::Loop()
