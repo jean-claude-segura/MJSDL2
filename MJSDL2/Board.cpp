@@ -88,7 +88,7 @@ void Board::FillBoard()
 		} while (tempDominos[domino] == 0);
 		int debugdom = tempDominos[domino];
 		--tempDominos[domino];
-		LogicalBoard[index] = std::make_tuple(std::get<0>(LogicalBoard[index]), std::get<1>(LogicalBoard[index]), std::get<2>(LogicalBoard[index]), domino);
+		std::get<3>(LogicalBoard[index]) = domino;
 	}
 
 #ifdef _DEBUG
