@@ -125,6 +125,41 @@ void Board::InitBoard()
 		++tempConfirm[domino];
 	}
 #endif
+	removable[0x0] = true;
+	removable[0xb] = true;
+	removable[0xc] = true;
+	removable[0x13] = true;
+	removable[0x14] = true;
+	removable[0x1d] = true;
+	removable[0x36] = true;
+	removable[0x3f] = true;
+	removable[0x40] = true;
+	removable[0x47] = true;
+	removable[0x48] = true;
+	removable[0x53] = true;
+	removable[0x54] = true;
+	removable[0x59] = true;
+	removable[0x5a] = true;
+	removable[0x5f] = true;
+	removable[0x60] = true;
+	removable[0x65] = true;
+	removable[0x66] = true;
+	removable[0x6b] = true;
+	removable[0x6c] = true;
+	removable[0x71] = true;
+	removable[0x72] = true;
+	removable[0x77] = true;
+	removable[0x78] = true;
+	removable[0x7b] = true;
+	removable[0x7c] = true;
+	removable[0x7f] = true;
+	removable[0x80] = true;
+	removable[0x83] = true;
+	removable[0x84] = true;
+	removable[0x87] = true;
+	removable[0x8c] = true;
+	removable[0x8e] = true;
+	removable[0x8f] = true;
 }
 
 const std::array<std::tuple<int, int, int, int>, 140>& Board::getBoard()
@@ -135,4 +170,9 @@ const std::array<std::tuple<int, int, int, int>, 140>& Board::getBoard()
 const std::array <int, 4>& Board::getSpeciaux()
 {
 	return Speciaux;
+}
+
+const std::array<bool, 144>& Board::getRemovable()
+{
+	return removable;
 }

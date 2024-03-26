@@ -219,8 +219,11 @@ void GraphicBoard::setClicked(int x, int y)
 	colour = *(Uint32*)p & 0xFF;
 	if (0 <= colour && colour <= 143)
 	{
-		clicked[colour] = !clicked[colour];
-		Refresh();
+		if (plateau.getRemovable()[colour])
+		{
+			clicked[colour] = !clicked[colour];
+			Refresh();
+		}
 	}
 	//std::cout << "0x" << std::hex << colour << std::endl;
 }
