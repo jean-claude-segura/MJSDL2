@@ -12,6 +12,7 @@ public:
 	const std::array<std::tuple<int, int, int, int>, 140>& getBoard();
 	const std::array <int, 4>& getSpeciaux();
 	const std::array<bool, 144>& getRemovable();
+	void Remove(int, int);
 	
 private:
 	std::array<std::tuple<int, int, int, int>, 140> LogicalBoard;

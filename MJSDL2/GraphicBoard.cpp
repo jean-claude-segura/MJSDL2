@@ -221,11 +221,41 @@ void GraphicBoard::setClicked(int x, int y)
 	{
 		if (plateau.getRemovable()[colour])
 		{
-			clicked[colour] = !clicked[colour];
-			Refresh();
+			if (!clicked[colour])
+			{
+				if (selected == -1)
+				{
+					selected = colour;
+					clicked[colour] = true;
+					Refresh();
+				}
+				else
+				{
+					int left = (selected < 140) ? std::get<3>(plateau.getBoard()[selected]) : plateau.getSpeciaux()[selected - 140];
+					int right = (colour < 140) ? std::get<3>(plateau.getBoard()[colour]) : plateau.getSpeciaux()[colour - 140];
+					if (left == right)
+					{
+						clicked[colour] = true;
+						plateau.Remove(selected, colour);
+						selected = -1;
+						Refresh();
+					}
+					else
+					{
+
+					}
+				}
+
+			}
+			else
+			{
+				clicked[colour] = false;
+				selected = -1;
+				Refresh();
+			}			
 		}
 	}
-	//std::cout << "0x" << std::hex << colour << std::endl;
+	std::cout << "0x" << std::hex << colour << std::endl;
 }
 
 void GraphicBoard::RefreshMouseMap()
@@ -300,10 +330,13 @@ void GraphicBoard::Refresh()
 	coordonnees.x = -1 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
 	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
 
-	if (clicked[140])
-		SDL_UpperBlitInverted(dominos[plateau.getSpeciaux()[0]], virtualscreen, coordonnees);
-	else
-		SDL_UpperBlit(dominos[plateau.getSpeciaux()[0]], NULL, virtualscreen, &coordonnees);
+	if (plateau.getSpeciaux()[0] != -1)
+	{
+		if (clicked[140])
+			SDL_UpperBlitInverted(dominos[plateau.getSpeciaux()[0]], virtualscreen, coordonnees);
+		else
+			SDL_UpperBlit(dominos[plateau.getSpeciaux()[0]], NULL, virtualscreen, &coordonnees);
+	}
 
 	for (int z = 0; z < 5; ++z)
 	{
@@ -333,27 +366,35 @@ void GraphicBoard::Refresh()
 		}
 	}
 
-	coordonnees.x = 12 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
-	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-	if(clicked[141])
-		SDL_UpperBlitXored(dominos[plateau.getSpeciaux()[1]], virtualscreen, coordonnees);
-	else
-		SDL_UpperBlit(dominos[plateau.getSpeciaux()[1]], NULL, virtualscreen, &coordonnees);
+	if (plateau.getSpeciaux()[1] != -1)
+	{
+		coordonnees.x = 12 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
+		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
+		if (clicked[141])
+			SDL_UpperBlitXored(dominos[plateau.getSpeciaux()[1]], virtualscreen, coordonnees);
+		else
+			SDL_UpperBlit(dominos[plateau.getSpeciaux()[1]], NULL, virtualscreen, &coordonnees);
+	}
 
-	coordonnees.x = 13 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
-	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-	if(clicked[142])
-		SDL_UpperBlitNegate(dominos[plateau.getSpeciaux()[2]], virtualscreen, coordonnees);
-	else
-		SDL_UpperBlit(dominos[plateau.getSpeciaux()[2]], NULL, virtualscreen, &coordonnees);
+	if (plateau.getSpeciaux()[2] != -1)
+	{
+		coordonnees.x = 13 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
+		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
+		if (clicked[142])
+			SDL_UpperBlitNegate(dominos[plateau.getSpeciaux()[2]], virtualscreen, coordonnees);
+		else
+			SDL_UpperBlit(dominos[plateau.getSpeciaux()[2]], NULL, virtualscreen, &coordonnees);
+	}
 
-
-	coordonnees.x = 5.5 * (dominos[0]->w - 40) - 4 * 40 + tWidth;
-	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 4 * 40 + tHeight;
-	if(clicked[143])
-		SDL_UpperBlitInverted(dominos[plateau.getSpeciaux()[3]], virtualscreen, coordonnees);
-	else
-		SDL_UpperBlit(dominos[plateau.getSpeciaux()[3]], NULL, virtualscreen, &coordonnees);
+	if (plateau.getSpeciaux()[3] != -1)
+	{
+		coordonnees.x = 5.5 * (dominos[0]->w - 40) - 4 * 40 + tWidth;
+		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 4 * 40 + tHeight;
+		if (clicked[143])
+			SDL_UpperBlitInverted(dominos[plateau.getSpeciaux()[3]], virtualscreen, coordonnees);
+		else
+			SDL_UpperBlit(dominos[plateau.getSpeciaux()[3]], NULL, virtualscreen, &coordonnees);
+	}
 
 	/**/
 	/*

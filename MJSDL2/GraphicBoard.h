@@ -60,4 +60,5 @@ private:
 		false, false, false, false
 	};
 	SDL_Rect ScreenRect;
+	int selected = -1;
 };

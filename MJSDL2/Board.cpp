@@ -176,3 +176,15 @@ const std::array<bool, 144>& Board::getRemovable()
 {
 	return removable;
 }
+
+void Board::Remove(int first, int second)
+{
+	if (first < 140)
+		std::get<2>(LogicalBoard[first]) = 0;
+	else
+		Speciaux[first - 140] = -1;
+	if (second < 140)
+		std::get<2>(LogicalBoard[second]) = 0;
+	else
+		Speciaux[second - 140] = -1;
+}
