@@ -29,6 +29,8 @@ private:
 
 	SDL_Window* window = NULL;
 	SDL_Surface* virtualscreen = NULL;
+	SDL_Surface* virtualmousescreen = NULL;
+	SDL_Surface* mousescreen = NULL;
 	SDL_Surface* tampon = NULL;
 	SDL_Renderer* renderer = NULL;
 	SDL_Surface* background = NULL;
