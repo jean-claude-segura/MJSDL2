@@ -45,6 +45,18 @@ private:
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL		
 	};
 	Board plateau;
-	std::tuple<double, double, bool> clicked[2] = { {0,0,false}, {0,0,false} };
+	bool clicked[144] = {
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+		false, false, false, false
+	};
 	SDL_Rect ScreenRect;
 };
