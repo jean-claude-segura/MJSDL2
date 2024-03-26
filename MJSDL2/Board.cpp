@@ -73,13 +73,13 @@ void Board::InitBoard()
 	std::uniform_int_distribution<int> uniform_dist(0, 41);
 
 	int tempDominos[42] = {
-	4,4,4,4,4,4,4,4,4, // Cercles
 	4,4,4,4,4,4,4,4,4, // Bambous
+	4,4,4,4,4,4,4,4,4, // Cercles
 	4,4,4,4,4,4,4,4,4, // Caractères
+	4,4,4,4, // Honneurs
+	4,4,4, // Dragons
 	1,1,1,1, // Saisons
-	1,1,1,1, // Fleurs
-	4,4,4,4, // Honeurs
-	4,4,4 // Dragons
+	1,1,1,1 // Fleurs
 	};
 	for (int index = 0; index < 140; ++index)
 	{

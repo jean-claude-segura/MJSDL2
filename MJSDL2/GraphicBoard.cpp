@@ -96,10 +96,10 @@ void GraphicBoard::FreeResources()
 
 void GraphicBoard::LoadResources()
 {
-	// Cercles : 9*4
+	// Bambous : 9*4
 	for (int i = 0; i < 9; ++i)
 	{
-		std::string path = "./tiles/MJt";
+		std::string path = "./tiles/MJs";
 		path += '1' + i;
 		path += "-.svg";
 		dominos[i] = IMG_Load(path.c_str());
@@ -109,10 +109,10 @@ void GraphicBoard::LoadResources()
 			ThrowException(1);
 		}
 	}
-	// Bambous : 9*4
+	// Cercles : 9*4
 	for (int i = 9; i < 18; ++i)
 	{
-		std::string path = "./tiles/MJs";
+		std::string path = "./tiles/MJt";
 		path += '1' + i - 9;
 		path += "-.svg";
 		dominos[i] = IMG_Load(path.c_str());
@@ -135,37 +135,11 @@ void GraphicBoard::LoadResources()
 			ThrowException(1);
 		}
 	}
-	// Saisons : 1 * 4
+	// Honneurs : 4*4
 	for (int i = 27; i < 31; ++i)
 	{
-		std::string path = "./tiles/MJh";
-		path += '1' + i - 27;
-		path += "-.svg";
-		dominos[i] = IMG_Load(path.c_str());
-		if (dominos[i] == NULL)
-		{
-			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
-	}
-	// Fleurs : 1 * 4
-	for (int i = 31; i < 35; ++i)
-	{
-		std::string path = "./tiles/MJh";
-		path += '1' + i - 27;
-		path += "-.svg";
-		dominos[i] = IMG_Load(path.c_str());
-		if (dominos[i] == NULL)
-		{
-			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
-	}
-	// Honeurs : 4*4
-	for (int i = 35; i < 39; ++i)
-	{
 		std::string path = "./tiles/MJf";
-		path += '1' + i - 35;
+		path += '1' + i - 27;
 		path += "-.svg";
 		dominos[i] = IMG_Load(path.c_str());
 		if (dominos[i] == NULL)
@@ -175,10 +149,36 @@ void GraphicBoard::LoadResources()
 		}
 	}
 	// Dragons : 3*4
-	for (int i = 39; i < 42; ++i)
+	for (int i = 31; i < 34; ++i)
 	{
 		std::string path = "./tiles/MJd";
-		path += '1' + i - 39;
+		path += '1' + i - 31;
+		path += "-.svg";
+		dominos[i] = IMG_Load(path.c_str());
+		if (dominos[i] == NULL)
+		{
+			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
+	}
+	// Saisons : 1 * 4
+	for (int i = 34; i < 38; ++i)
+	{
+		std::string path = "./tiles/MJh";
+		path += '1' + i - 34;
+		path += "-.svg";
+		dominos[i] = IMG_Load(path.c_str());
+		if (dominos[i] == NULL)
+		{
+			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
+	}
+	// Fleurs : 1 * 4
+	for (int i = 38; i < 42; ++i)
+	{
+		std::string path = "./tiles/MJh";
+		path += '1' + i - 38;
 		path += "-.svg";
 		dominos[i] = IMG_Load(path.c_str());
 		if (dominos[i] == NULL)
