@@ -353,7 +353,7 @@ void GraphicBoard::Refresh()
 						std::get<2>(plateau.getBoard()[index]) == z
 						) break;
 				}
-				if (index != 140)
+				if (index != 140 && std::get<3>(plateau.getBoard()[index]) != -1)
 				{
 					coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
 					coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
