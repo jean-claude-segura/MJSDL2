@@ -23,6 +23,7 @@ private:
 	void FreeResources();
 	void LoadResources();
 	void Refresh();
+	void RefreshMouseMap();
 	void WhatsLeft();
 	void setClicked(int x, int y);
 	void ThrowException(int);
