@@ -131,16 +131,15 @@ void SDL_SetColourOnOpaque(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordo
 	{
 		for (int pixel = 0; pixel < coloured->h * coloured->w; ++pixel, ++bufferZ)
 		{
-			if((0xFFFFFFFF & Amask) == 0)
+			if ((*bufferZ & Amask))
 				*bufferZ = ColourToFill;
 		}
 	}
 
-	SDL_UpperBlit(coloured, NULL, dest, &coordonnees);
-
 	if (SDL_MUSTLOCK(coloured))
 		SDL_UnlockSurface(coloured);
-
+	
+	SDL_SetSurfaceBlendMode(coloured, SDL_BLENDMODE_NONE);
 	SDL_UpperBlit(coloured, NULL, dest, &coordonnees);
 	SDL_FreeSurface(coloured);
 }
