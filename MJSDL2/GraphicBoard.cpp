@@ -246,17 +246,20 @@ void GraphicBoard::Refresh()
 
 	coordonnees.x = 12 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
 	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-	SDL_UpperBlit(dominos[plateau.getSpeciaux()[1]], NULL, virtualscreen, &coordonnees);
+	//SDL_UpperBlit(dominos[plateau.getSpeciaux()[1]], NULL, virtualscreen, &coordonnees);
+	SDL_UpperBlitXored(dominos[plateau.getSpeciaux()[3]], virtualscreen, coordonnees);
 
 	coordonnees.x = 13 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
 	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-	SDL_UpperBlit(dominos[plateau.getSpeciaux()[2]], NULL, virtualscreen, &coordonnees);
+	//SDL_UpperBlit(dominos[plateau.getSpeciaux()[2]], NULL, virtualscreen, &coordonnees);
+	SDL_UpperBlitXored(dominos[plateau.getSpeciaux()[3]], virtualscreen, coordonnees);
 
 
 	coordonnees.x = 5.5 * (dominos[0]->w - 40) - 4 * 40 + tWidth;
 	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 4 * 40 + tHeight;
 	//SDL_UpperBlit(dominos[plateau.getSpeciaux()[3]], NULL, virtualscreen, &coordonnees);
-	SDL_UpperBlitInverted(dominos[plateau.getSpeciaux()[3]], virtualscreen, coordonnees);		
+	SDL_UpperBlitInverted(dominos[plateau.getSpeciaux()[3]], virtualscreen, coordonnees);
+	//SDL_UpperBlitXored(dominos[plateau.getSpeciaux()[3]], virtualscreen, coordonnees);
 
 	/**/
 	/*
