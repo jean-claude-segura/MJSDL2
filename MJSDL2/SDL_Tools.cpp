@@ -116,3 +116,31 @@ void SDL_UpperBlitNegate(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonn
 	SDL_UpperBlit(negate, NULL, dest, &coordonnees);
 	SDL_FreeSurface(negate);
 }
+
+void SDL_SetColourOnOpaque(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees, Uint32 ColourToFill)
+{
+	SDL_Surface* coloured = SDL_CreateRGBSurface(0, src->w, src->h, src->format->BitsPerPixel, src->format->Rmask, src->format->Gmask, src->format->Bmask, src->format->Amask);
+	SDL_UpperBlit(src, 0, coloured, 0);
+	if (SDL_MUSTLOCK(coloured))
+		SDL_LockSurface(coloured);
+
+	Uint32* bufferZ = (Uint32*)coloured->pixels;
+	auto Amask = src->format->Amask;
+
+	if (src->format->BitsPerPixel == 32)
+	{
+		for (int pixel = 0; pixel < coloured->h * coloured->w; ++pixel, ++bufferZ)
+		{
+			if((0xFFFFFFFF & Amask) == 0)
+				*bufferZ = ColourToFill;
+		}
+	}
+
+	SDL_UpperBlit(coloured, NULL, dest, &coordonnees);
+
+	if (SDL_MUSTLOCK(coloured))
+		SDL_UnlockSurface(coloured);
+
+	SDL_UpperBlit(coloured, NULL, dest, &coordonnees);
+	SDL_FreeSurface(coloured);
+}
