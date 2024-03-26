@@ -178,7 +178,7 @@ void GraphicBoard::LoadResources()
 	for (int i = 38; i < 42; ++i)
 	{
 		std::string path = "./tiles/MJh";
-		path += '1' + i - 38;
+		path += '1' + i - 34;
 		path += "-.svg";
 		dominos[i] = IMG_Load(path.c_str());
 		if (dominos[i] == NULL)
