@@ -463,6 +463,34 @@ void GraphicBoard::Refresh()
 
 	SDL_DestroyTexture(texture);
 
+	if (plateau.GetBlocked())
+	{
+		auto failure = SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 1);
+		if (failure == NULL)
+		{
+			std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
+
+		SDL_FillRect(failure, NULL, SDL_MapRGB(failure->format, 0xFF, 0xA0, 0xA0));
+		texture = SDL_CreateTextureFromSurface(renderer, failure);
+		if (texture == NULL)
+		{
+			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
+		SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+		SDL_SetTextureAlphaMod(texture, 0xA0);
+
+		if (SDL_RenderCopy(renderer, texture, NULL, NULL) < 0)
+		{
+			std::cout << stderr << "could not copy renderer: " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
+		SDL_DestroyTexture(texture);
+		SDL_FreeSurface(failure);
+	}
+
 	SDL_RenderPresent(renderer);
 
 	SDL_ShowCursor(true ? SDL_ENABLE : SDL_DISABLE);

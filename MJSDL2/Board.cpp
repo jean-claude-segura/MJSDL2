@@ -167,6 +167,8 @@ void Board::InitBoard()
 	removable[0x8c] = true;
 	removable[0x8e] = true;
 	removable[0x8f] = true;
+
+	Blocked = false;
 }
 
 const std::array<std::tuple<int, int, int, int>, 140>& Board::getBoard()
@@ -236,7 +238,33 @@ void Board::Remove(int index)
 				removable[OccupationBoard[x][y][z-1]] = true;
 		}
 	}
-
+	int max = 0;
+	std::map<int, int> TotalMovesLeftByTile;
+	for (int i = 0; i < 140 && max < 2; ++i)
+	{
+		if (removable[i])
+		{
+			auto tile = std::get<3>(LogicalBoard[i]);
+			if (TotalMovesLeftByTile.contains(tile))
+				TotalMovesLeftByTile[tile] += 1;
+			else
+				TotalMovesLeftByTile[tile] = 1;
+			max = std::max(TotalMovesLeftByTile[tile], max);
+		}
+	}
+	for (int i = 0; i < 4 && max < 2; ++i)
+	{
+		if (removable[i + 140])
+		{
+			auto tile = Speciaux[i];
+			if (TotalMovesLeftByTile.contains(tile))
+				TotalMovesLeftByTile[tile] += 1;
+			else
+				TotalMovesLeftByTile[tile] = 1;
+			max = std::max(TotalMovesLeftByTile[tile], max);
+		}
+	}
+	Blocked = max != 2;
 }
 
 void Board::Remove(int first, int second)

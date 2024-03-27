@@ -2,6 +2,7 @@
 #include <iostream>
 #include <array>
 #include <vector>
+#include <map>
 #include <random>
 
 class Board
@@ -13,6 +14,7 @@ public:
 	const std::array <int, 4>& getSpeciaux();
 	const std::array<bool, 144>& getRemovable();
 	void Remove(int, int);
+	bool GetBlocked() { return Blocked; }
 	
 private:
 	std::array<std::tuple<int, int, int, int>, 140> LogicalBoard;
@@ -33,4 +35,5 @@ private:
 		false, false, false, false
 	};
 	void Remove(int);
+	bool Blocked = false;
 };
