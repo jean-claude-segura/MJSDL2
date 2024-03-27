@@ -224,16 +224,16 @@ void Board::Remove(int index)
 		int y = std::get<1>(LogicalBoard[index]);
 		int z = std::get<2>(LogicalBoard[index]);
 		OccupationBoard[x][y][z] = -1;
-		if (x < 11 && OccupationBoard[x + 1][y][z] >= 0)
+		if (x < 11 && OccupationBoard[x + 1][y][z] >= 0 && ( z > 3 || OccupationBoard[x + 1][y][z + 1] < 0 ))
 			removable[OccupationBoard[x + 1][y][z]] = true;
-		if (x > 0 && OccupationBoard[x - 1][y][z] >= 0)
+		if (x > 0 && OccupationBoard[x - 1][y][z] >= 0 && (z > 3 || OccupationBoard[x - 1][y][z + 1] < 0))
 			removable[OccupationBoard[x - 1][y][z]] = true;
 		if (z > 0)
 		{
-			if (x < 11 && OccupationBoard[x + 1][y][z-1] >= 0)
-				removable[OccupationBoard[x + 1][y][z-1]] = true;
-			if (x > 0 && OccupationBoard[x - 1][y][z-1] >= 0)
-				removable[OccupationBoard[x - 1][y][z-1]] = true;
+			if (x < 11 && OccupationBoard[x + 1][y][z-1] < 0)
+				removable[OccupationBoard[x][y][z-1]] = true;
+			if (x > 0 && OccupationBoard[x - 1][y][z-1] < 0)
+				removable[OccupationBoard[x][y][z-1]] = true;
 		}
 	}
 
