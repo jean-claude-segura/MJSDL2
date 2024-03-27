@@ -16,6 +16,7 @@ public:
 	
 private:
 	std::array<std::tuple<int, int, int, int>, 140> LogicalBoard;
+	std::array<std::array<std::array<int, 5>, 8>, 12> OccupationBoard;
 	std::array <int, 4> Speciaux;
 	std::array<std::array<std::array<int, 5>, 8>, 12> BasePattern;
 	std::array<bool, 144> removable = {
@@ -31,4 +32,5 @@ private:
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false
 	};
+	void Remove(int);
 };

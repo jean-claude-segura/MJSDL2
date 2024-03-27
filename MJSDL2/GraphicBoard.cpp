@@ -212,51 +212,69 @@ void GraphicBoard::LoadResources()
 
 void GraphicBoard::setClicked(int x, int y)
 {
-	Uint32*  lpMouse = (Uint32*)mousescreen;
-	Uint32 colour;
-	int bpp = mousescreen->format->BytesPerPixel;
-	Uint8* p = (Uint8*)mousescreen->pixels + y * mousescreen->pitch + x * bpp;
-	colour = *(Uint32*)p & 0xFF;
-	if (0 <= colour && colour <= 143)
+	if (x < 10 && y < 10)
 	{
-		if (plateau.getRemovable()[colour])
+		plateau.InitBoard();
+		RefreshMouseMap();
+		Refresh();
+	}
+	else
+	{
+		Uint32* lpMouse = (Uint32*)mousescreen;
+		Uint32 colour;
+		int bpp = mousescreen->format->BytesPerPixel;
+		Uint8* p = (Uint8*)mousescreen->pixels + y * mousescreen->pitch + x * bpp;
+		colour = *(Uint32*)p & 0xFF;
+		if (0 <= colour && colour <= 143)
 		{
-			if (!clicked[colour])
+			if (plateau.getRemovable()[colour])
 			{
-				if (selected == -1)
+				if (!clicked[colour])
 				{
-					selected = colour;
-					clicked[colour] = true;
-					Refresh();
-				}
-				else
-				{
-					int left = (selected < 140) ? std::get<3>(plateau.getBoard()[selected]) : plateau.getSpeciaux()[selected - 140];
-					int right = (colour < 140) ? std::get<3>(plateau.getBoard()[colour]) : plateau.getSpeciaux()[colour - 140];
-					if (left == right)
+					if (selected == -1)
 					{
+						selected = colour;
 						clicked[colour] = true;
-						plateau.Remove(selected, colour);
-						selected = -1;
-						RefreshMouseMap();
 						Refresh();
 					}
 					else
 					{
+						int left = (selected < 140) ? std::get<3>(plateau.getBoard()[selected]) : plateau.getSpeciaux()[selected - 140];
+						int right = (colour < 140) ? std::get<3>(plateau.getBoard()[colour]) : plateau.getSpeciaux()[colour - 140];
+						if (
+							left == right ||
+							(34 <= left && left < 38 && 34 <= right && right < 38) ||
+							(38 <= left && left < 42 && 38 <= right && right < 42)
+							)
+						{
+							clicked[colour] = true;
+							plateau.Remove(selected, colour);
+							int temp = selected;
+							selected = -1;
+							RefreshMouseMap();
+							Refresh();
+							clicked[temp] = false;
+							clicked[colour] = false;
+						}
+						else
+						{
 
+						}
 					}
-				}
 
+				}
+				else
+				{
+					clicked[colour] = false;
+					selected = -1;
+					Refresh();
+				}
 			}
-			else
-			{
-				clicked[colour] = false;
-				selected = -1;
-				Refresh();
-			}			
 		}
+#ifdef _DEBUG
+		std::cout << "0x" << std::hex << colour << std::endl;
+#endif
 	}
-	std::cout << "0x" << std::hex << colour << std::endl;
 }
 
 void GraphicBoard::RefreshMouseMap()

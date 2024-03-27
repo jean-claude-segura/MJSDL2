@@ -63,6 +63,11 @@ Board::Board()
 	}
 	/**/
 
+	for (int z = 0; z < 5; ++z)
+		for (int y = 0; y < 8; ++y)
+			for (int x = 0; x < 12; ++x)
+				OccupationBoard[x][y][z] = -1;
+
 	InitBoard();
 }
 
@@ -91,6 +96,7 @@ void Board::InitBoard()
 		int debugdom = tempDominos[domino];
 		--tempDominos[domino];
 		std::get<3>(LogicalBoard[index]) = domino;
+		OccupationBoard[std::get<0>(LogicalBoard[index])][std::get<1>(LogicalBoard[index])][std::get<2>(LogicalBoard[index])] = index;
 	}
 
 #ifdef _DEBUG
@@ -125,6 +131,7 @@ void Board::InitBoard()
 		++tempConfirm[domino];
 	}
 #endif
+	for(int index = 0; index < 140; ++index) removable[0x0] = false;
 	removable[0x0] = true;
 	removable[0xb] = true;
 	removable[0xc] = true;
@@ -177,22 +184,56 @@ const std::array<bool, 144>& Board::getRemovable()
 	return removable;
 }
 
+void Board::Remove(int index)
+{
+	if (index < 140)
+	{
+		std::get<3>(LogicalBoard[index]) = -1;
+	}
+	else
+	{
+		Speciaux[index - 140] = -1;
+	}
+
+	removable[index] = false;
+
+	if (index == 0x8F)
+	{
+		removable[0x88] = true;
+		removable[0x89] = true;
+		removable[0x8A] = true;
+		removable[0x8B] = true;
+	}
+	else if (index == 0x8C)
+	{
+		removable[0x1E] = true;
+		removable[0x2A] = true;
+	}
+	else if (index == 0x8E)
+	{
+		removable[0x8D] = true;
+	}
+	else if (index == 0x8D)
+	{
+		removable[0x29] = true;
+		removable[0x35] = true;
+	}
+	else
+	{
+		int x = std::get<0>(LogicalBoard[index]);
+		int y = std::get<1>(LogicalBoard[index]);
+		int z = std::get<2>(LogicalBoard[index]);
+		OccupationBoard[x][y][z] = -1;
+		if (x < 11 && OccupationBoard[x + 1][y][z] >= 0)
+			removable[OccupationBoard[x + 1][y][z]] = true;
+		if (x > 0 && OccupationBoard[x - 1][y][z] >= 0)
+			removable[OccupationBoard[x - 1][y][z]] = true;
+	}
+
+}
+
 void Board::Remove(int first, int second)
 {
-	if (first < 140)
-	{
-		std::get<3>(LogicalBoard[first]) = -1;
-	}
-	else
-	{
-		Speciaux[first - 140] = -1;
-	}
-	if (second < 140)
-	{
-		std::get<3>(LogicalBoard[second]) = -1;
-	}
-	else
-	{
-		Speciaux[second - 140] = -1;
-	}
+	Remove(first);
+	Remove(second);
 }
