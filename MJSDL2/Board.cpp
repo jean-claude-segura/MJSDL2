@@ -228,6 +228,13 @@ void Board::Remove(int index)
 			removable[OccupationBoard[x + 1][y][z]] = true;
 		if (x > 0 && OccupationBoard[x - 1][y][z] >= 0)
 			removable[OccupationBoard[x - 1][y][z]] = true;
+		if (z > 0)
+		{
+			if (x < 11 && OccupationBoard[x + 1][y][z-1] >= 0)
+				removable[OccupationBoard[x + 1][y][z-1]] = true;
+			if (x > 0 && OccupationBoard[x - 1][y][z-1] >= 0)
+				removable[OccupationBoard[x - 1][y][z-1]] = true;
+		}
 	}
 
 }
