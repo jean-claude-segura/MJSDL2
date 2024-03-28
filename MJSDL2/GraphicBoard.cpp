@@ -227,7 +227,7 @@ void GraphicBoard::setClicked(int x, int y)
 		colour = *(Uint32*)p & 0xFF;
 		if (0 <= colour && colour <= 143)
 		{
-			if (plateau.getRemovable()[colour])
+			if (plateau.getRemovableFromIndex(colour))
 			{
 				if (!clicked[colour])
 				{
@@ -239,8 +239,8 @@ void GraphicBoard::setClicked(int x, int y)
 					}
 					else
 					{
-						int left = (selected < 140) ? std::get<3>(plateau.getBoard()[selected]) : plateau.getSpeciaux()[selected - 140];
-						int right = (colour < 140) ? std::get<3>(plateau.getBoard()[colour]) : plateau.getSpeciaux()[colour - 140];
+						int left = plateau.getDominoFromIndex(selected);
+						int right = plateau.getDominoFromIndex(colour);
 						if (
 							left == right ||
 							(34 <= left && left < 38 && 34 <= right && right < 38) ||
@@ -248,7 +248,7 @@ void GraphicBoard::setClicked(int x, int y)
 							)
 						{
 							clicked[colour] = true;
-							plateau.Remove(selected, colour);
+							plateau.RemovePairOfTiles(selected, colour);
 							int temp = selected;
 							selected = -1;
 							RefreshMouseMap();
@@ -296,29 +296,16 @@ void GraphicBoard::RefreshMouseMap()
 		SDL_SetColourOnOpaque(dominos[plateau.getSpeciaux()[0]], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 140, 0x00, 0x00));
 	}
 
-	for (int z = 0; z < 5; ++z)
+	for (auto& temp : plateau.getLogicalBoard())
 	{
-		for (int y = 7; y >= 0; --y)
-		{
-			for (int x = 0; x < 12; ++x)
-			{
-				int index = 0;
-				for (; index < 140; ++index)
-				{
-					if (
-						std::get<0>(plateau.getBoard()[index]) == x &&
-						std::get<1>(plateau.getBoard()[index]) == y &&
-						std::get<2>(plateau.getBoard()[index]) == z
-						) break;
-				}
-				if (index != 140 && std::get<3>(plateau.getBoard()[index]) != -1)
-				{
-					coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-					coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
-					SDL_SetColourOnOpaque(dominos[std::get<3>(plateau.getBoard()[index])], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
-				}
-			}
-		}
+		auto x = std::get<0>(temp);
+		auto y = std::get<1>(temp);
+		auto z = std::get<2>(temp);
+		auto domino = std::get<3>(temp);
+		auto index = std::get<4>(temp);
+		coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
+		coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
+		SDL_SetColourOnOpaque(dominos[domino], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
 	}
 
 	if (plateau.getSpeciaux()[1] != -1)
@@ -342,7 +329,7 @@ void GraphicBoard::RefreshMouseMap()
 		SDL_SetColourOnOpaque(dominos[plateau.getSpeciaux()[3]], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 143, 0x00, 0x00));
 	}
 
-	SDL_BlitScaled(virtualmousescreen, NULL, mousescreen, &ScreenRect);
+	SDL_BlitScaled(virtualmousescreen, NULL, mousescreen, NULL);
 }
 
 void GraphicBoard::Refresh()
@@ -366,33 +353,19 @@ void GraphicBoard::Refresh()
 		else
 			SDL_UpperBlit(dominos[plateau.getSpeciaux()[0]], NULL, virtualscreen, &coordonnees);
 	}
-
-	for (int z = 0; z < 5; ++z)
+	for (auto& temp : plateau.getLogicalBoard())
 	{
-		for (int y = 7; y >= 0; --y)
-		{
-			for (int x = 0; x < 12; ++x)
-			{
-				int index = 0;
-				for (; index < 140; ++index)
-				{
-					if (
-						std::get<0>(plateau.getBoard()[index]) == x &&
-						std::get<1>(plateau.getBoard()[index]) == y &&
-						std::get<2>(plateau.getBoard()[index]) == z
-						) break;
-				}
-				if (index != 140 && std::get<3>(plateau.getBoard()[index]) != -1)
-				{
-					coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-					coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
-					if (clicked[index])
-						SDL_UpperBlitInverted(dominos[std::get<3>(plateau.getBoard()[index])], virtualscreen, coordonnees);
-					else
-						SDL_UpperBlit(dominos[std::get<3>(plateau.getBoard()[index])], NULL, virtualscreen, &coordonnees);
-				}
-			}
-		}
+		auto x = std::get<0>(temp);
+		auto y = std::get<1>(temp);
+		auto z = std::get<2>(temp);
+		auto domino = std::get<3>(temp);
+		auto index = std::get<4>(temp);
+		coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
+		coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
+		if (clicked[index])
+			SDL_UpperBlitInverted(dominos[domino], virtualscreen, coordonnees);
+		else
+			SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
 	}
 
 	if (plateau.getSpeciaux()[1] != -1)
@@ -446,7 +419,8 @@ void GraphicBoard::Refresh()
 	}
 	/**/
 
-	SDL_BlitScaled(virtualscreen, NULL, tampon, &ScreenRect);
+	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
+	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, &ScreenRect);
 
 	SDL_RenderClear(renderer);
 	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
@@ -464,10 +438,10 @@ void GraphicBoard::Refresh()
 	SDL_DestroyTexture(texture);
 
 #ifdef _DEBUG
-	std::cout << std::dec << plateau.WhatsLeft() << std::endl;
+	std::cout << std::dec << plateau.getNumberOfTilesLeft() << std::endl;
 #endif
 
-	if (plateau.GetBlocked())
+	if (plateau.IsBlocked())
 	{
 		auto failure = SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 1);
 		if (failure == NULL)
@@ -475,24 +449,26 @@ void GraphicBoard::Refresh()
 			std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
 			ThrowException(1);
 		}
-
-		SDL_FillRect(failure, NULL, plateau.IsEmpty() ? SDL_MapRGB(failure->format, 0xA0, 0xFF, 0xA0) : SDL_MapRGB(failure->format, 0xFF, 0xA0, 0xA0));
-		texture = SDL_CreateTextureFromSurface(renderer, failure);
-		if (texture == NULL)
+		else
 		{
-			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
-		SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
-		SDL_SetTextureAlphaMod(texture, 0xA0);
+			SDL_FillRect(failure, NULL, plateau.IsEmpty() ? SDL_MapRGB(failure->format, 0xA0, 0xFF, 0xA0) : SDL_MapRGB(failure->format, 0xFF, 0xA0, 0xA0));
+			texture = SDL_CreateTextureFromSurface(renderer, failure);
+			if (texture == NULL)
+			{
+				std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
+				ThrowException(1);
+			}
+			SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+			SDL_SetTextureAlphaMod(texture, 0xA0);
 
-		if (SDL_RenderCopy(renderer, texture, NULL, NULL) < 0)
-		{
-			std::cout << stderr << "could not copy renderer: " << SDL_GetError() << std::endl;
-			ThrowException(1);
+			if (SDL_RenderCopy(renderer, texture, NULL, NULL) < 0)
+			{
+				std::cout << stderr << "could not copy renderer: " << SDL_GetError() << std::endl;
+				ThrowException(1);
+			}
+			SDL_DestroyTexture(texture);
+			SDL_FreeSurface(failure);
 		}
-		SDL_DestroyTexture(texture);
-		SDL_FreeSurface(failure);
 	}
 
 	SDL_RenderPresent(renderer);
@@ -512,14 +488,14 @@ void GraphicBoard::WhatsLeft()
 		for (int y = 0; y < 8; ++y)
 			board[y][x] = 0;
 
-	for (auto& index : plateau.getLeft())
+	for (auto& index : plateau.getWhatsLeft())
 	{
-		int domino = index < 140 ? std::get<3>(plateau.getBoard()[index]) : plateau.getSpeciaux()[index - 140];
+		int domino = plateau.getDominoFromIndex(index);
 		int x = (domino >> 3);
 		int y = (domino & 0b111);
 		++board[y][x];
 	}
-	
+
 	for (int x = 0; x < 6; ++x)
 		for (int y = 7; y >= 0; --y)
 		{
@@ -534,7 +510,7 @@ void GraphicBoard::WhatsLeft()
 		}
 	/**/
 
-	SDL_BlitScaled(virtualscreen, NULL, tampon, &ScreenRect);
+	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
 
 	SDL_RenderClear(renderer);
 	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
