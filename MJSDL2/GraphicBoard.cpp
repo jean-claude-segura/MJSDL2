@@ -596,16 +596,17 @@ void GraphicBoard::Loop()
 			case SDL_BUTTON_LEFT:
 				while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
 				{
-					setClicked(event.motion.x, event.motion.y);
+					//setClicked(event.motion.x, event.motion.y);
+					setClicked(event.button.x, event.button.y);
 					//plateau.InitBoard();
 					//Refresh();
-					switch (event.type)
+					/*switch (event.type)
 					{
 					case SDL_MOUSEMOTION:
 						break;
 					default:
 						break;
-					}
+					}*/
 				}
 				break;
 			case SDL_BUTTON_RIGHT:
