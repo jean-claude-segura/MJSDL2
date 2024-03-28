@@ -169,6 +169,9 @@ void Board::InitBoard()
 	removable[0x8f] = true;
 
 	Blocked = false;
+
+	Left.clear();
+	for (int i = 0; i < 144; ++i) Left.emplace_back(i);
 }
 
 const std::array<std::tuple<int, int, int, int>, 140>& Board::getBoard()
@@ -196,6 +199,10 @@ void Board::Remove(int index)
 	{
 		Speciaux[index - 140] = -1;
 	}
+
+	auto it = std::find(Left.begin(), Left.end(), index);
+	if (it != Left.end())
+		Left.erase(it);
 
 	removable[index] = false;
 

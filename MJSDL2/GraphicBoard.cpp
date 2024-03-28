@@ -463,6 +463,10 @@ void GraphicBoard::Refresh()
 
 	SDL_DestroyTexture(texture);
 
+#ifdef _DEBUG
+	std::cout << std::dec << plateau.WhatsLeft() << std::endl;
+#endif
+
 	if (plateau.GetBlocked())
 	{
 		auto failure = SDL_CreateRGBSurface(0, Width, Height, 32, 0, 0, 0, 1);
@@ -472,7 +476,7 @@ void GraphicBoard::Refresh()
 			ThrowException(1);
 		}
 
-		SDL_FillRect(failure, NULL, SDL_MapRGB(failure->format, 0xFF, 0xA0, 0xA0));
+		SDL_FillRect(failure, NULL, plateau.IsEmpty() ? SDL_MapRGB(failure->format, 0xA0, 0xFF, 0xA0) : SDL_MapRGB(failure->format, 0xFF, 0xA0, 0xA0));
 		texture = SDL_CreateTextureFromSurface(renderer, failure);
 		if (texture == NULL)
 		{
