@@ -179,16 +179,6 @@ const std::array<std::tuple<int, int, int, int>, 140>& Board::getBoard()
 	return LogicalBoard;
 }
 
-const std::array <int, 4>& Board::getSpeciaux()
-{
-	return Speciaux;
-}
-
-const std::array<bool, 144>& Board::getRemovable()
-{
-	return removable;
-}
-
 void Board::Remove(int index)
 {
 	if (index < 140)

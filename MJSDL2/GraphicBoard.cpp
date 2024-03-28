@@ -511,25 +511,13 @@ void GraphicBoard::WhatsLeft()
 	for (int x = 0; x < 6; ++x)
 		for (int y = 0; y < 8; ++y)
 			board[y][x] = 0;
-	for (int index = 0; index < 140; ++index)
+
+	for (auto& index : plateau.getLeft())
 	{
-		int domino = std::get<3>(plateau.getBoard()[index]);
-		if (domino != -1)
-		{
-			int x = (domino >> 3);
-			int y = (domino & 0b111);
-			++board[y][x];
-		}
-	}
-	for (int index = 0; index < 4; ++index)
-	{
-		int domino = plateau.getSpeciaux()[index];
-		if (domino != -1)
-		{
-			int x = (domino >> 3);
-			int y = (domino & 0b111);
-			++board[y][x];
-		}
+		int domino = index < 140 ? std::get<3>(plateau.getBoard()[index]) : plateau.getSpeciaux()[index - 140];
+		int x = (domino >> 3);
+		int y = (domino & 0b111);
+		++board[y][x];
 	}
 	
 	for (int x = 0; x < 6; ++x)

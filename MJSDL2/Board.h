@@ -11,12 +11,13 @@ public:
 	Board();
 	void InitBoard();
 	const std::array<std::tuple<int, int, int, int>, 140>& getBoard();
-	const std::array <int, 4>& getSpeciaux();
-	const std::array<bool, 144>& getRemovable();
+	const std::array <int, 4>& getSpeciaux() { return Speciaux; }
+	const std::array<bool, 144>& getRemovable() { return removable; }
 	void Remove(int, int);
-	bool GetBlocked() { return Blocked; }
+	const bool GetBlocked() { return Blocked; }
 	bool IsEmpty() { return Left.empty(); }
 	int WhatsLeft() { return Left.size(); }
+	const std::vector<int>& getLeft() { return Left; }
 	
 private:
 	std::vector<int> Left;
