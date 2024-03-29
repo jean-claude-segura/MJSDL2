@@ -289,12 +289,12 @@ void GraphicBoard::RefreshMouseMap()
 	auto tWidth = (Width - (dominos[0]->w - 40) * 12) >> 1;
 	auto tHeight = (Height - (dominos[0]->h - 40) >> 3) >> 1;
 
-	if (plateau.getSpeciaux()[0] != -1)
+	/*if (plateau.getSpeciaux()[0] != -1)
 	{
 		coordonnees.x = -1 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
 		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
 		SDL_SetColourOnOpaque(dominos[plateau.getSpeciaux()[0]], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 140, 0x00, 0x00));
-	}
+	}*/
 
 	for (auto& temp : plateau.getLogicalBoard())
 	{
@@ -308,7 +308,7 @@ void GraphicBoard::RefreshMouseMap()
 		SDL_SetColourOnOpaque(dominos[domino], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
 	}
 
-	if (plateau.getSpeciaux()[1] != -1)
+	/*if (plateau.getSpeciaux()[1] != -1)
 	{
 		coordonnees.x = 12 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
 		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
@@ -327,7 +327,7 @@ void GraphicBoard::RefreshMouseMap()
 		coordonnees.x = 5.5 * (dominos[0]->w - 40) - 4 * 40 + tWidth;
 		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 4 * 40 + tHeight;
 		SDL_SetColourOnOpaque(dominos[plateau.getSpeciaux()[3]], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 143, 0x00, 0x00));
-	}
+	}*/
 
 	SDL_BlitScaled(virtualmousescreen, NULL, mousescreen, NULL);
 }
@@ -346,13 +346,13 @@ void GraphicBoard::Refresh()
 	coordonnees.x = -1 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
 	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
 
-	if (plateau.getSpeciaux()[0] != -1)
+	/*if (plateau.getSpeciaux()[0] != -1)
 	{
 		if (clicked[140])
 			SDL_UpperBlitInverted(dominos[plateau.getSpeciaux()[0]], virtualscreen, coordonnees);
 		else
 			SDL_UpperBlit(dominos[plateau.getSpeciaux()[0]], NULL, virtualscreen, &coordonnees);
-	}
+	}*/
 	for (auto& temp : plateau.getLogicalBoard())
 	{
 		auto x = std::get<0>(temp);
@@ -368,7 +368,7 @@ void GraphicBoard::Refresh()
 			SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
 	}
 
-	if (plateau.getSpeciaux()[1] != -1)
+	/*if (plateau.getSpeciaux()[1] != -1)
 	{
 		coordonnees.x = 12 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
 		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
@@ -396,7 +396,7 @@ void GraphicBoard::Refresh()
 			SDL_UpperBlitInverted(dominos[plateau.getSpeciaux()[3]], virtualscreen, coordonnees);
 		else
 			SDL_UpperBlit(dominos[plateau.getSpeciaux()[3]], NULL, virtualscreen, &coordonnees);
-	}
+	}*/
 
 	/**/
 	/*

@@ -48,6 +48,11 @@ Board::Board()
 		}
 	}
 
+	InitIndexToCoord[140] = std::make_tuple(-1, 3.5, 0);
+	InitIndexToCoord[141] = std::make_tuple(12, 3.5, 0);
+	InitIndexToCoord[142] = std::make_tuple(13, 3.5, 0);
+	InitIndexToCoord[143] = std::make_tuple(5.5, 3.5, 4);
+
 	/*
 	int cptr = 0;
 
@@ -66,20 +71,38 @@ Board::Board()
 	for (int z = 0; z < 5; ++z)
 		for (int y = 0; y < 8; ++y)
 			for (int x = 0; x < 12; ++x)
-				OccupationBoard[x][y][z] = -1;
+				mOccupationBoard[std::make_tuple<double, double, double>(x, y, z)] = -1;
 
 	InitBoard();
 }
 
-bool Board::CompLogicalBoard(std::tuple<int, int, int, int, int> left, std::tuple<int, int, int, int, int> right)
+bool Board::CompLogicalBoard(std::tuple<double, double, double, int, int>& left, std::tuple<double, double, double, int, int>& right)
 {
+	auto zLeft = std::get<2>(left);
+	auto yLeft = std::get<1>(left);
+	auto xLeft = std::get<0>(left);
+	auto zRight = std::get<2>(right);
+	auto yRight = std::get<1>(right);
+	auto xRight = std::get<0>(right);
+	return
+		(
+			zLeft <= zRight &&
+			(
+				(std::floor(yLeft) >= std::floor(yRight)) && (std::floor(yLeft) != std::floor(yRight) || xLeft <= xRight)
+				//(std::ceil(yLeft) >= std::ceil(yRight)) && (std::ceil(yLeft) != std::ceil(yRight) || xLeft <= xRight)
+				)
+			);
+	return
+		(
+			std::get<2>(left) <= std::get<2>(right) &&
+			(
+				(std::get<2>(left) != std::get<2>(right)) ||
+				(std::get<1>(left) >= std::get<1>(right)) && (std::get<1>(left) != std::get<1>(right) || std::get<0>(left) <= std::get<0>(right))
+			)
+		);
 	return ! (std::get<2>(left) > std::get<2>(right) ||
 		std::get<2>(left) == std::get<2>(right) &&
 		(std::get<1>(left) < std::get<1>(right) || std::get<1>(left) == std::get<1>(right) && std::get<0>(left) > std::get<0>(right)));
-	return
-		std::get<2>(left) > std::get<2>(right) ||
-		std::get<1>(left) < std::get<1>(right) ||
-		std::get<0>(left) > std::get<0>(right);
 }
 
 void Board::InitBoard()
@@ -101,7 +124,7 @@ void Board::InitBoard()
 	1,1,1,1 // Fleurs
 	};
 
-	for (int index = 0; index < 140; ++index)
+	for (int index = 0; index < 144; ++index)
 	{
 		int domino = 0;
 		do
@@ -113,14 +136,15 @@ void Board::InitBoard()
 		auto x = std::get<0>(InitIndexToCoord[index]);
 		auto y = std::get<1>(InitIndexToCoord[index]);
 		auto z = std::get<2>(InitIndexToCoord[index]);
-		OccupationBoard[x][y][z] = index;
+		auto m = std::make_tuple(x, y, z);
+		mOccupationBoard[m] = index;
 		LogicalBoard.push_back(std::make_tuple(x, y, z, domino, index));
 		TilesMap[index] = domino;
 	}
 
 	std::sort(LogicalBoard.begin(), LogicalBoard.end(), Board::CompLogicalBoard);
 
-	for (int index = 0; index < 4; ++index)
+	/*for (int index = 0; index < 4; ++index)
 	{
 		int domino = 0;
 		do
@@ -131,7 +155,7 @@ void Board::InitBoard()
 		--tempDominos[domino];
 		Speciaux[index] = domino;
 		TilesMap[index + 140] = domino;
-	}
+	}*/
 
 	for(int index = 0; index < 140; ++index) Removable[0x0] = false;
 	Removable[0x0] = true;
@@ -180,7 +204,7 @@ void Board::RemoveTile(int index)
 {
 	TilesMap.erase(index);
 
-	if (index > 139) Speciaux[index - 140] = -1;
+	//if (index > 139) Speciaux[index - 140] = -1;
 
 	auto it = std::find(WhatsLeft.begin(), WhatsLeft.end(), index);
 	if (it != WhatsLeft.end())
@@ -211,24 +235,24 @@ void Board::RemoveTile(int index)
 	}
 	else
 	{
-		std::vector<std::tuple<int, int, int, int, int>>::iterator it = LogicalBoard.begin();
+		std::vector<std::tuple<double, double, double, int, int>>::iterator it = LogicalBoard.begin();
 		for (; it != LogicalBoard.end() && std::get<4>(*it) != index; ++it);
 		int x = std::get<0>(*it);
 		int y = std::get<1>(*it);
 		int z = std::get<2>(*it);
 		LogicalBoard.erase(it);
 
-		OccupationBoard[x][y][z] = -1;
-		if (x < 11 && OccupationBoard[x + 1][y][z] >= 0 && ( z > 3 || OccupationBoard[x + 1][y][z + 1] < 0 ))
-			Removable[OccupationBoard[x + 1][y][z]] = true;
-		if (x > 0 && OccupationBoard[x - 1][y][z] >= 0 && (z > 3 || OccupationBoard[x - 1][y][z + 1] < 0))
-			Removable[OccupationBoard[x - 1][y][z]] = true;
+		mOccupationBoard[std::make_tuple<double, double, double>(x, y, z)] = -1;
+		if (x < 11 && mOccupationBoard[std::make_tuple<double, double, double>(x+1, y, z)] >= 0 && ( z > 3 || mOccupationBoard[std::make_tuple<double, double, double>(x+1, y, z+1)] < 0 ))
+			Removable[mOccupationBoard[std::make_tuple<double, double, double>(x+1, y, z)]] = true;
+		if (x > 0 && mOccupationBoard[std::make_tuple<double, double, double>(x-1, y, z)] >= 0 && (z > 3 || mOccupationBoard[std::make_tuple<double, double, double>(x-1, y, z+1)] < 0))
+			Removable[mOccupationBoard[std::make_tuple<double, double, double>(x - 1, y, z)]] = true;
 		if (z > 0)
 		{
-			if (x < 11 && OccupationBoard[x + 1][y][z-1] < 0)
-				Removable[OccupationBoard[x][y][z-1]] = true;
-			if (x > 0 && OccupationBoard[x - 1][y][z-1] < 0)
-				Removable[OccupationBoard[x][y][z-1]] = true;
+			if (x < 11 && mOccupationBoard[std::make_tuple<double, double, double>(x+1, y, z-1)] < 0)
+				Removable[mOccupationBoard[std::make_tuple<double, double, double>(x, y, z-1)]] = true;
+			if (x > 0 && mOccupationBoard[std::make_tuple<double, double, double>(x-1, y, z-1)] < 0)
+				Removable[mOccupationBoard[std::make_tuple<double, double, double>(x, y, z-1)]] = true;
 		}
 	}
 	int max = 0;
