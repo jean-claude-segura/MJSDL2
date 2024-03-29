@@ -84,15 +84,25 @@ bool Board::CompLogicalBoard(std::tuple<double, double, double, int, int>& left,
 	auto zRight = std::get<2>(right);
 	auto yRight = std::get<1>(right);
 	auto xRight = std::get<0>(right);
-	return
+	auto yFloor = ((std::floor(yLeft) >= std::floor(yRight)) && (std::floor(yLeft) != std::floor(yRight) || xLeft <= xRight)); // Domino droite
+	auto yCeil = ((std::ceil(yLeft) >= std::ceil(yRight)) && (std::ceil(yLeft) != std::ceil(yRight) || xLeft <= xRight)); // Domino gauche
+	auto g = xLeft == -1 && yLeft == 3.5 && zLeft == 0;
+	auto h = xRight == 0 && yRight == 3 && zRight == 0;
+	auto i = xRight == 0 && yRight == 4 && zRight == 0;
+
+	auto cond = yCeil;
+	
+	auto finalcondition = (
+		zLeft <= zRight &&
 		(
-			zLeft <= zRight &&
+			(zLeft != zRight) ||
 			(
-				(zLeft != zRight) ||
-				(std::floor(yLeft) >= std::floor(yRight)) && (std::floor(yLeft) != std::floor(yRight) || xLeft <= xRight)
-				//(std::ceil(yLeft) >= std::ceil(yRight)) && (std::ceil(yLeft) != std::ceil(yRight) || xLeft <= xRight)
+				cond
 				)
-			);
+			)
+		);
+
+	return finalcondition;
 	return
 		(
 			std::get<2>(left) <= std::get<2>(right) &&
