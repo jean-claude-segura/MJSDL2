@@ -88,6 +88,7 @@ bool Board::CompLogicalBoard(std::tuple<double, double, double, int, int>& left,
 		(
 			zLeft <= zRight &&
 			(
+				(zLeft != zRight) ||
 				(std::floor(yLeft) >= std::floor(yRight)) && (std::floor(yLeft) != std::floor(yRight) || xLeft <= xRight)
 				//(std::ceil(yLeft) >= std::ceil(yRight)) && (std::ceil(yLeft) != std::ceil(yRight) || xLeft <= xRight)
 				)
