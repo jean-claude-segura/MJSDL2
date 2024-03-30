@@ -12,9 +12,9 @@ public:
 	static bool CompLogicalBoard(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right);
 	Board();
 	void InitBoard();
-	const int getDominoFromIndex(int index) { return TilesMap[index]; }
-	const bool getRemovableFromIndex(int index) { return Removable[index]; }
-	void RemovePairOfTiles(int, int);
+	const int getDominoFromIndex(const int index) { return TilesMap[index]; }
+	const bool getRemovableFromIndex(const int index) { return Removable[index]; }
+	void RemovePairOfTiles(const int, const int);
 	const bool IsBlocked() { return Blocked; }
 	bool IsEmpty() { return WhatsLeft.empty(); }
 	int getNumberOfTilesLeft() { return WhatsLeft.size(); }

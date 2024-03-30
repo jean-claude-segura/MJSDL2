@@ -20,14 +20,15 @@ public:
 	void Loop();
 
 private:
-	void LoadTile(int i, std::string & path);
+	void LoadTile(const int i, const std::string & path);
+	void LoadBackground(const std::string& path);
 	void FreeResources();
 	void LoadResources();
 	void Refresh();
 	void RefreshMouseMap();
 	void WhatsLeft();
-	void setClicked(int x, int y);
-	void ThrowException(int);
+	void setClicked(const int x, const int y);
+	void ThrowException(const int);
 
 	SDL_Window* window = NULL;
 	SDL_Surface* virtualscreen = NULL;

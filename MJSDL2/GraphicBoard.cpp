@@ -32,7 +32,6 @@ GraphicBoard::GraphicBoard()
 		ThrowException(1);
 	}
 
-
 	renderer = SDL_CreateRenderer(window, -1, 0);
 	if (renderer == NULL)
 	{
@@ -84,7 +83,7 @@ GraphicBoard::~GraphicBoard()
 	FreeResources();
 }
 
-void GraphicBoard::ThrowException(int i)
+void GraphicBoard::ThrowException(const int i)
 {
 	FreeResources();
 	throw i;
@@ -110,13 +109,24 @@ void GraphicBoard::FreeResources()
 	SDL_Quit();
 }
 
-void GraphicBoard::LoadTile(int i, std::string & path)
+void GraphicBoard::LoadTile(const int i, const std::string & path)
 {
 	auto temp = IMG_Load(path.c_str());
 	dominos[i] = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (dominos[i] == NULL)
 	{
 		std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	SDL_FreeSurface(temp);
+}
+
+void GraphicBoard::LoadBackground(const std::string& path)
+{
+	auto temp = IMG_Load(path.c_str());
+	background = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (background == NULL) {
+		std::cout << stderr << "could not create surface: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 	SDL_FreeSurface(temp);
@@ -181,17 +191,10 @@ void GraphicBoard::LoadResources()
 		LoadTile(i, path);
 	}
 
-	std::string path = "./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg";
-	auto temp = IMG_Load(path.c_str());
-	background = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-	if (background == NULL) {
-		std::cout << stderr << "could not create surface: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	SDL_FreeSurface(temp);
+	LoadBackground("./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg");
 }
 
-void GraphicBoard::setClicked(int x, int y)
+void GraphicBoard::setClicked(const int x, const int y)
 {
 	if (x < 10 && y < 10)
 	{
@@ -224,8 +227,8 @@ void GraphicBoard::setClicked(int x, int y)
 						int right = plateau.getDominoFromIndex(colour);
 						if (
 							left == right ||
-							(34 <= left && left < 38 && 34 <= right && right < 38) ||
-							(38 <= left && left < 42 && 38 <= right && right < 42)
+							(34 <= left && left < 38 && 34 <= right && right < 38) || // Saisons
+							(38 <= left && left < 42 && 38 <= right && right < 42) // Fleurs.
 							)
 						{
 							clicked[colour] = true;
@@ -260,22 +263,15 @@ void GraphicBoard::setClicked(int x, int y)
 
 void GraphicBoard::RefreshMouseMap()
 {
-	// copie du fond :
+	// Copie du fond :
 	SDL_FillRect(virtualmousescreen, NULL, SDL_MapRGB(virtualmousescreen->format, 0xFF, 0xFF, 0xFF));
 
 	/**/
-	// placement des dominos :
+	// Placement des dominos :
 	SDL_Rect coordonnees;
 
 	auto tWidth = (Width - (dominos[0]->w - 40) * 12) >> 1;
 	auto tHeight = (Height - (dominos[0]->h - 40) >> 3) >> 1;
-
-	/*if (plateau.getSpeciaux()[0] != -1)
-	{
-		coordonnees.x = -1 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
-		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-		SDL_SetColourOnOpaque(dominos[plateau.getSpeciaux()[0]], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 140, 0x00, 0x00));
-	}*/
 
 	for (auto& temp : plateau.getLogicalBoard())
 	{
@@ -289,36 +285,15 @@ void GraphicBoard::RefreshMouseMap()
 		SDL_SetColourOnOpaque(dominos[domino], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
 	}
 
-	/*if (plateau.getSpeciaux()[1] != -1)
-	{
-		coordonnees.x = 12 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
-		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-		SDL_SetColourOnOpaque(dominos[plateau.getSpeciaux()[1]], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 141, 0x00, 0x00));
-	}
-
-	if (plateau.getSpeciaux()[2] != -1)
-	{
-		coordonnees.x = 13 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
-		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-		SDL_SetColourOnOpaque(dominos[plateau.getSpeciaux()[2]], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 142, 0x00, 0x00));
-	}
-
-	if (plateau.getSpeciaux()[3] != -1)
-	{
-		coordonnees.x = 5.5 * (dominos[0]->w - 40) - 4 * 40 + tWidth;
-		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 4 * 40 + tHeight;
-		SDL_SetColourOnOpaque(dominos[plateau.getSpeciaux()[3]], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 143, 0x00, 0x00));
-	}*/
-
 	SDL_BlitScaled(virtualmousescreen, NULL, mousescreen, NULL);
 }
 
 void GraphicBoard::Refresh()
 {
-	// copie du fond :
+	// Copie du fond :
 	SDL_UpperBlit(background, NULL, virtualscreen, NULL);
 
-	// placement des dominos :
+	// Placement des dominos :
 	SDL_Rect coordonnees;
 
 	auto tWidth = (Width - (dominos[0]->w - 40) * 12) >> 1;
@@ -327,13 +302,6 @@ void GraphicBoard::Refresh()
 	coordonnees.x = -1 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
 	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
 
-	/*if (plateau.getSpeciaux()[0] != -1)
-	{
-		if (clicked[140])
-			SDL_UpperBlitInverted(dominos[plateau.getSpeciaux()[0]], virtualscreen, coordonnees);
-		else
-			SDL_UpperBlit(dominos[plateau.getSpeciaux()[0]], NULL, virtualscreen, &coordonnees);
-	}*/
 	for (auto& temp : plateau.getLogicalBoard())
 	{
 		auto x = std::get<0>(temp);
@@ -349,37 +317,6 @@ void GraphicBoard::Refresh()
 			SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
 	}
 
-	/*if (plateau.getSpeciaux()[1] != -1)
-	{
-		coordonnees.x = 12 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
-		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-		if (clicked[141])
-			SDL_UpperBlitXored(dominos[plateau.getSpeciaux()[1]], virtualscreen, coordonnees);
-		else
-			SDL_UpperBlit(dominos[plateau.getSpeciaux()[1]], NULL, virtualscreen, &coordonnees);
-	}
-
-	if (plateau.getSpeciaux()[2] != -1)
-	{
-		coordonnees.x = 13 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
-		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-		if (clicked[142])
-			SDL_UpperBlitNegate(dominos[plateau.getSpeciaux()[2]], virtualscreen, coordonnees);
-		else
-			SDL_UpperBlit(dominos[plateau.getSpeciaux()[2]], NULL, virtualscreen, &coordonnees);
-	}
-
-	if (plateau.getSpeciaux()[3] != -1)
-	{
-		coordonnees.x = 5.5 * (dominos[0]->w - 40) - 4 * 40 + tWidth;
-		coordonnees.y = 3.5 * (dominos[0]->h - 40) + 4 * 40 + tHeight;
-		if (clicked[143])
-			SDL_UpperBlitInverted(dominos[plateau.getSpeciaux()[3]], virtualscreen, coordonnees);
-		else
-			SDL_UpperBlit(dominos[plateau.getSpeciaux()[3]], NULL, virtualscreen, &coordonnees);
-	}*/
-
-	/**/
 	/*
 	SDL_Rect coordonnees;
 	int i = 0;

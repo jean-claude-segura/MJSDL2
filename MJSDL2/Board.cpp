@@ -227,7 +227,7 @@ void Board::InitBoard()
 	for (int i = 0; i < 144; ++i) WhatsLeft.emplace_back(i);
 }
 
-void Board::RemoveTile(int index)
+void Board::RemoveTile(const int index)
 {
 	TilesMap.erase(index);
 
@@ -298,7 +298,7 @@ void Board::RemoveTile(int index)
 	Blocked = max != 2;
 }
 
-void Board::RemovePairOfTiles(int first, int second)
+void Board::RemovePairOfTiles(const int first, const int second)
 {
 	RemoveTile(first);
 	RemoveTile(second);
