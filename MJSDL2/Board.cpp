@@ -221,10 +221,21 @@ void Board::InitBoard()
 	Removable[0x8e] = true;
 	Removable[0x8f] = true;
 
-	Blocked = false;
-
 	WhatsLeft.clear();
 	for (int i = 0; i < 144; ++i) WhatsLeft.emplace_back(i);
+	SetMoves();
+#ifdef _DEBUG
+	std::cout << std::dec << WhatsLeft.size() << " tile" << (WhatsLeft.size() > 1 ? "s" : "") << " left." << std::endl;
+	std::cout << std::dec << Moves.size() << " move" << (Moves.size() > 1 ? "s" : "") << " left." << std::endl;
+	auto it = Moves.begin();
+	if (it != Moves.end())
+	{
+		std::cout << "(" << it->first << ";" << it->second << ")";
+		for (++it; it != Moves.end(); ++it)
+			std::cout << ", (" << it->first << ";" << it->second << ")";
+		std::cout << "." << std::endl;
+	}
+#endif
 }
 
 void Board::RemoveTile(const int index)
@@ -280,9 +291,49 @@ void Board::RemoveTile(const int index)
 				Removable[mOccupationBoard[std::make_tuple<double, double, double>(x, y, z-1)]] = true;
 		}
 	}
+}
+
+void Board::RemovePairOfTiles(const int first, const int second)
+{
+	RemoveTile(first);
+	RemoveTile(second);
+	SetMoves();
+}
+
+void Board::Tree(std::vector<std::tuple<double, double, double, int, int>>::iterator itNextIn, std::vector<std::pair<int, int>>& Moves, int domino)
+{
+	auto itFirst = std::find_if(itNextIn, RemovableBoard.end(),
+		[domino](const std::tuple<double, double, double, int, int>& in)
+		{
+			return std::get<3>(in) == domino;
+		}
+	);
+	if (itFirst != RemovableBoard.end())
+	{
+		int indexFirst = std::get<4>(*itFirst);
+		auto itNext = itFirst;
+		do
+		{
+			itNext = std::find_if(++itNext, RemovableBoard.end(),
+				[domino](const std::tuple<double, double, double, int, int>& in)
+				{
+					return std::get<3>(in) == domino;
+				}
+			);
+			if (itNext != RemovableBoard.end())
+				Moves.emplace_back(std::make_pair(indexFirst, std::get<4>(*itNext)));
+		} while (itNext != RemovableBoard.end());
+
+		if (++itFirst != RemovableBoard.end())
+			Tree(itFirst, Moves, domino);
+	}
+}
+
+void Board::SetMoves()
+{
 	int max = 0;
 	std::map<int, int> TotalMovesLeftByTile;
-	for (std::map<int, int>::iterator it = TilesMap.begin(); it != TilesMap.end() && max < 2; ++it)
+	for (std::map<int, int>::iterator it = TilesMap.begin(); it != TilesMap.end() /* && max < 2*/; ++it)
 	{
 		if (Removable[it->first])
 		{
@@ -295,11 +346,20 @@ void Board::RemoveTile(const int index)
 		}
 	}
 
-	Blocked = max != 2;
-}
 
-void Board::RemovePairOfTiles(const int first, const int second)
-{
-	RemoveTile(first);
-	RemoveTile(second);
+	RemovableBoard.clear();
+	for (const auto& tuple : LogicalBoard)
+	{
+		if (Removable[std::get<4>(tuple)]) RemovableBoard.emplace_back(tuple);
+	}
+
+	Moves.clear();
+	for (std::map<int, int>::iterator it = TotalMovesLeftByTile.begin(); it != TotalMovesLeftByTile.end(); ++it)
+	{
+		if (it->second > 1)
+		{
+			int domino = it->first;
+			Tree(RemovableBoard.begin(), Moves, domino);
+		}
+	}
 }

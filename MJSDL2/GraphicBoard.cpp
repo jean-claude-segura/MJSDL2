@@ -201,6 +201,18 @@ void GraphicBoard::setClicked(const int x, const int y)
 		plateau.InitBoard();
 		RefreshMouseMap();
 		Refresh();
+#ifdef _DEBUG
+		std::cout << std::dec << plateau.getNumberOfTilesLeft() << " tile" << (plateau.getNumberOfTilesLeft() > 1 ? "s" : "") << " left." << std::endl;
+		std::cout << std::dec << plateau.HowManyMovesLeft() << " move" << (plateau.HowManyMovesLeft() > 1 ? "s" : "") << " left." << std::endl;
+		auto it = plateau.GetMovesLeft().begin();
+		if (it != plateau.GetMovesLeft().end())
+		{
+			std::cout << "(" << it->first << ";" << it->second << ")";
+			for (++it; it != plateau.GetMovesLeft().end(); ++it)
+				std::cout << ", (" << it->first << ";" << it->second << ")";
+			std::cout << "." << std::endl;
+		}
+#endif
 	}
 	else
 	{
@@ -220,6 +232,9 @@ void GraphicBoard::setClicked(const int x, const int y)
 						selected = colour;
 						clicked[colour] = true;
 						Refresh();
+#ifdef _DEBUG
+						std::cout << "Tile 0x" << std::hex << colour << " (" <<std::dec << colour << ")" << " clicked." << std::endl;
+#endif					
 					}
 					else
 					{
@@ -239,10 +254,25 @@ void GraphicBoard::setClicked(const int x, const int y)
 							Refresh();
 							clicked[temp] = false;
 							clicked[colour] = false;
+#ifdef _DEBUG
+							std::cout << std::dec << plateau.getNumberOfTilesLeft() << " tile" << (plateau.getNumberOfTilesLeft() > 1 ? "s" : "") << " left." << std::endl;
+							std::cout << "Tile 0x" << std::hex << colour << " (" <<std::dec << colour << ")" << " clicked." << std::endl;
+							std::cout << std::dec << plateau.HowManyMovesLeft() << " move" << (plateau.HowManyMovesLeft() > 1 ? "s" : "") << " left." << std::endl;
+							auto it = plateau.GetMovesLeft().begin();
+							if (it != plateau.GetMovesLeft().end())
+							{
+								std::cout << "(" << it->first << ";" << it->second << ")";
+								for (++it; it != plateau.GetMovesLeft().end(); ++it)
+									std::cout << ", (" << it->first << ";" << it->second << ")";
+								std::cout << "." << std::endl;
+							}
+#endif
 						}
 						else
 						{
-
+#ifdef _DEBUG
+							std::cout << "Tile 0x" << std::hex << colour << " (" <<std::dec << colour << ")" << " clicked." << std::endl;
+#endif					
 						}
 					}
 
@@ -252,12 +282,18 @@ void GraphicBoard::setClicked(const int x, const int y)
 					clicked[colour] = false;
 					selected = -1;
 					Refresh();
+#ifdef _DEBUG
+					std::cout << "Tile 0x" << std::hex << colour << " (" << std::dec << colour << ")" << " clicked." << std::endl;
+#endif					
 				}
 			}
-		}
+			else
+			{
 #ifdef _DEBUG
-		std::cout << "0x" << std::hex << colour << std::endl;
-#endif
+				std::cout << "Tile 0x" << std::hex << colour << " (" << std::dec << colour << ")" << " clicked." << std::endl;
+#endif					
+			}
+		}
 	}
 }
 
@@ -355,10 +391,6 @@ void GraphicBoard::Refresh()
 	}
 
 	SDL_DestroyTexture(texture);
-
-#ifdef _DEBUG
-	std::cout << std::dec << plateau.getNumberOfTilesLeft() << std::endl;
-#endif
 
 	if (plateau.IsBlocked())
 	{
