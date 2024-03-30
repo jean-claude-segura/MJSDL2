@@ -76,33 +76,13 @@ Board::Board()
 	InitBoard();
 }
 
-bool Board::CompLogicalBoard(std::tuple<double, double, double, int, int>& left, std::tuple<double, double, double, int, int>& right)
+bool Board::CompLogicalBoard(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
 {
-	auto zLeft = std::get<2>(left);
-	auto yLeft = std::get<1>(left);
-	auto xLeft = std::get<0>(left);
-	auto zRight = std::get<2>(right);
-	auto yRight = std::get<1>(right);
-	auto xRight = std::get<0>(right);
+	/*
 	auto yFloor = ((std::floor(yLeft) >= std::floor(yRight)) && (std::floor(yLeft) != std::floor(yRight) || xLeft <= xRight)); // Domino droite
 	auto yCeil = ((std::ceil(yLeft) >= std::ceil(yRight)) && (std::ceil(yLeft) != std::ceil(yRight) || xLeft <= xRight)); // Domino gauche
-	auto g = xLeft == -1 && yLeft == 3.5 && zLeft == 0;
-	auto h = xRight == 0 && yRight == 3 && zRight == 0;
-	auto i = xRight == 0 && yRight == 4 && zRight == 0;
-
-	auto cond = yCeil;
-	
-	auto finalcondition = (
-		zLeft <= zRight &&
-		(
-			(zLeft != zRight) ||
-			(
-				cond
-				)
-			)
-		);
-
-	return finalcondition;
+	auto yNormal = (yLeft >= yRight) && (yLeft != yRight || xLeft <= xRight); // Domino droite
+	*/
 	return
 		(
 			std::get<2>(left) <= std::get<2>(right) &&
@@ -135,7 +115,7 @@ void Board::InitBoard()
 	1,1,1,1 // Fleurs
 	};
 
-	for (int index = 0; index < 144; ++index)
+	for (int index = 0; index < 140; ++index)
 	{
 		int domino = 0;
 		do
@@ -154,8 +134,7 @@ void Board::InitBoard()
 	}
 
 	std::sort(LogicalBoard.begin(), LogicalBoard.end(), Board::CompLogicalBoard);
-
-	/*for (int index = 0; index < 4; ++index)
+	for (int index = 140; index < 144; ++index)
 	{
 		int domino = 0;
 		do
@@ -164,9 +143,46 @@ void Board::InitBoard()
 		} while (tempDominos[domino] == 0);
 		int debugdom = tempDominos[domino];
 		--tempDominos[domino];
-		Speciaux[index] = domino;
-		TilesMap[index + 140] = domino;
-	}*/
+		auto x = std::get<0>(InitIndexToCoord[index]);
+		auto y = std::get<1>(InitIndexToCoord[index]);
+		auto z = std::get<2>(InitIndexToCoord[index]);
+		auto m = std::make_tuple(x, y, z);
+		mOccupationBoard[m] = index;
+		std::vector<std::tuple<double, double, double, int, int>>::iterator it;
+		switch (index)
+		{
+		case 140:
+			it = LogicalBoard.begin();
+			break;
+		case 141:
+		{
+			auto t = std::make_tuple(12, 8, 0, 0, 0);
+			it = std::find_if(LogicalBoard.begin(), LogicalBoard.end(),
+				[&t](std::tuple<double, double, double, int, int>& in)
+				{
+					return Board::CompLogicalBoard(in, t);
+				}
+			);
+			break;
+		}
+		case 142:
+		{
+			auto t = std::make_tuple(13, 8, 0, 0, 0);
+			it = std::find_if(LogicalBoard.begin(), LogicalBoard.end(),
+				[&t](std::tuple<double, double, double, int, int>& in)
+				{
+					return Board::CompLogicalBoard(in, t);
+				}
+			);
+			break;
+		}
+		case 143:
+			it = LogicalBoard.end();
+			break;
+		}
+		LogicalBoard.insert(it, std::make_tuple(x, y, z, domino, index));
+		TilesMap[index] = domino;
+	}
 
 	for(int index = 0; index < 140; ++index) Removable[0x0] = false;
 	Removable[0x0] = true;
