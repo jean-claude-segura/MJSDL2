@@ -20,6 +20,7 @@ public:
 	void Loop();
 
 private:
+	void LoadTile(int i, std::string & path);
 	void FreeResources();
 	void LoadResources();
 	void Refresh();

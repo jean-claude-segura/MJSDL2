@@ -143,3 +143,43 @@ void SDL_SetColourOnOpaque(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordo
 	SDL_UpperBlit(coloured, NULL, dest, &coordonnees);
 	SDL_FreeSurface(coloured);
 }
+
+// https://tannerhelland.com/2011/10/01/grayscale-image-algorithm-vb6.html
+void SDL_SetGreyScale(SDL_Surface* src)
+{
+	// GIMP : Gray = (Red * 0.3 + Green * 0.59 + Blue * 0.11)
+	// BT.709 : Gray = (Red * 0.2126 + Green * 0.7152 + Blue * 0.0722)
+	// BT.601 : Gray = (Red * 0.299 + Green * 0.587 + Blue * 0.114)
+	if (SDL_MUSTLOCK(src))
+		SDL_LockSurface(src);
+
+	//src = SDL_ConvertSurfaceFormat(src, SDL_PIXELFORMAT_ARGB8888, 0);
+
+	Uint32* bufferZ = (Uint32*)src->pixels;
+	auto Amask = src->format->Amask;
+	auto RGBmask = 0xFFFFFFFF & ~Amask;
+
+	if (src->format->BitsPerPixel == 32)
+	{
+		for (int pixel = 0; pixel < src->h * src->w; ++pixel, ++bufferZ) //for (int pixel = 0; pixel < src->h * src->w; ++pixel, ++bufferZ)
+		{
+			auto r = (src->format->Rmask & *bufferZ) >> 16;
+			auto g = (src->format->Gmask & *bufferZ) >> 8;
+			auto b = src->format->Bmask & *bufferZ;
+			Uint32 rp = r * .3;
+			Uint32 gp = g * .59;
+			Uint32 bb = b * .11;
+			/**bufferZ = Uint32((src->format->Rmask & *bufferZ) * .2) & src->format->Rmask |
+				Uint32((src->format->Gmask & *bufferZ) * .2) & src->format->Gmask |
+				Uint32((src->format->Bmask & *bufferZ) * .2) & src->format->Bmask |
+				*bufferZ & Amask;*/
+			*bufferZ = Uint32((src->format->Rmask & *bufferZ) * .3) & src->format->Rmask |
+				Uint32((src->format->Gmask & *bufferZ) * .59) & src->format->Gmask |
+				Uint32((src->format->Bmask & *bufferZ) * .11) & src->format->Bmask |
+				*bufferZ & Amask;
+		}
+	}
+
+	if (SDL_MUSTLOCK(src))
+		SDL_UnlockSurface(src);
+}
