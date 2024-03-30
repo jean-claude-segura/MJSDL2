@@ -215,11 +215,17 @@ void Board::RemoveTile(int index)
 {
 	TilesMap.erase(index);
 
-	//if (index > 139) Speciaux[index - 140] = -1;
+	std::vector<std::tuple<double, double, double, int, int>>::iterator it = LogicalBoard.begin();
+	for (; it != LogicalBoard.end() && std::get<4>(*it) != index; ++it);
+	int x = std::get<0>(*it);
+	int y = std::get<1>(*it);
+	int z = std::get<2>(*it);
+	LogicalBoard.erase(it);
+	mOccupationBoard[std::make_tuple<double, double, double>(x, y, z)] = -1;
 
-	auto it = std::find(WhatsLeft.begin(), WhatsLeft.end(), index);
-	if (it != WhatsLeft.end())
-		WhatsLeft.erase(it);
+	auto itWL = std::find(WhatsLeft.begin(), WhatsLeft.end(), index);
+	if (itWL != WhatsLeft.end())
+		WhatsLeft.erase(itWL);
 
 	Removable[index] = false;
 
@@ -246,14 +252,6 @@ void Board::RemoveTile(int index)
 	}
 	else
 	{
-		std::vector<std::tuple<double, double, double, int, int>>::iterator it = LogicalBoard.begin();
-		for (; it != LogicalBoard.end() && std::get<4>(*it) != index; ++it);
-		int x = std::get<0>(*it);
-		int y = std::get<1>(*it);
-		int z = std::get<2>(*it);
-		LogicalBoard.erase(it);
-
-		mOccupationBoard[std::make_tuple<double, double, double>(x, y, z)] = -1;
 		if (x < 11 && mOccupationBoard[std::make_tuple<double, double, double>(x+1, y, z)] >= 0 && ( z > 3 || mOccupationBoard[std::make_tuple<double, double, double>(x+1, y, z+1)] < 0 ))
 			Removable[mOccupationBoard[std::make_tuple<double, double, double>(x+1, y, z)]] = true;
 		if (x > 0 && mOccupationBoard[std::make_tuple<double, double, double>(x-1, y, z)] >= 0 && (z > 3 || mOccupationBoard[std::make_tuple<double, double, double>(x-1, y, z+1)] < 0))
