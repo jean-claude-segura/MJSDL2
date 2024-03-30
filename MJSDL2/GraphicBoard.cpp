@@ -191,7 +191,7 @@ void GraphicBoard::LoadResources()
 		LoadTile(i, path);
 	}
 
-	LoadBackground("./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg");
+	//LoadBackground("./background/10013168.jpg");
 }
 
 void GraphicBoard::setClicked(const int x, const int y)
@@ -327,7 +327,8 @@ void GraphicBoard::RefreshMouseMap()
 void GraphicBoard::Refresh()
 {
 	// Copie du fond :
-	SDL_UpperBlit(background, NULL, virtualscreen, NULL);
+	//SDL_UpperBlit(background, NULL, virtualscreen, NULL);
+	SDL_BlitScaled(background, NULL, virtualscreen, NULL);
 
 	// Placement des dominos :
 	SDL_Rect coordonnees;
@@ -430,7 +431,8 @@ void GraphicBoard::Refresh()
 void GraphicBoard::WhatsLeft()
 {
 	// copie du fond :
-	SDL_UpperBlit(background, NULL, virtualscreen, NULL);
+	//SDL_UpperBlit(background, NULL, virtualscreen, NULL);
+	SDL_BlitScaled(background, NULL, virtualscreen, NULL);
 	/**/
 	auto tWitdh = (Width - (dominos[0]->h + 40 * 3)) >> 3;
 	SDL_Rect coordonnees;
