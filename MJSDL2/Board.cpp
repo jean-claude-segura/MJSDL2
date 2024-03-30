@@ -158,9 +158,9 @@ void Board::InitBoard()
 		{
 			auto t = std::make_tuple(12, 8, 0, 0, 0);
 			it = std::find_if(LogicalBoard.begin(), LogicalBoard.end(),
-				[&t](std::tuple<double, double, double, int, int>& in)
+				[&t](const std::tuple<double, double, double, int, int>& in)
 				{
-					return Board::CompLogicalBoard(in, t);
+					return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
 				}
 			);
 			break;
@@ -169,9 +169,9 @@ void Board::InitBoard()
 		{
 			auto t = std::make_tuple(13, 8, 0, 0, 0);
 			it = std::find_if(LogicalBoard.begin(), LogicalBoard.end(),
-				[&t](std::tuple<double, double, double, int, int>& in)
+				[&t](const std::tuple<double, double, double, int, int>& in)
 				{
-					return Board::CompLogicalBoard(in, t);
+					return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
 				}
 			);
 			break;
