@@ -53,7 +53,6 @@ GraphicBoard::GraphicBoard()
 		std::cout << stderr << "could not create virtual mouse screen: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
-
 	tampon = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
 	if (tampon == NULL)
 	{
@@ -61,7 +60,8 @@ GraphicBoard::GraphicBoard()
 		ThrowException(1);
 	}
 
-	mousescreen = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
+	mousescreen = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0xFF, 0xFF00, 0xFF0000, 0xFF000000);
+	//mousescreen = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
 	if (mousescreen == NULL)
 	{
 		std::cout << stderr << "could not create mouse screen: " << SDL_GetError() << std::endl;
@@ -110,6 +110,18 @@ void GraphicBoard::FreeResources()
 	SDL_Quit();
 }
 
+void GraphicBoard::LoadTile(int i, std::string & path)
+{
+	auto temp = IMG_Load(path.c_str());
+	dominos[i] = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (dominos[i] == NULL)
+	{
+		std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	SDL_FreeSurface(temp);
+}
+
 void GraphicBoard::LoadResources()
 {
 	// Bambous : 9*4
@@ -118,12 +130,7 @@ void GraphicBoard::LoadResources()
 		std::string path = "./tiles/MJs";
 		path += '1' + i;
 		path += "-.svg";
-		dominos[i] = IMG_Load(path.c_str());
-		if (dominos[i] == NULL)
-		{
-			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
+		LoadTile(i, path);
 	}
 	// Cercles : 9*4
 	for (int i = 9; i < 18; ++i)
@@ -131,12 +138,7 @@ void GraphicBoard::LoadResources()
 		std::string path = "./tiles/MJt";
 		path += '1' + i - 9;
 		path += "-.svg";
-		dominos[i] = IMG_Load(path.c_str());
-		if (dominos[i] == NULL)
-		{
-			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
+		LoadTile(i, path);
 	}
 	// Caractères : 9*4
 	for (int i = 18; i < 27; ++i)
@@ -144,12 +146,7 @@ void GraphicBoard::LoadResources()
 		std::string path = "./tiles/MJw";
 		path += '1' + i - 18;
 		path += "-.svg";
-		dominos[i] = IMG_Load(path.c_str());
-		if (dominos[i] == NULL)
-		{
-			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
+		LoadTile(i, path);
 	}
 	// Honneurs : 4*4
 	for (int i = 27; i < 31; ++i)
@@ -157,12 +154,7 @@ void GraphicBoard::LoadResources()
 		std::string path = "./tiles/MJf";
 		path += '1' + i - 27;
 		path += "-.svg";
-		dominos[i] = IMG_Load(path.c_str());
-		if (dominos[i] == NULL)
-		{
-			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
+		LoadTile(i, path);
 	}
 	// Dragons : 3*4
 	for (int i = 31; i < 34; ++i)
@@ -170,12 +162,7 @@ void GraphicBoard::LoadResources()
 		std::string path = "./tiles/MJd";
 		path += '1' + i - 31;
 		path += "-.svg";
-		dominos[i] = IMG_Load(path.c_str());
-		if (dominos[i] == NULL)
-		{
-			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
+		LoadTile(i, path);
 	}
 	// Saisons : 1 * 4
 	for (int i = 34; i < 38; ++i)
@@ -183,12 +170,7 @@ void GraphicBoard::LoadResources()
 		std::string path = "./tiles/MJh";
 		path += '1' + i - 34;
 		path += "-.svg";
-		dominos[i] = IMG_Load(path.c_str());
-		if (dominos[i] == NULL)
-		{
-			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
+		LoadTile(i, path);
 	}
 	// Fleurs : 1 * 4
 	for (int i = 38; i < 42; ++i)
@@ -196,18 +178,17 @@ void GraphicBoard::LoadResources()
 		std::string path = "./tiles/MJh";
 		path += '1' + i - 34;
 		path += "-.svg";
-		dominos[i] = IMG_Load(path.c_str());
-		if (dominos[i] == NULL)
-		{
-			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
+		LoadTile(i, path);
 	}
-	background = IMG_Load("./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg");
+
+	std::string path = "./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg";
+	auto temp = IMG_Load(path.c_str());
+	background = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (background == NULL) {
 		std::cout << stderr << "could not create surface: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
+	SDL_FreeSurface(temp);
 }
 
 void GraphicBoard::setClicked(int x, int y)
@@ -420,7 +401,8 @@ void GraphicBoard::Refresh()
 	/**/
 
 	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
-	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, &ScreenRect);
+	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, NULL);
+	//SDL_SetGreyScale(tampon);
 
 	SDL_RenderClear(renderer);
 	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
