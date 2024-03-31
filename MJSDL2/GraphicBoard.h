@@ -28,6 +28,7 @@ private:
 	void LoadTile(const int istart, const int iend, const std::string& path);
 	void LoadRamdomTileSet(const int istart, const int iend, const std::string& path);
 	void LoadTiles();
+	void LoadRandomBackground(const std::string& path);
 	void LoadBackground(const std::string& path);
 	void FreeResources();
 	void LoadResources();

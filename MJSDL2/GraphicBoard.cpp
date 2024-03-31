@@ -169,12 +169,28 @@ void GraphicBoard::LoadRamdomTileSet(const int istart, const int iend, const std
 		LoadTile(istart, iend, vPaths[uniform_dist(e1)]);
 	}
 }
+
+void GraphicBoard::LoadRandomBackground(const std::string& path)
+{
+	std::vector<std::string> vPaths;
+	for (const auto& entry : std::filesystem::directory_iterator(path))
+	{
+		if (!entry.is_directory())
+			vPaths.emplace_back(entry.path().string());
+	}
+		std::sort(vPaths.begin(), vPaths.end());
+		std::random_device r;
+		std::default_random_engine e1(r());
+		std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
+		LoadBackground(vPaths[uniform_dist(e1)]);
+}
+
 void GraphicBoard::LoadBackground(const std::string& path)
 {
 	auto temp = IMG_Load(path.c_str());
 	background = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (background == NULL) {
-		std::cout << stderr << "could not create surface: " << SDL_GetError() << std::endl;
+		std::cout << stderr << "could not create background: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 	SDL_FreeSurface(temp);
@@ -207,8 +223,10 @@ void GraphicBoard::LoadTiles()
 void GraphicBoard::LoadResources()
 {
 	LoadTiles();
-	LoadBackground("./background/10013168.jpg");
+	//LoadBackground("./background/10013168.jpg");
 	//LoadBackground("./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg");
+	LoadRandomBackground("./background/");
+
 	auto temp = IMG_Load("./tiles/Blank/tilemask.png");
 	tilemask = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (tilemask == NULL)
