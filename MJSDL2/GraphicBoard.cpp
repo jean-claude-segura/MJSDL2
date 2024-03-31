@@ -376,25 +376,31 @@ void GraphicBoard::Refresh()
 	}
 	/**/
 
+	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
+	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, NULL);
+
 	if (plateau.IsBlocked())
 	{
-		auto failure = SDL_CreateRGBSurface(0, virtualscreen->w, virtualscreen->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-		if (failure == NULL)
+		if (plateau.IsEmpty())
 		{
-			std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
-			ThrowException(1);
+			auto success = SDL_CreateRGBSurface(0, virtualscreen->w, virtualscreen->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			if (success == NULL)
+			{
+				std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
+				ThrowException(1);
+			}
+			else
+			{
+				SDL_FillRect(success, NULL, SDL_MapRGBA(success->format, 0x00, 0xFF, 0x00, 0xA0));
+				SDL_UpperBlit(success, NULL, virtualscreen, NULL);
+				SDL_FreeSurface(success);
+			}
 		}
 		else
 		{
-			SDL_FillRect(failure, NULL, plateau.IsEmpty() ? SDL_MapRGBA(failure->format, 0xFF, 0x00, 0x00, 0xA0) : SDL_MapRGBA(failure->format, 0x00, 0xFF, 0x00, 0xA0));
-			SDL_UpperBlit(failure, NULL, virtualscreen, NULL);
-			SDL_FreeSurface(failure);
+			SDL_SetGreyScale(tampon);
 		}
 	}
-
-	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
-	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, NULL);
-	//SDL_SetGreyScale(tampon);
 
 	SDL_RenderClear(renderer);
 	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);

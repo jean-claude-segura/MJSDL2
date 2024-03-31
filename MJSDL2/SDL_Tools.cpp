@@ -163,20 +163,12 @@ void SDL_SetGreyScale(SDL_Surface* src)
 	{
 		for (int pixel = 0; pixel < src->h * src->w; ++pixel, ++bufferZ) //for (int pixel = 0; pixel < src->h * src->w; ++pixel, ++bufferZ)
 		{
+			auto colour = *bufferZ;
 			auto r = (src->format->Rmask & *bufferZ) >> 16;
 			auto g = (src->format->Gmask & *bufferZ) >> 8;
 			auto b = src->format->Bmask & *bufferZ;
-			Uint32 rp = r * .3;
-			Uint32 gp = g * .59;
-			Uint32 bb = b * .11;
-			/**bufferZ = Uint32((src->format->Rmask & *bufferZ) * .2) & src->format->Rmask |
-				Uint32((src->format->Gmask & *bufferZ) * .2) & src->format->Gmask |
-				Uint32((src->format->Bmask & *bufferZ) * .2) & src->format->Bmask |
-				*bufferZ & Amask;*/
-			*bufferZ = Uint32((src->format->Rmask & *bufferZ) * .3) & src->format->Rmask |
-				Uint32((src->format->Gmask & *bufferZ) * .59) & src->format->Gmask |
-				Uint32((src->format->Bmask & *bufferZ) * .11) & src->format->Bmask |
-				*bufferZ & Amask;
+			Uint8 avg = (77 * r + 150 * g + 29 * b) >> 8;
+			*bufferZ = avg << 16 | avg << 8 | avg | Amask;
 		}
 	}
 
