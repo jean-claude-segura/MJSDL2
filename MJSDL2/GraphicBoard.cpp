@@ -116,18 +116,53 @@ void GraphicBoard::FreeResources()
 	SDL_Quit();
 }
 
-void GraphicBoard::LoadTile(const int i, const std::string & path)
+void GraphicBoard::LoadTile(const int istart, const int iend, const std::string & path)
 {
-	auto temp = IMG_Load(path.c_str());
-	dominos[i] = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-	if (dominos[i] == NULL)
+	std::vector<std::string> vPaths;
+	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
-		std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
-		ThrowException(1);
+		if(!entry.is_directory())
+			vPaths.emplace_back(entry.path().string());
 	}
-	SDL_FreeSurface(temp);
+	if(vPaths.size() != (iend - istart))
+		ThrowException(1);
+	std::sort(vPaths.begin(), vPaths.end());
+	auto it = vPaths.begin();
+	for (int i = istart; i < iend; ++i)
+	{
+		auto temp = IMG_Load(it->c_str());
+		dominos[i] = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+		if (dominos[i] == NULL)
+		{
+			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
+		SDL_FreeSurface(temp);
+		++it;
+	}
 }
 
+void GraphicBoard::LoadRamdomTileSet(const int istart, const int iend, const std::string& path)
+{
+	std::vector<std::string> vPaths;
+	for (const auto& entry : std::filesystem::directory_iterator(path))
+	{
+		if (entry.is_directory())
+			vPaths.emplace_back(entry.path().string());
+	}
+	if (vPaths.empty())
+	{
+		LoadTile(istart, iend, path);
+	}
+	else
+	{
+		std::sort(vPaths.begin(), vPaths.end());
+		std::random_device r;
+		std::default_random_engine e1(r());
+		std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
+		LoadTile(istart, iend, vPaths[uniform_dist(e1)]);
+	}
+}
 void GraphicBoard::LoadBackground(const std::string& path)
 {
 	auto temp = IMG_Load(path.c_str());
@@ -142,63 +177,28 @@ void GraphicBoard::LoadBackground(const std::string& path)
 void GraphicBoard::LoadResources()
 {
 	// Bambous : 9*4
-	for (int i = 0; i < 9; ++i)
-	{
-		std::string path = "./tiles/MJs";
-		path += '1' + i;
-		path += "-.svg";
-		LoadTile(i, path);
-	}
-	// Cercles : 9*4
-	for (int i = 9; i < 18; ++i)
-	{
-		std::string path = "./tiles/MJt";
-		path += '1' + i - 9;
-		path += "-.svg";
-		LoadTile(i, path);
-	}
-	// Caractères : 9*4
-	for (int i = 18; i < 27; ++i)
-	{
-		std::string path = "./tiles/MJw";
-		path += '1' + i - 18;
-		path += "-.svg";
-		LoadTile(i, path);
-	}
-	// Honneurs : 4*4
-	for (int i = 27; i < 31; ++i)
-	{
-		std::string path = "./tiles/MJf";
-		path += '1' + i - 27;
-		path += "-.svg";
-		LoadTile(i, path);
-	}
-	// Dragons : 3*4
-	for (int i = 31; i < 34; ++i)
-	{
-		std::string path = "./tiles/MJd";
-		path += '1' + i - 31;
-		path += "-.svg";
-		LoadTile(i, path);
-	}
-	// Saisons : 1 * 4
-	for (int i = 34; i < 38; ++i)
-	{
-		std::string path = "./tiles/MJh";
-		path += '1' + i - 34;
-		path += "-.svg";
-		LoadTile(i, path);
-	}
-	// Fleurs : 1 * 4
-	for (int i = 38; i < 42; ++i)
-	{
-		std::string path = "./tiles/MJh";
-		path += '1' + i - 34;
-		path += "-.svg";
-		LoadTile(i, path);
-	}
+	LoadRamdomTileSet(0, 9, "./tiles/Bambous/");
 
-	//LoadBackground("./background/10013168.jpg");
+	// Cercles : 9*4
+	LoadRamdomTileSet(9, 18, "./tiles/Cercles/");
+	
+	// Caractères : 9*4
+	LoadRamdomTileSet(18, 27, "./tiles/Caracteres/");
+	
+	// Honneurs : 4*4
+	LoadRamdomTileSet(27, 31, "./tiles/Honneurs/");
+	
+	// Dragons : 3*4
+	LoadRamdomTileSet(31, 34, "./tiles/Dragons/");
+	
+	// Saisons : 1 * 4
+	LoadRamdomTileSet(34, 38, "./tiles/Saisons/");
+	
+	// Fleurs : 1 * 4
+	LoadRamdomTileSet(38, 42, "./tiles/Fleurs/");
+
+	LoadBackground("./background/10013168.jpg");
+	//LoadBackground("./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg");
 }
 
 void GraphicBoard::LoadUI()

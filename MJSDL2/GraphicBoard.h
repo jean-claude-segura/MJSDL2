@@ -7,6 +7,7 @@
 #include "Board.h"
 #include <vector>
 #include <random>
+#include <filesystem>
 #include "SDL_Tools.h"
 
 // https://fr.vecteezy.com/photo/2680573-texture-bois-fond-texture-bois
@@ -23,7 +24,8 @@ public:
 	void Loop();
 
 private:
-	void LoadTile(const int i, const std::string& path);
+	void LoadTile(const int istart, const int iend, const std::string& path);
+	void LoadRamdomTileSet(const int istart, const int iend, const std::string& path);
 	void LoadBackground(const std::string& path);
 	void FreeResources();
 	void LoadResources();
