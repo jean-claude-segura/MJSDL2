@@ -442,15 +442,6 @@ void GraphicBoard::Refresh()
 		}
 	}
 	/**/
-	coordonnees.x = 0;
-	coordonnees.y = 0;
-	SDL_UpperBlit(restart, NULL, virtualscreen, &coordonnees);
-	coordonnees.x = 0;
-	coordonnees.y = 100;
-	SDL_UpperBlit(hint, NULL, virtualscreen, &coordonnees);
-
-	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
-	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, NULL);
 
 	if (plateau.IsBlocked())
 	{
@@ -471,9 +462,20 @@ void GraphicBoard::Refresh()
 		}
 		else
 		{
-			SDL_SetGreyScale(tampon);
+			SDL_SetGreyScale(virtualscreen);
 		}
 	}
+
+	// Interface :
+	coordonnees.x = 0;
+	coordonnees.y = 0;
+	SDL_UpperBlit(restart, NULL, virtualscreen, &coordonnees);
+	coordonnees.x = 0;
+	coordonnees.y = 100;
+	SDL_UpperBlit(hint, NULL, virtualscreen, &coordonnees);
+
+	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
+	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, NULL);
 
 	SDL_RenderClear(renderer);
 	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);

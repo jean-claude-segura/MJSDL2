@@ -184,7 +184,7 @@ void Board::InitBoard()
 		TilesMap[index] = domino;
 	}
 
-	for(int index = 0; index < 140; ++index) Removable[0x0] = false;
+	for(int index = 0; index < 140; ++index) Removable[index] = false;
 	Removable[0x0] = true;
 	Removable[0xb] = true;
 	Removable[0xc] = true;
