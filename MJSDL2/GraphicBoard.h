@@ -15,6 +15,7 @@
 
 #define	RESTART		0xFE
 #define	HINT		0xFD
+#define	TURN		0xFC
 
 class GraphicBoard
 {
@@ -26,6 +27,7 @@ public:
 private:
 	void LoadTile(const int istart, const int iend, const std::string& path);
 	void LoadRamdomTileSet(const int istart, const int iend, const std::string& path);
+	void LoadTiles();
 	void LoadBackground(const std::string& path);
 	void FreeResources();
 	void LoadResources();
@@ -45,6 +47,9 @@ private:
 	SDL_Surface* background = NULL;
 	SDL_Surface* restart = NULL;
 	SDL_Surface* hint = NULL;
+	SDL_Surface* turn = NULL;
+	SDL_Surface* tilemask = NULL;
+	SDL_Surface* bordermask = NULL;
 	//SDL_Surface* couches[5] = { NULL, NULL, NULL, NULL, NULL };
 	int Height, Width;
 	SDL_DisplayMode displayCapabilities;
@@ -72,4 +77,5 @@ private:
 	SDL_Rect ScreenRect;
 	int selected = -1;
 	std::vector<std::pair<int, int>>::const_iterator itNextMove;
+	bool turnboard = true;
 };

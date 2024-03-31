@@ -89,11 +89,66 @@ bool Board::CompLogicalBoard(const std::tuple<double, double, double, int, int>&
 			(
 				(std::get<2>(left) != std::get<2>(right)) ||
 				(std::get<1>(left) >= std::get<1>(right)) && (std::get<1>(left) != std::get<1>(right) || std::get<0>(left) <= std::get<0>(right))
-			)
-		);
-	return ! (std::get<2>(left) > std::get<2>(right) ||
+				)
+			);
+	return !(std::get<2>(left) > std::get<2>(right) ||
 		std::get<2>(left) == std::get<2>(right) &&
 		(std::get<1>(left) < std::get<1>(right) || std::get<1>(left) == std::get<1>(right) && std::get<0>(left) > std::get<0>(right)));
+}
+
+bool Board::CompLogicalBoardDown(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
+{
+	/*
+	auto yFloor = ((std::floor(yLeft) >= std::floor(yRight)) && (std::floor(yLeft) != std::floor(yRight) || xLeft <= xRight)); // Domino droite
+	auto yCeil = ((std::ceil(yLeft) >= std::ceil(yRight)) && (std::ceil(yLeft) != std::ceil(yRight) || xLeft <= xRight)); // Domino gauche
+	auto yNormal = (yLeft >= yRight) && (yLeft != yRight || xLeft <= xRight); // Domino droite
+	*/
+	return
+		(
+			std::get<2>(left) <= std::get<2>(right) &&
+			(
+				(std::get<2>(left) != std::get<2>(right)) ||
+				(std::get<1>(left) <= std::get<1>(right)) && (std::get<1>(left) != std::get<1>(right) || std::get<0>(left) <= std::get<0>(right))
+				)
+			);
+	return !(std::get<2>(left) > std::get<2>(right) ||
+		std::get<2>(left) == std::get<2>(right) &&
+		(std::get<1>(left) < std::get<1>(right) || std::get<1>(left) == std::get<1>(right) && std::get<0>(left) > std::get<0>(right)));
+}
+
+void Board::SortBoard(bool turn)
+{
+	std::sort(LogicalBoard.begin(), LogicalBoard.end(), turn ? Board::CompLogicalBoard : Board::CompLogicalBoardDown);
+	std::vector< std::tuple<double, double, double, int, int>>::iterator it;
+	for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 140; ++it);
+	if (it != LogicalBoard.end())
+	{
+		auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
+		LogicalBoard.erase(it);
+		LogicalBoard.insert(LogicalBoard.begin(), temp);
+	}
+	for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 141; ++it);
+	if (it != LogicalBoard.end())
+	{
+		auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
+		LogicalBoard.erase(it);
+		LogicalBoard.insert(LogicalBoard.end(), temp);
+	}
+	for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 142; ++it);
+	if (it != LogicalBoard.end())
+	{
+		auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
+		LogicalBoard.erase(it);
+		LogicalBoard.insert(LogicalBoard.end(), temp);
+	}
+	for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 143; ++it);
+	if (it != LogicalBoard.end())
+	{
+		auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
+		LogicalBoard.erase(it);
+		LogicalBoard.insert(LogicalBoard.end(), temp);
+	}
+
 }
 
 void Board::InitBoard()
@@ -134,6 +189,7 @@ void Board::InitBoard()
 	}
 
 	std::sort(LogicalBoard.begin(), LogicalBoard.end(), Board::CompLogicalBoard);
+
 	for (int index = 140; index < 144; ++index)
 	{
 		int domino = 0;
@@ -156,24 +212,26 @@ void Board::InitBoard()
 			break;
 		case 141:
 		{
-			auto t = std::make_tuple(12, 8, 0, 0, 0);
+			it = LogicalBoard.end();
+			/*auto t = std::make_tuple(12, 8, 0, 0, 0);
 			it = std::find_if(LogicalBoard.begin(), LogicalBoard.end(),
 				[&t](const std::tuple<double, double, double, int, int>& in)
 				{
 					return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
 				}
-			);
+			);*/
 			break;
 		}
 		case 142:
 		{
-			auto t = std::make_tuple(13, 8, 0, 0, 0);
+			it = LogicalBoard.end();
+			/*auto t = std::make_tuple(13, 8, 0, 0, 0);
 			it = std::find_if(LogicalBoard.begin(), LogicalBoard.end(),
 				[&t](const std::tuple<double, double, double, int, int>& in)
 				{
 					return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
 				}
-			);
+			);*/
 			break;
 		}
 		case 143:

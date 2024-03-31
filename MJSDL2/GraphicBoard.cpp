@@ -53,7 +53,6 @@ GraphicBoard::GraphicBoard()
 		ThrowException(1);
 	}
 
-	//tampon = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
 	tampon = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 	if (tampon == NULL)
 	{
@@ -62,7 +61,6 @@ GraphicBoard::GraphicBoard()
 	}
 
 	mousescreen = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0xFF, 0xFF00, 0xFF0000, 0xFF000000);
-	//mousescreen = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0, 0, 0, 0);
 	if (mousescreen == NULL)
 	{
 		std::cout << stderr << "could not create mouse screen: " << SDL_GetError() << std::endl;
@@ -111,6 +109,12 @@ void GraphicBoard::FreeResources()
 		SDL_FreeSurface(restart);
 	if (hint != NULL)
 		SDL_FreeSurface(hint);
+	if (turn != NULL)
+		SDL_FreeSurface(turn);
+	if (tilemask != NULL)
+		SDL_FreeSurface(tilemask);
+	if (bordermask != NULL)
+		SDL_FreeSurface(bordermask);
 	if (window != NULL)
 		SDL_DestroyWindow(window);
 	SDL_Quit();
@@ -130,6 +134,8 @@ void GraphicBoard::LoadTile(const int istart, const int iend, const std::string 
 	auto it = vPaths.begin();
 	for (int i = istart; i < iend; ++i)
 	{
+		if (dominos[i] != NULL)
+			SDL_FreeSurface(dominos[i]);
 		auto temp = IMG_Load(it->c_str());
 		dominos[i] = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 		if (dominos[i] == NULL)
@@ -174,35 +180,66 @@ void GraphicBoard::LoadBackground(const std::string& path)
 	SDL_FreeSurface(temp);
 }
 
-void GraphicBoard::LoadResources()
+void GraphicBoard::LoadTiles()
 {
 	// Bambous : 9*4
 	LoadRamdomTileSet(0, 9, "./tiles/Bambous/");
 
 	// Cercles : 9*4
 	LoadRamdomTileSet(9, 18, "./tiles/Cercles/");
-	
+
 	// Caractères : 9*4
 	LoadRamdomTileSet(18, 27, "./tiles/Caracteres/");
-	
+
 	// Honneurs : 4*4
 	LoadRamdomTileSet(27, 31, "./tiles/Honneurs/");
-	
+
 	// Dragons : 3*4
 	LoadRamdomTileSet(31, 34, "./tiles/Dragons/");
-	
+
 	// Saisons : 1 * 4
 	LoadRamdomTileSet(34, 38, "./tiles/Saisons/");
-	
+
 	// Fleurs : 1 * 4
 	LoadRamdomTileSet(38, 42, "./tiles/Fleurs/");
+}
 
+void GraphicBoard::LoadResources()
+{
+	LoadTiles();
 	LoadBackground("./background/10013168.jpg");
 	//LoadBackground("./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg");
+	auto temp = IMG_Load("./tiles/Blank/tilemask.png");
+	tilemask = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (tilemask == NULL)
+	{
+		std::cout << stderr << "could not create tile mask: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	SDL_FreeSurface(temp);
+
+	temp = IMG_Load("./tiles/Blank/border mask.png");
+	bordermask = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (bordermask == NULL)
+	{
+		std::cout << stderr << "could not create tile mask: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	SDL_FreeSurface(temp);
 }
 
 void GraphicBoard::LoadUI()
 {
+	turn = SDL_CreateRGBSurface(0, 100, 100, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+	if (turn == NULL)
+	{
+		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	else
+	{
+		SDL_FillRect(turn, NULL, SDL_MapRGBA(turn->format, 0xFF, 0x00, 0x00, 0xFF));
+	}
 	hint = SDL_CreateRGBSurface(0, 100, 100, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 	if (hint == NULL)
 	{
@@ -317,6 +354,7 @@ void GraphicBoard::setClicked(const int x, const int y)
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				plateau.InitBoard();
 				itNextMove = plateau.GetMovesLeft().begin();
+				LoadTiles();
 				RefreshMouseMap();
 				Refresh();
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
@@ -338,6 +376,14 @@ void GraphicBoard::setClicked(const int x, const int y)
 					Refresh();
 					++itNextMove;
 				}
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				break;
+			case TURN:
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				turnboard = !turnboard;
+				plateau.SortBoard(turnboard);
+				RefreshMouseMap();
+				Refresh();
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
 			default:
@@ -378,9 +424,40 @@ void GraphicBoard::RefreshMouseMap()
 		auto z = std::get<2>(temp);
 		auto domino = std::get<3>(temp);
 		auto index = std::get<4>(temp);
-		coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-		coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
-		SDL_SetColourOnOpaque(dominos[domino], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
+		if (turnboard)
+		{
+			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
+			SDL_SetColourOnOpaque(dominos[domino], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
+		}
+		else
+		{
+			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (dominos[0]->h - 40) - z * 40 + tHeight;
+			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_Rect coord;
+			coord.x = 0;
+			//coord.y = -39;
+			coord.y = -40;
+			SDL_UpperBlit(dominos[domino], NULL, temp, &coord);
+			auto tempBorderMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
+			flip_surface(tempBorderMask);
+			SDL_UpperBlitCut(tempBorderMask, temp);
+
+			auto tempMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(tilemask, NULL, tempMask, NULL);
+			flip_surface(tempMask);
+
+			SDL_UpperBlit(tempMask, NULL, temp, NULL);
+
+			//SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
+			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
+
+			SDL_FreeSurface(temp);
+			SDL_FreeSurface(tempMask);
+			SDL_FreeSurface(tempBorderMask);
+		}
 	}
 
 	coordonnees.x = 0;
@@ -389,6 +466,9 @@ void GraphicBoard::RefreshMouseMap()
 	coordonnees.x = 0;
 	coordonnees.y = 100;
 	SDL_SetColourOnOpaque(hint, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, HINT, 0x00, 0x00));
+	coordonnees.x = 0;
+	coordonnees.y = 200;
+	SDL_SetColourOnOpaque(turn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, TURN, 0x00, 0x00));
 
 	SDL_BlitScaled(virtualmousescreen, NULL, mousescreen, NULL);
 }
@@ -405,9 +485,6 @@ void GraphicBoard::Refresh()
 	auto tWidth = (Width - (dominos[0]->w - 40) * 12) >> 1;
 	auto tHeight = (Height - (dominos[0]->h - 40) >> 3) >> 1;
 
-	coordonnees.x = -1 * (dominos[0]->w - 40) - 0 * 40 + tWidth;
-	coordonnees.y = 3.5 * (dominos[0]->h - 40) + 0 * 40 + tHeight;
-
 	for (auto& temp : plateau.getLogicalBoard())
 	{
 		auto x = std::get<0>(temp);
@@ -415,12 +492,47 @@ void GraphicBoard::Refresh()
 		auto z = std::get<2>(temp);
 		auto domino = std::get<3>(temp);
 		auto index = std::get<4>(temp);
-		coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-		coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
-		if (clicked[index])
-			SDL_UpperBlitInverted(dominos[domino], virtualscreen, coordonnees);
+		if (turnboard)
+		{
+			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
+			if (clicked[index])
+				SDL_UpperBlitInverted(dominos[domino], virtualscreen, coordonnees);
+			else
+				SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
+		}
 		else
-			SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
+		{
+			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (dominos[0]->h - 40) - z * 40 + tHeight;
+			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_Rect coord;
+			coord.x = 0;
+			//coord.y = -39;
+			coord.y = -40;
+			SDL_UpperBlit(dominos[domino], NULL, temp, &coord);
+			auto tempBorderMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
+			flip_surface(tempBorderMask);
+			SDL_UpperBlitCut(tempBorderMask, temp);
+
+			auto tempMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(tilemask, NULL, tempMask, NULL);
+			flip_surface(tempMask);
+
+			SDL_UpperBlit(tempMask, NULL, temp, NULL);
+
+			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
+
+			if (clicked[index])
+				SDL_UpperBlitInverted(temp, virtualscreen, coordonnees);
+			else
+				SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
+
+			SDL_FreeSurface(temp);
+			SDL_FreeSurface(tempMask);
+			SDL_FreeSurface(tempBorderMask);
+		}
 	}
 
 	/*
@@ -473,6 +585,9 @@ void GraphicBoard::Refresh()
 	coordonnees.x = 0;
 	coordonnees.y = 100;
 	SDL_UpperBlit(hint, NULL, virtualscreen, &coordonnees);
+	coordonnees.x = 0;
+	coordonnees.y = 200;
+	SDL_UpperBlit(turn, NULL, virtualscreen, &coordonnees);
 
 	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
 	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, NULL);

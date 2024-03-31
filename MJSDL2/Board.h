@@ -10,6 +10,7 @@ class Board
 {
 public:
 	static bool CompLogicalBoard(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right);
+	static bool CompLogicalBoardDown(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right);
 	Board();
 	void InitBoard();
 	const int getDominoFromIndex(const int index) { return TilesMap[index]; }
@@ -22,6 +23,7 @@ public:
 	int getNumberOfTilesLeft() { return WhatsLeft.size(); }
 	const std::vector<int>& getWhatsLeft() { return WhatsLeft; }
 	const std::vector<std::tuple<double, double, double, int, int>>& getLogicalBoard() { return LogicalBoard; }
+	void SortBoard(bool turn);
 	
 private:
 	std::vector<int> WhatsLeft;

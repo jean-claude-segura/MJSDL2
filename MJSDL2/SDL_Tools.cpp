@@ -175,3 +175,43 @@ void SDL_SetGreyScale(SDL_Surface* src)
 	if (SDL_MUSTLOCK(src))
 		SDL_UnlockSurface(src);
 }
+
+void flip_surface(SDL_Surface* surface)
+{
+	SDL_LockSurface(surface);
+
+	int pitch = surface->pitch; // row size
+	char* temp = new char[pitch]; // intermediate buffer
+	char* pixels = (char*)surface->pixels;
+
+	for (int i = 0; i < surface->h / 2; ++i) {
+		// get pointers to the two rows to swap
+		char* row1 = pixels + i * pitch;
+		char* row2 = pixels + (surface->h - i - 1) * pitch;
+
+		// swap rows
+		memcpy(temp, row1, pitch);
+		memcpy(row1, row2, pitch);
+		memcpy(row2, temp, pitch);
+	}
+
+	delete[] temp;
+
+	SDL_UnlockSurface(surface);
+}
+
+void SDL_UpperBlitCut(SDL_Surface* src, SDL_Surface* dest)
+{
+	Uint32* bufferZ = (Uint32*)src->pixels;
+	Uint32* bufferX = (Uint32*)dest->pixels;
+	auto Amask = src->format->Amask;
+	auto RGBmask = 0xFFFFFFFF & ~Amask;
+
+	if (src->format->BitsPerPixel == 32)
+	{
+		for (int pixel = 0; pixel < src->h * src->w; ++pixel, ++bufferZ, ++bufferX)
+		{
+			*bufferX = (*bufferX & RGBmask) | (*bufferZ & Amask);
+		}
+	}
+}
