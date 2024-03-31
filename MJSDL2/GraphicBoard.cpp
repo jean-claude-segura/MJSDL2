@@ -370,6 +370,7 @@ void GraphicBoard::setClicked(const int x, const int y)
 			{
 			case RESTART:
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				turnboard = true;
 				plateau.InitBoard();
 				itNextMove = plateau.GetMovesLeft().begin();
 				LoadTiles();
