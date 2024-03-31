@@ -70,14 +70,15 @@ GraphicBoard::GraphicBoard()
 	}
 
 	LoadResources();
+	LoadUI();
 	
-	RefreshMouseMap();
-
-	Refresh();
-
 	/*screenSurface = SDL_GetWindowSurface(window);
 	SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));*/
 	//SDL_UpdateWindowSurface(window);
+
+	itNextMove = plateau.GetMovesLeft().begin();
+	RefreshMouseMap();
+	Refresh();
 }
 
 GraphicBoard::~GraphicBoard()
@@ -106,6 +107,10 @@ void GraphicBoard::FreeResources()
 	}
 	if (background != NULL)
 		SDL_FreeSurface(background);
+	if (restart != NULL)
+		SDL_FreeSurface(restart);
+	if (hint != NULL)
+		SDL_FreeSurface(hint);
 	if (window != NULL)
 		SDL_DestroyWindow(window);
 	SDL_Quit();
@@ -196,69 +201,74 @@ void GraphicBoard::LoadResources()
 	//LoadBackground("./background/10013168.jpg");
 }
 
-void GraphicBoard::setClicked(const int x, const int y)
+void GraphicBoard::LoadUI()
 {
-	if (x < 10 && y < 10)
+	hint = SDL_CreateRGBSurface(0, 100, 100, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+	if (hint == NULL)
 	{
-		plateau.InitBoard();
-		RefreshMouseMap();
-		Refresh();
-#ifdef _DEBUG
-		std::cout << std::dec << plateau.getNumberOfTilesLeft() << " tile" << (plateau.getNumberOfTilesLeft() > 1 ? "s" : "") << " left." << std::endl;
-		std::cout << std::dec << plateau.HowManyMovesLeft() << " move" << (plateau.HowManyMovesLeft() > 1 ? "s" : "") << " left." << std::endl;
-		auto it = plateau.GetMovesLeft().begin();
-		if (it != plateau.GetMovesLeft().end())
-		{
-			std::cout << "(" << it->first << ";" << it->second << ")";
-			for (++it; it != plateau.GetMovesLeft().end(); ++it)
-				std::cout << ", (" << it->first << ";" << it->second << ")";
-			std::cout << "." << std::endl;
-		}
-#endif
+		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
+		ThrowException(1);
 	}
 	else
 	{
-		Uint32* lpMouse = (Uint32*)mousescreen;
-		Uint32 colour;
-		int bpp = mousescreen->format->BytesPerPixel;
-		Uint8* p = (Uint8*)mousescreen->pixels + y * mousescreen->pitch + x * bpp;
-		colour = *(Uint32*)p & 0xFF;
-		if (0 <= colour && colour <= 143)
+		SDL_FillRect(hint, NULL, SDL_MapRGBA(hint->format, 0x00, 0xFF, 0x00, 0xFF));
+	}
+	restart = SDL_CreateRGBSurface(0, 100, 100, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+	if (restart == NULL)
+	{
+		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	else
+	{
+		SDL_FillRect(restart, NULL, SDL_MapRGBA(restart->format, 0x00, 0x00, 0xFF, 0xFF));
+	}
+}
+
+void GraphicBoard::setClicked(const int x, const int y)
+{
+	Uint8* p = (Uint8*)mousescreen->pixels + y * mousescreen->pitch + x * mousescreen->format->BytesPerPixel;
+	Uint32 index = *(Uint32*)p & 0xFF;
+	if (index != 255) // Not background.
+	{
+		if (index < 144)
 		{
-			if (plateau.getRemovableFromIndex(colour))
+			// Tile clicked :
+			if (!plateau.IsBlocked() && plateau.getRemovableFromIndex(index))
 			{
-				if (!clicked[colour])
+				if (!clicked[index])
 				{
 					if (selected == -1)
 					{
-						selected = colour;
-						clicked[colour] = true;
+						selected = index;
+						clicked[index] = true;
 						Refresh();
 #ifdef _DEBUG
-						std::cout << "Tile 0x" << std::hex << colour << " (" <<std::dec << colour << ")" << " clicked." << std::endl;
+						std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
 					}
 					else
 					{
 						int left = plateau.getDominoFromIndex(selected);
-						int right = plateau.getDominoFromIndex(colour);
+						int right = plateau.getDominoFromIndex(index);
 						if (
 							left == right ||
 							(34 <= left && left < 38 && 34 <= right && right < 38) || // Saisons
 							(38 <= left && left < 42 && 38 <= right && right < 42) // Fleurs.
 							)
 						{
-							clicked[colour] = true;
-							plateau.RemovePairOfTiles(selected, colour);
+							clicked[index] = true;
+							plateau.RemovePairOfTiles(selected, index);
 							int temp = selected;
 							selected = -1;
 							RefreshMouseMap();
 							Refresh();
+							itNextMove = plateau.GetMovesLeft().begin();
 							clicked[temp] = false;
-							clicked[colour] = false;
+							clicked[index] = false;
 #ifdef _DEBUG
 							std::cout << std::dec << plateau.getNumberOfTilesLeft() << " tile" << (plateau.getNumberOfTilesLeft() > 1 ? "s" : "") << " left." << std::endl;
-							std::cout << "Tile 0x" << std::hex << colour << " (" <<std::dec << colour << ")" << " clicked." << std::endl;
+							std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 							std::cout << std::dec << plateau.HowManyMovesLeft() << " move" << (plateau.HowManyMovesLeft() > 1 ? "s" : "") << " left." << std::endl;
 							auto it = plateau.GetMovesLeft().begin();
 							if (it != plateau.GetMovesLeft().end())
@@ -273,7 +283,7 @@ void GraphicBoard::setClicked(const int x, const int y)
 						else
 						{
 #ifdef _DEBUG
-							std::cout << "Tile 0x" << std::hex << colour << " (" <<std::dec << colour << ")" << " clicked." << std::endl;
+							std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
 						}
 					}
@@ -281,20 +291,70 @@ void GraphicBoard::setClicked(const int x, const int y)
 				}
 				else
 				{
-					clicked[colour] = false;
+					// Unclicked :
+					clicked[index] = false;
 					selected = -1;
 					Refresh();
 #ifdef _DEBUG
-					std::cout << "Tile 0x" << std::hex << colour << " (" << std::dec << colour << ")" << " clicked." << std::endl;
+					std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
 				}
 			}
 			else
 			{
 #ifdef _DEBUG
-				std::cout << "Tile 0x" << std::hex << colour << " (" << std::dec << colour << ")" << " clicked." << std::endl;
+				std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
 			}
+		}
+		else
+		{
+			// Interface clicked :
+			// UI buttons needed...
+			switch (index)
+			{
+			case RESTART:
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				plateau.InitBoard();
+				itNextMove = plateau.GetMovesLeft().begin();
+				RefreshMouseMap();
+				Refresh();
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				break;
+			case HINT:
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				if (itNextMove == plateau.GetMovesLeft().end())
+					itNextMove = plateau.GetMovesLeft().begin();
+				if (itNextMove != plateau.GetMovesLeft().end())
+				{
+					clicked[selected] = false;
+					selected = -1;
+					clicked[itNextMove->first] = true;
+					clicked[itNextMove->second] = true;
+					Refresh();
+					SDL_Delay(300);
+					clicked[itNextMove->first] = false;
+					clicked[itNextMove->second] = false;
+					Refresh();
+					++itNextMove;
+				}
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				break;
+			default:
+				break;
+			}
+#ifdef _DEBUG
+			std::cout << std::dec << plateau.getNumberOfTilesLeft() << " tile" << (plateau.getNumberOfTilesLeft() > 1 ? "s" : "") << " left." << std::endl;
+			std::cout << std::dec << plateau.HowManyMovesLeft() << " move" << (plateau.HowManyMovesLeft() > 1 ? "s" : "") << " left." << std::endl;
+			auto it = plateau.GetMovesLeft().begin();
+			if (it != plateau.GetMovesLeft().end())
+			{
+				std::cout << "(" << it->first << ";" << it->second << ")";
+				for (++it; it != plateau.GetMovesLeft().end(); ++it)
+					std::cout << ", (" << it->first << ";" << it->second << ")";
+				std::cout << "." << std::endl;
+			}
+#endif
 		}
 	}
 }
@@ -322,6 +382,13 @@ void GraphicBoard::RefreshMouseMap()
 		coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
 		SDL_SetColourOnOpaque(dominos[domino], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
 	}
+
+	coordonnees.x = 0;
+	coordonnees.y = 0;
+	SDL_SetColourOnOpaque(restart, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, RESTART, 0x00, 0x00));
+	coordonnees.x = 0;
+	coordonnees.y = 100;
+	SDL_SetColourOnOpaque(hint, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, HINT, 0x00, 0x00));
 
 	SDL_BlitScaled(virtualmousescreen, NULL, mousescreen, NULL);
 }
@@ -375,6 +442,12 @@ void GraphicBoard::Refresh()
 		}
 	}
 	/**/
+	coordonnees.x = 0;
+	coordonnees.y = 0;
+	SDL_UpperBlit(restart, NULL, virtualscreen, &coordonnees);
+	coordonnees.x = 0;
+	coordonnees.y = 100;
+	SDL_UpperBlit(hint, NULL, virtualscreen, &coordonnees);
 
 	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
 	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, NULL);
