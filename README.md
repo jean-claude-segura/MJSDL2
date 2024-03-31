@@ -11,5 +11,7 @@ https://commons.wikimedia.org/wiki/User:Cangjie6
 https://commons.wikimedia.org/wiki/File:MJt1-.svg
 
 Image by <a href="https://www.freepik.com/free-vector/flat-design-poker-table-background_88532214.htm">Freepik</a>
+Image by <a href="https://www.freepik.com/free-vector/flat-design-poker-table-background_88532181.htm">Freepik</a>
+
 Full attribution coming (There are 42 tiles! I need to confirm the author for each of them!).
-Seems ther're all Cangjie6's : https://commons.wikimedia.org/wiki/User:Cangjie6
+Seems they're all Cangjie6's : https://commons.wikimedia.org/wiki/User:Cangjie6
