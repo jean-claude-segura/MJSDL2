@@ -33,6 +33,9 @@ private:
 	void FreeResources();
 	void LoadResources();
 	void Refresh();
+#ifdef _DEBUG
+	void RefreshExample();
+#endif
 	void RefreshMouseMap();
 	void WhatsLeft();
 	void setClicked(const int x, const int y);
