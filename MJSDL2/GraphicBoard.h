@@ -32,7 +32,7 @@ private:
 	void LoadBackground(const std::string& path);
 	void FreeResources();
 	void LoadResources();
-	void Refresh();
+	void Refresh(bool);
 #ifdef _DEBUG
 	void RefreshExample();
 #endif

@@ -75,8 +75,7 @@ GraphicBoard::GraphicBoard()
 	//SDL_UpdateWindowSurface(window);
 
 	itNextMove = plateau.GetMovesLeft().begin();
-	RefreshMouseMap();
-	Refresh();
+	Refresh(true);
 }
 
 GraphicBoard::~GraphicBoard()
@@ -297,7 +296,7 @@ void GraphicBoard::setClicked(const int x, const int y)
 					{
 						selected = index;
 						clicked[index] = true;
-						Refresh();
+						Refresh(false);
 #ifdef _DEBUG
 						std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
@@ -316,8 +315,7 @@ void GraphicBoard::setClicked(const int x, const int y)
 							plateau.RemovePairOfTiles(selected, index);
 							int temp = selected;
 							selected = -1;
-							RefreshMouseMap();
-							Refresh();
+							Refresh(true);
 							itNextMove = plateau.GetMovesLeft().begin();
 							clicked[temp] = false;
 							clicked[index] = false;
@@ -349,7 +347,7 @@ void GraphicBoard::setClicked(const int x, const int y)
 					// Unclicked :
 					clicked[index] = false;
 					selected = -1;
-					Refresh();
+					Refresh(false);
 #ifdef _DEBUG
 					std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
@@ -374,8 +372,7 @@ void GraphicBoard::setClicked(const int x, const int y)
 				plateau.InitBoard();
 				itNextMove = plateau.GetMovesLeft().begin();
 				LoadTiles();
-				RefreshMouseMap();
-				Refresh();
+				Refresh(true);
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
 			case HINT:
@@ -388,11 +385,11 @@ void GraphicBoard::setClicked(const int x, const int y)
 					selected = -1;
 					clicked[itNextMove->first] = true;
 					clicked[itNextMove->second] = true;
-					Refresh();
-					SDL_Delay(300);
+					Refresh(false);
+					SDL_Delay(400);
 					clicked[itNextMove->first] = false;
 					clicked[itNextMove->second] = false;
-					Refresh();
+					Refresh(false);
 					++itNextMove;
 				}
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
@@ -401,8 +398,7 @@ void GraphicBoard::setClicked(const int x, const int y)
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				turnboard = !turnboard;
 				plateau.SortBoard(turnboard);
-				RefreshMouseMap();
-				Refresh();
+				Refresh(true);
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
 			default:
@@ -670,11 +666,12 @@ void GraphicBoard::RefreshExample()
 }
 #endif
 
-void GraphicBoard::Refresh()
+void GraphicBoard::Refresh(bool refreshMouseMap)
 {
 #ifdef _DEBUG
 	//return RefreshExample();
 #endif
+	if (refreshMouseMap) RefreshMouseMap();
 	// Copie du fond :
 	//SDL_UpperBlit(background, NULL, virtualscreen, NULL);
 	SDL_BlitScaled(background, NULL, virtualscreen, NULL);
@@ -916,7 +913,7 @@ void GraphicBoard::Loop()
 				WhatsLeft();
 				while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
 				//plateau.InitBoard();
-				Refresh();
+				Refresh(false);
 				break;
 			default:
 				break;
