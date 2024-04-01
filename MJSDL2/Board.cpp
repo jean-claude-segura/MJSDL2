@@ -139,7 +139,7 @@ void Board::SortBoard(bool turn)
 		);*/
 		auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
 		LogicalBoard.erase(it);
-		LogicalBoard.insert(LogicalBoard.end(), temp);
+		LogicalBoard.emplace_back(temp);
 	}
 	for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 142; ++it);
 	if (it != LogicalBoard.end())
@@ -153,14 +153,14 @@ void Board::SortBoard(bool turn)
 		);*/
 		auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
 		LogicalBoard.erase(it);
-		LogicalBoard.insert(LogicalBoard.end(), temp);
+		LogicalBoard.emplace_back(temp);
 	}
 	for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 143; ++it);
 	if (it != LogicalBoard.end())
 	{
 		auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
 		LogicalBoard.erase(it);
-		LogicalBoard.insert(LogicalBoard.end(), temp);
+		LogicalBoard.emplace_back(temp);
 	}
 
 }
