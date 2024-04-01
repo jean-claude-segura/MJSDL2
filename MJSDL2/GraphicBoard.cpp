@@ -236,7 +236,7 @@ void GraphicBoard::LoadResources()
 	}
 	SDL_FreeSurface(temp);
 
-	temp = IMG_Load("./tiles/Blank/border mask.png");
+	temp = IMG_Load("./tiles/Blank/blank.svg");
 	bordermask = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (bordermask == NULL)
 	{
@@ -451,24 +451,28 @@ void GraphicBoard::RefreshMouseMap()
 		}
 		else
 		{
+			auto tempBorderMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
+			flip_surface(tempBorderMask);
+			auto tempMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(tilemask, NULL, tempMask, NULL);
+			flip_surface(tempMask);
+
 			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
 			coordonnees.y = y * (dominos[0]->h - 40) - z * 40 + tHeight;
 			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			SDL_Rect coord;
 			coord.x = 0;
-			//coord.y = -39;
-			coord.y = -40;
+			coord.y = -38;
+
+			// 1 : on dessine le domino initial mais décalé en y :
 			SDL_UpperBlit(dominos[domino], NULL, temp, &coord);
-			auto tempBorderMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
-			flip_surface(tempBorderMask);
-			SDL_UpperBlitCut(tempBorderMask, temp);
 
-			auto tempMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(tilemask, NULL, tempMask, NULL);
-			flip_surface(tempMask);
-
+			// 2 : on dépose par dessus la version avec la face transparente mais retournée pour préserver l'intérieur (la face du domino initial) :
 			SDL_UpperBlit(tempMask, NULL, temp, NULL);
+
+			// On découpe l'extérieur avec l'image d'un domino vide dont l'extérieur est transparent pour masquer celui du domino initial :
+			SDL_UpperBlitCut(tempBorderMask, temp);
 
 			//SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
 			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
@@ -522,24 +526,28 @@ void GraphicBoard::Refresh()
 		}
 		else
 		{
+			auto tempBorderMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
+			flip_surface(tempBorderMask);
+			auto tempMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(tilemask, NULL, tempMask, NULL);
+			flip_surface(tempMask);
+
 			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
 			coordonnees.y = y * (dominos[0]->h - 40) - z * 40 + tHeight;
 			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			SDL_Rect coord;
 			coord.x = 0;
-			//coord.y = -39;
-			coord.y = -40;
+			coord.y = -38;
+
+			// 1 : on dessine le domino initial mais décalé en y :
 			SDL_UpperBlit(dominos[domino], NULL, temp, &coord);
-			auto tempBorderMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
-			flip_surface(tempBorderMask);
-			SDL_UpperBlitCut(tempBorderMask, temp);
 
-			auto tempMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(tilemask, NULL, tempMask, NULL);
-			flip_surface(tempMask);
-
+			// 2 : on dépose par dessus la version avec la face transparente mais retournée pour préserver l'intérieur (la face du domino initial) :
 			SDL_UpperBlit(tempMask, NULL, temp, NULL);
+
+			// On découpe l'extérieur avec l'image d'un domino vide dont l'extérieur est transparent pour masquer celui du domino initial :
+			SDL_UpperBlitCut(tempBorderMask, temp);
 
 			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
 
