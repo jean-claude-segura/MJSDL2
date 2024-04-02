@@ -16,6 +16,10 @@
 #define	RESTART		0xFE
 #define	HINT		0xFD
 #define	TURN		0xFC
+#define	NORTH		0xFB
+#define	SOUTH		0xFA
+#define	EAST		0xF9
+#define	WEST		0xF8
 
 class GraphicBoard
 {
@@ -25,6 +29,7 @@ public:
 	void Loop();
 
 private:
+	void LoadTile(SDL_Surface* &tileSurface, const char* szPath);
 	void LoadTile(const int istart, const int iend, const std::string& path);
 	void LoadRamdomTileSet(const int istart, const int iend, const std::string& path);
 	void LoadTiles();
@@ -54,6 +59,10 @@ private:
 	SDL_Surface* turn = NULL;
 	SDL_Surface* bordermask = NULL;
 	SDL_Surface* facedown = NULL;
+	SDL_Surface* Est = NULL;
+	SDL_Surface* Sud = NULL;
+	SDL_Surface* Ouest = NULL;
+	SDL_Surface* Nord = NULL;
 	//SDL_Surface* couches[5] = { NULL, NULL, NULL, NULL, NULL };
 	int Height, Width;
 	SDL_DisplayMode displayCapabilities;

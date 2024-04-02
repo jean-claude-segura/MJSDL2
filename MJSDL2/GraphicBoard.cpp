@@ -114,9 +114,31 @@ void GraphicBoard::FreeResources()
 		SDL_FreeSurface(bordermask);
 	if (facedown != NULL)
 		SDL_FreeSurface(facedown);
+	if (Nord != NULL)
+		SDL_FreeSurface(Nord);
+	if (Ouest != NULL)
+		SDL_FreeSurface(Ouest);
+	if (Sud != NULL)
+		SDL_FreeSurface(Sud);
+	if (Est != NULL)
+		SDL_FreeSurface(Est);
 	if (window != NULL)
 		SDL_DestroyWindow(window);
 	SDL_Quit();
+}
+
+void GraphicBoard::LoadTile(SDL_Surface* &tileSurface, const char * szPath)
+{
+	if (tileSurface != NULL)
+		SDL_FreeSurface(tileSurface);
+	auto temp = IMG_Load(szPath);
+	tileSurface = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (tileSurface == NULL)
+	{
+		std::cout << stderr << "could not create tile " << szPath << " : " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	SDL_FreeSurface(temp);
 }
 
 void GraphicBoard::LoadTile(const int istart, const int iend, const std::string & path)
@@ -133,16 +155,7 @@ void GraphicBoard::LoadTile(const int istart, const int iend, const std::string 
 	auto it = vPaths.begin();
 	for (int i = istart; i < iend; ++i)
 	{
-		if (dominos[i] != NULL)
-			SDL_FreeSurface(dominos[i]);
-		auto temp = IMG_Load(it->c_str());
-		dominos[i] = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-		if (dominos[i] == NULL)
-		{
-			std::cout << stderr << "could not create tile " << i << " : " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
-		SDL_FreeSurface(temp);
+		LoadTile(dominos[i], it->c_str());
 		++it;
 	}
 }
@@ -247,7 +260,65 @@ void GraphicBoard::LoadResources()
 
 void GraphicBoard::LoadUI()
 {
-	turn = SDL_CreateRGBSurface(0, 100, 100, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+	SDL_Surface* temp = NULL;
+	LoadTile(temp, "./interface/MJf1-.svg");
+	Est = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
+	if (Est == NULL)
+	{
+		std::cout << stderr << "could not create Est: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	else
+	{
+		SDL_BlitScaled(temp, NULL, Est, NULL);
+	}
+	SDL_FreeSurface(temp);
+
+	temp = NULL;
+	LoadTile(temp, "./interface/MJf2-.svg");
+	Sud = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
+	if (Sud == NULL)
+	{
+		std::cout << stderr << "could not create Sud: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	else
+	{
+		SDL_BlitScaled(temp, NULL, Sud, NULL);
+	}
+	SDL_FreeSurface(temp);
+
+	temp = NULL;
+	LoadTile(temp, "./interface/MJf3-.svg");
+	Ouest = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
+	if (Ouest == NULL)
+	{
+		std::cout << stderr << "could not create Ouest: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	else
+	{
+		SDL_BlitScaled(temp, NULL, Ouest, NULL);
+	}
+	SDL_FreeSurface(temp);
+
+	temp = NULL;
+	LoadTile(temp, "./interface/MJf4-.svg");
+	Nord = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
+	if (Nord == NULL)
+	{
+		std::cout << stderr << "could not create Nord: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	else
+	{
+		SDL_BlitScaled(temp, NULL, Nord, NULL);
+	}
+	SDL_FreeSurface(temp);
+
+	temp = NULL;
+	LoadTile(temp, "./interface/blank.svg");
+	turn = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
 	if (turn == NULL)
 	{
 		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
@@ -255,9 +326,12 @@ void GraphicBoard::LoadUI()
 	}
 	else
 	{
-		SDL_FillRect(turn, NULL, SDL_MapRGBA(turn->format, 0xFF, 0x00, 0x00, 0xFF));
+		SDL_BlitScaled(temp, NULL, turn, NULL);
 	}
-	hint = SDL_CreateRGBSurface(0, 100, 100, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+
+	temp = NULL;
+	LoadTile(temp, "./interface/blank.svg");
+	hint = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
 	if (hint == NULL)
 	{
 		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
@@ -265,9 +339,12 @@ void GraphicBoard::LoadUI()
 	}
 	else
 	{
-		SDL_FillRect(hint, NULL, SDL_MapRGBA(hint->format, 0x00, 0xFF, 0x00, 0xFF));
+		SDL_BlitScaled(temp, NULL, hint, NULL);
 	}
-	restart = SDL_CreateRGBSurface(0, 100, 100, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+
+	temp = NULL;
+	LoadTile(temp, "./interface/blank.svg");
+	restart = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
 	if (restart == NULL)
 	{
 		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
@@ -275,7 +352,7 @@ void GraphicBoard::LoadUI()
 	}
 	else
 	{
-		SDL_FillRect(restart, NULL, SDL_MapRGBA(restart->format, 0x00, 0x00, 0xFF, 0xFF));
+		SDL_BlitScaled(temp, NULL, restart, NULL);
 	}
 }
 
@@ -401,6 +478,24 @@ void GraphicBoard::setClicked(const int x, const int y)
 				Refresh(true);
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
+			case NORTH:
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				turnboard = false;
+				plateau.SortBoard(turnboard);
+				Refresh(true);
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				break;
+			case SOUTH:
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				turnboard = true;
+				plateau.SortBoard(turnboard);
+				Refresh(true);
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				break;
+			case EAST:
+				break;
+			case WEST:
+				break;
 			default:
 				break;
 			}
@@ -461,15 +556,35 @@ void GraphicBoard::RefreshMouseMap()
 		}
 	}
 
+	// Ouest :
 	coordonnees.x = 0;
+	coordonnees.y = (restart->h - 20) * 4;
+	SDL_SetColourOnOpaque(Ouest, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, WEST, 0x00, 0x00));
+	// Sud :
+	coordonnees.x = Nord->w - 20;
+	coordonnees.y = (restart->h - 20) * 5;
+	SDL_SetColourOnOpaque(Sud, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, SOUTH, 0x00, 0x00));
+	// Turn :
+	coordonnees.x = restart->w - 20;
+	coordonnees.y = (restart->h - 20) * 4;
+	SDL_SetColourOnOpaque(turn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, TURN, 0x00, 0x00));
+	// Nord :
+	coordonnees.x = restart->w - 20;
+	coordonnees.y = (restart->h - 20) * 3;
+	SDL_SetColourOnOpaque(Nord, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, NORTH, 0x00, 0x00));
+	// Est :
+	coordonnees.x = (restart->w << 1) - 40;
+	coordonnees.y = (restart->h - 20) * 4;
+	SDL_SetColourOnOpaque(Est, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, EAST, 0x00, 0x00));
+	// Hint :
+	coordonnees.x = restart->w - 20;
+	coordonnees.y = restart->h - 20;
+	SDL_SetColourOnOpaque(hint, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, HINT, 0x00, 0x00));
+	// Restart :
+	coordonnees.x = restart->w - 20;
 	coordonnees.y = 0;
 	SDL_SetColourOnOpaque(restart, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, RESTART, 0x00, 0x00));
-	coordonnees.x = 0;
-	coordonnees.y = 100;
-	SDL_SetColourOnOpaque(hint, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, HINT, 0x00, 0x00));
-	coordonnees.x = 0;
-	coordonnees.y = 200;
-	SDL_SetColourOnOpaque(turn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, TURN, 0x00, 0x00));
+
 
 	SDL_BlitScaled(virtualmousescreen, NULL, mousescreen, NULL);
 }
@@ -720,15 +835,35 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 	}
 
 	// Interface :
+	// Ouest :
 	coordonnees.x = 0;
+	coordonnees.y = (restart->h - 20) * 4;
+	SDL_UpperBlit(Ouest, NULL, virtualscreen, &coordonnees);
+	// Sud :
+	coordonnees.x = Nord->w - 20;
+	coordonnees.y = (restart->h - 20) * 5;
+	SDL_UpperBlit(Sud, NULL, virtualscreen, &coordonnees);
+	// Turn :
+	coordonnees.x = restart->w - 20;
+	coordonnees.y = (restart->h - 20) * 4;
+	SDL_UpperBlit(turn, NULL, virtualscreen, &coordonnees);
+	// Nord :
+	coordonnees.x = restart->w - 20;
+	coordonnees.y = (restart->h - 20) * 3;
+	SDL_UpperBlit(Nord, NULL, virtualscreen, &coordonnees);
+	// Est :
+	coordonnees.x = (restart->w << 1) - 40;
+	coordonnees.y = (restart->h - 20) * 4;
+	SDL_UpperBlit(Est, NULL, virtualscreen, &coordonnees);
+	// Hint :
+	coordonnees.x = restart->w - 20;
+	coordonnees.y = restart->h - 20;
+	SDL_UpperBlit(hint, NULL, virtualscreen, &coordonnees);
+	// Restart :
+	coordonnees.x = restart->w - 20;
 	coordonnees.y = 0;
 	SDL_UpperBlit(restart, NULL, virtualscreen, &coordonnees);
-	coordonnees.x = 0;
-	coordonnees.y = 100;
-	SDL_UpperBlit(hint, NULL, virtualscreen, &coordonnees);
-	coordonnees.x = 0;
-	coordonnees.y = 200;
-	SDL_UpperBlit(turn, NULL, virtualscreen, &coordonnees);
+	/**/
 
 #ifdef _DEBUG
 	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
