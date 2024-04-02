@@ -12,6 +12,9 @@ Image by <a href="https://www.freepik.com/free-vector/flat-design-poker-table-ba
 
 Image by <a href="https://www.freepik.com/free-vector/flat-design-poker-table-background_88532181.htm">Freepik</a>
 
+The file "facedown.svg" is licensed under the <a href="https://en.wikipedia.org/wiki/Creative_Commons">Creative Commons</a>
+<a href="https://creativecommons.org/licenses/by-sa/4.0/deed.en">Attribution-Share Alike 4.0 International</a> license (Based on Cangjie6's work).
+
 Tiles from :
 
 https://en.wikipedia.org/wiki/Mahjong_tiles
