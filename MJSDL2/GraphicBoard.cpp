@@ -206,8 +206,8 @@ void GraphicBoard::LoadTiles()
 	// Caractères : 9*4
 	LoadRamdomTileSet(18, 27, "./tiles/Caracteres/");
 
-	// Honneurs : 4*4
-	LoadRamdomTileSet(27, 31, "./tiles/Honneurs/");
+	// Vents : 4*4
+	LoadRamdomTileSet(27, 31, "./tiles/Vents/");
 
 	// Dragons : 3*4
 	LoadRamdomTileSet(31, 34, "./tiles/Dragons/");
