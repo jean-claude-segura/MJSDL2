@@ -110,10 +110,10 @@ void GraphicBoard::FreeResources()
 		SDL_FreeSurface(hint);
 	if (turn != NULL)
 		SDL_FreeSurface(turn);
-	if (tilemask != NULL)
-		SDL_FreeSurface(tilemask);
 	if (bordermask != NULL)
 		SDL_FreeSurface(bordermask);
+	if (facedown != NULL)
+		SDL_FreeSurface(facedown);
 	if (window != NULL)
 		SDL_DestroyWindow(window);
 	SDL_Quit();
@@ -226,18 +226,18 @@ void GraphicBoard::LoadResources()
 	//LoadBackground("./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg");
 	LoadRandomBackground("./background/");
 
-	auto temp = IMG_Load("./tiles/Blank/tilemask.png");
-	tilemask = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-	if (tilemask == NULL)
+	auto temp = IMG_Load("./tiles/Blank/blank.svg");
+	bordermask = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (bordermask == NULL)
 	{
 		std::cout << stderr << "could not create tile mask: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 	SDL_FreeSurface(temp);
 
-	temp = IMG_Load("./tiles/Blank/blank.svg");
-	bordermask = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-	if (bordermask == NULL)
+	temp = IMG_Load("./tiles/Blank/facedown.svg");
+	facedown = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (facedown == NULL)
 	{
 		std::cout << stderr << "could not create tile mask: " << SDL_GetError() << std::endl;
 		ThrowException(1);
@@ -447,28 +447,26 @@ void GraphicBoard::RefreshMouseMap()
 		}
 		else
 		{
-			auto tempBorderMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			auto tempBorderMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
 			flip_surface(tempBorderMask);
-			auto tempMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(tilemask, NULL, tempMask, NULL);
-			flip_surface(tempMask);
+			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 
 			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
 			coordonnees.y = y * (dominos[0]->h - 40) - z * 40 + tHeight;
-			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			SDL_Rect coord;
 			coord.x = 0;
 			coord.y = -38;
 
-			// 1 : on dessine le domino initial mais décalé en y :
-			SDL_UpperBlit(dominos[domino], NULL, temp, &coord);
-
-			// 2 : on dépose par dessus la version avec la face transparente mais retournée pour préserver l'intérieur (la face du domino initial) :
-			SDL_UpperBlit(tempMask, NULL, temp, NULL);
-
-			// On découpe l'extérieur avec l'image d'un domino vide dont l'extérieur est transparent pour masquer celui du domino initial :
-			SDL_UpperBlitCut(tempBorderMask, temp);
+			// Récupération du domino :
+			SDL_UpperBlit(dominos[domino], NULL, tempMask, NULL);
+			// Découpage de tout sauf de la face :
+			SDL_UpperBlitCut(facedown, tempMask);
+			// Dessin du domino sans face :
+			SDL_UpperBlit(tempBorderMask, NULL, temp, NULL);
+			// Dessin de la face sur de domino :
+			SDL_UpperBlit(tempMask, NULL, temp, &coord);
 
 			//SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
 			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
@@ -507,6 +505,7 @@ void GraphicBoard::RefreshExample()
 
 	auto& tile = *plateau.getLogicalBoard().begin();
 	{
+		/*
 		auto x = std::get<0>(tile);
 		auto y = std::get<1>(tile);
 		auto z = std::get<2>(tile);
@@ -520,7 +519,8 @@ void GraphicBoard::RefreshExample()
 		SDL_UpperBlit(tilemask, NULL, tempMask, NULL);
 		flip_surface(tempMask);
 
-
+		/**/
+		/*
 		{
 			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 
@@ -534,7 +534,7 @@ void GraphicBoard::RefreshExample()
 			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
 			SDL_FreeSurface(temp);
 		}
-		/**/
+		/*
 		{
 			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			x += 2;
@@ -548,7 +548,7 @@ void GraphicBoard::RefreshExample()
 			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
 			SDL_FreeSurface(temp);
 		}
-		/**/
+		/*
 		{
 			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			x += 2;
@@ -569,7 +569,7 @@ void GraphicBoard::RefreshExample()
 			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
 			SDL_FreeSurface(temp);
 		}
-		/**/
+		/*
 		{
 			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			x += 2;
@@ -585,7 +585,7 @@ void GraphicBoard::RefreshExample()
 			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
 			SDL_FreeSurface(temp);
 		}
-		/**/
+		/*
 		{
 			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			x += 2;
@@ -607,7 +607,7 @@ void GraphicBoard::RefreshExample()
 			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
 			SDL_FreeSurface(temp);
 		}
-		/**/
+		/*
 		{
 			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			x += 2;
@@ -627,9 +627,14 @@ void GraphicBoard::RefreshExample()
 
 			SDL_FreeSurface(temp);
 		}
+		/**/
+
+		/*
 
 		SDL_FreeSurface(tempMask);
 		SDL_FreeSurface(tempBorderMask);
+		SDL_FreeSurface(tilemask);
+		/**/
 	}
 
 	// Interface :
@@ -700,28 +705,26 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 		}
 		else
 		{
-			auto tempBorderMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			auto tempBorderMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
 			flip_surface(tempBorderMask);
-			auto tempMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(tilemask, NULL, tempMask, NULL);
-			flip_surface(tempMask);
+			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 
 			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
 			coordonnees.y = y * (dominos[0]->h - 40) - z * 40 + tHeight;
-			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			SDL_Rect coord;
 			coord.x = 0;
 			coord.y = -38;
 
-			// 1 : on dessine le domino initial mais décalé en y :
-			SDL_UpperBlit(dominos[domino], NULL, temp, &coord);
-
-			// 2 : on dépose par dessus la version avec la face transparente mais retournée pour préserver l'intérieur (la face du domino initial) :
-			SDL_UpperBlit(tempMask, NULL, temp, NULL);
-
-			// On découpe l'extérieur avec l'image d'un domino vide dont l'extérieur est transparent pour masquer celui du domino initial :
-			SDL_UpperBlitCut(tempBorderMask, temp);
+			// Récupération du domino :
+			SDL_UpperBlit(dominos[domino], NULL, tempMask, NULL);
+			// Découpage de tout sauf de la face :
+			SDL_UpperBlitCut(facedown, tempMask);
+			// Dessin du domino sans face :
+			SDL_UpperBlit(tempBorderMask, NULL, temp, NULL);
+			// Dessin de la face sur de domino :
+			SDL_UpperBlit(tempMask, NULL, temp, &coord);
 
 			if (clicked[index])
 				SDL_UpperBlitInverted(temp, virtualscreen, coordonnees);

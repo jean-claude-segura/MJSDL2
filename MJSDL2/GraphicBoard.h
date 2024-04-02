@@ -52,8 +52,8 @@ private:
 	SDL_Surface* restart = NULL;
 	SDL_Surface* hint = NULL;
 	SDL_Surface* turn = NULL;
-	SDL_Surface* tilemask = NULL;
 	SDL_Surface* bordermask = NULL;
+	SDL_Surface* facedown = NULL;
 	//SDL_Surface* couches[5] = { NULL, NULL, NULL, NULL, NULL };
 	int Height, Width;
 	SDL_DisplayMode displayCapabilities;
