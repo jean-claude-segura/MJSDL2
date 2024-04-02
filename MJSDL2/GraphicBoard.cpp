@@ -429,8 +429,8 @@ void GraphicBoard::RefreshMouseMap()
 	// Placement des dominos :
 	SDL_Rect coordonnees;
 
-	auto tWidth = (Width - (dominos[0]->w - 40) * 12) >> 1;
-	auto tHeight = (Height - (dominos[0]->h - 40) >> 3) >> 1;
+	auto tWidth = (Width - (bordermask->w - 40) * 12) >> 1;
+	auto tHeight = (Height - (bordermask->h - 40) >> 3) >> 1;
 
 	for (auto& tile : plateau.getLogicalBoard())
 	{
@@ -441,39 +441,23 @@ void GraphicBoard::RefreshMouseMap()
 		auto index = std::get<4>(tile);
 		if (turnboard)
 		{
-			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
+			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
 			SDL_SetColourOnOpaque(dominos[domino], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
 		}
 		else
 		{
-			auto tempBorderMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
-			flip_surface(tempBorderMask);
-			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-
-			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (dominos[0]->h - 40) - z * 40 + tHeight;
+			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
 			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_Rect coord;
-			coord.x = 0;
-			coord.y = -38;
 
 			// Récupération du domino :
-			SDL_UpperBlit(dominos[domino], NULL, tempMask, NULL);
-			// Découpage de tout sauf de la face :
-			SDL_UpperBlitCut(facedown, tempMask);
-			// Dessin du domino sans face :
-			SDL_UpperBlit(tempBorderMask, NULL, temp, NULL);
-			// Dessin de la face sur de domino :
-			SDL_UpperBlit(tempMask, NULL, temp, &coord);
+			SDL_UpperBlit(bordermask, NULL, temp, NULL);
+			flip_surface(temp);
 
-			//SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
 			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
 
 			SDL_FreeSurface(temp);
-			SDL_FreeSurface(tempMask);
-			SDL_FreeSurface(tempBorderMask);
 		}
 	}
 
@@ -500,140 +484,98 @@ void GraphicBoard::RefreshExample()
 	// Placement des dominos :
 	SDL_Rect coordonnees;
 
-	auto tWidth = (Width - (dominos[0]->w - 40) * 12) >> 1;
-	auto tHeight = (Height - (dominos[0]->h - 40) >> 3) >> 1;
+	auto tWidth = (Width - (bordermask->w - 40) * 12) >> 1;
+	auto tHeight = (Height - (bordermask->h - 40) >> 3) >> 1;
 
 	auto& tile = *plateau.getLogicalBoard().begin();
 	{
-		/*
+		/**/
 		auto x = std::get<0>(tile);
 		auto y = std::get<1>(tile);
 		auto z = std::get<2>(tile);
 		auto domino = std::get<3>(tile);
 		auto index = std::get<4>(tile);
 
-		auto tempBorderMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-		SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
-		flip_surface(tempBorderMask);
-		auto tempMask = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-		SDL_UpperBlit(tilemask, NULL, tempMask, NULL);
-		flip_surface(tempMask);
-
 		/**/
-		/*
+		/**/
 		{
-			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-
-			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (dominos[0]->h - 40) - z * 40 + tHeight;
+			x += 2;
 			SDL_Rect coord;
 			coord.x = 0;
 			coord.y = 0;
-			// 1 : domino intial :
-			SDL_UpperBlit(dominos[domino], NULL, temp, &coord);
-			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
-			SDL_FreeSurface(temp);
-		}
-		/*
-		{
-			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			x += 2;
-			SDL_Rect coord;
-			coord.x = 0;
-			coord.y = -38;
-			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (dominos[0]->h - 40) - z * 40 + tHeight;
-			// 1 : on dessine le domino initial mais décalé en y :
-			SDL_UpperBlit(dominos[domino], NULL, temp, &coord);
-			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
-			SDL_FreeSurface(temp);
-		}
-		/*
-		{
-			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			x += 2;
-			SDL_Rect coord;
-			coord.x = 0;
-			coord.y = -38;
-			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = (y-1) * (dominos[0]->h - 40) - z * 40 + tHeight;
-			// 1 : on dessine le domino initial mais décalé en y :
-			SDL_UpperBlit(dominos[domino], NULL, temp, &coord);
-			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
-			SDL_FreeSurface(temp);
-			// 2 : on dépose par dessus la version avec la face transparente mais retournée pour préserver l'intérieur (la face du domino initial) :
-			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = (y + 1) * (dominos[0]->h - 40) - z * 40 + tHeight;
-			temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(tempMask, NULL, temp, NULL);
-			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
-			SDL_FreeSurface(temp);
-		}
-		/*
-		{
-			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			x += 2;
-			SDL_Rect coord;
-			coord.x = 0;
-			coord.y = -38;
-			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (dominos[0]->h - 40) - z * 40 + tHeight;
-			// 1 : on dessine le domino initial mais décalé en y :
-			SDL_UpperBlit(dominos[domino], NULL, temp, &coord);
-			// 2 : on dépose par dessus la version avec la face transparente mais retournée pour préserver l'intérieur (la face du domino initial) :
-			SDL_UpperBlit(tempMask, NULL, temp, NULL);
-			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
-			SDL_FreeSurface(temp);
-		}
-		/*
-		{
-			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			x += 2;
-			SDL_Rect coord;
-			coord.x = 0;
-			coord.y = -38;
-			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = (y - 1) * (dominos[0]->h - 40) - z * 40 + tHeight;
-			// 1 : on dessine le domino initial mais décalé en y :
-			SDL_UpperBlit(dominos[domino], NULL, temp, &coord);
-			// 2 : on dépose par dessus la version avec la face transparente mais retournée pour préserver l'intérieur (la face du domino initial) :
-			SDL_UpperBlit(tempMask, NULL, temp, NULL);
-			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
-			SDL_FreeSurface(temp);
-			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = (y + 1) * (dominos[0]->h - 40) - z * 40 + tHeight;
-			temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(tempBorderMask, NULL, temp, NULL);
-			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
-			SDL_FreeSurface(temp);
-		}
-		/*
-		{
-			auto temp = SDL_CreateRGBSurface(0, tilemask->w, tilemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			x += 2;
-			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (dominos[0]->h - 40) - z * 40 + tHeight;
-			SDL_Rect coord;
-			coord.x = 0;
-			coord.y = -38;
-			// 1 : on dessine le domino initial mais décalé en y :
-			SDL_UpperBlit(dominos[domino], NULL, temp, &coord);
-			// 2 : on dépose par dessus la version avec la face transparente mais retournée pour préserver l'intérieur (la face du domino initial) :
-			SDL_UpperBlit(tempMask, NULL, temp, NULL);
-			// On découpe l'extérieur avec l'image d'un domino vide dont l'extérieur est transparent pour masquer celui du domino initial :
-			SDL_UpperBlitCut(tempBorderMask, temp);
+			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
 
-			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
+			coordonnees.y = (y - 2) * (bordermask->h - 40) - z * 40 + tHeight;
+			SDL_UpperBlit(dominos[0], NULL, virtualscreen, &coordonnees);
 
-			SDL_FreeSurface(temp);
+			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
+			SDL_UpperBlit(facedown, NULL, virtualscreen, &coordonnees);
+
+			coordonnees.y = (y + 2) * (bordermask->h - 40) - z * 40 + tHeight;
+			auto tempBorderMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
+			SDL_UpperBlit(tempBorderMask, NULL, virtualscreen, &coordonnees);
+			SDL_FreeSurface(tempBorderMask);
 		}
 		/**/
+		/**/
+		{
 
-		/*
+			x += 2;
+			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
 
-		SDL_FreeSurface(tempMask);
-		SDL_FreeSurface(tempBorderMask);
-		SDL_FreeSurface(tilemask);
+			SDL_Rect coord;
+			coord.x = 0;
+			coord.y = 0;
+
+			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			// Récupération du domino :
+			SDL_UpperBlit(dominos[0], NULL, tempMask, NULL);
+			// Découpage de tout sauf de la face :
+			SDL_UpperBlitCut(facedown, tempMask);
+			coordonnees.y = (y - 1) * (bordermask->h - 40) - z * 40 + tHeight;
+			SDL_UpperBlit(tempMask, NULL, virtualscreen, &coordonnees);
+
+			auto tempBorderMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
+			flip_surface(tempBorderMask);
+			coordonnees.y = (y + 2) * (bordermask->h - 40) - z * 40 + tHeight;
+			SDL_UpperBlit(tempBorderMask, NULL, virtualscreen, &coordonnees);
+
+			SDL_FreeSurface(tempMask);
+			SDL_FreeSurface(tempBorderMask);
+		}
+		/**/
+		/**/
+		{
+			auto tempBorderMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
+			flip_surface(tempBorderMask);
+			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+
+			x += 2;
+			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
+			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_Rect coord;
+			coord.x = 0;
+			coord.y = -38;
+
+			// Récupération du domino :
+			SDL_UpperBlit(dominos[0], NULL, tempMask, NULL);
+			// Découpage de tout sauf de la face :
+			SDL_UpperBlitCut(facedown, tempMask);
+			// Dessin du domino sans face :
+			SDL_UpperBlit(tempBorderMask, NULL, temp, NULL);
+			// Dessin de la face sur de domino :
+			SDL_UpperBlit(tempMask, NULL, temp, &coord);
+
+			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
+
+			SDL_FreeSurface(temp);
+			SDL_FreeSurface(tempMask);
+			SDL_FreeSurface(tempBorderMask);
+		}
 		/**/
 	}
 
@@ -684,8 +626,8 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 	// Placement des dominos :
 	SDL_Rect coordonnees;
 
-	auto tWidth = (Width - (dominos[0]->w - 40) * 12) >> 1;
-	auto tHeight = (Height - (dominos[0]->h - 40) >> 3) >> 1;
+	auto tWidth = (Width - (bordermask->w - 40) * 12) >> 1;
+	auto tHeight = (Height - (bordermask->h - 40) >> 3) >> 1;
 
 	for (auto& tile : plateau.getLogicalBoard())
 	{
@@ -696,8 +638,8 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 		auto index = std::get<4>(tile);
 		if (turnboard)
 		{
-			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
+			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
 			if (clicked[index])
 				SDL_UpperBlitInverted(dominos[domino], virtualscreen, coordonnees);
 			else
@@ -705,14 +647,14 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 		}
 		else
 		{
-			auto tempBorderMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
-			flip_surface(tempBorderMask);
+			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(bordermask, NULL, temp, NULL);
+			flip_surface(temp);
 			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 
-			coordonnees.x = x * (dominos[0]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (dominos[0]->h - 40) - z * 40 + tHeight;
-			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
+
 			SDL_Rect coord;
 			coord.x = 0;
 			coord.y = -38;
@@ -721,9 +663,7 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			SDL_UpperBlit(dominos[domino], NULL, tempMask, NULL);
 			// Découpage de tout sauf de la face :
 			SDL_UpperBlitCut(facedown, tempMask);
-			// Dessin du domino sans face :
-			SDL_UpperBlit(tempBorderMask, NULL, temp, NULL);
-			// Dessin de la face sur de domino :
+			// Dessin du domino sans face sur le domino vierge :
 			SDL_UpperBlit(tempMask, NULL, temp, &coord);
 
 			if (clicked[index])
@@ -733,15 +673,14 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 
 			SDL_FreeSurface(temp);
 			SDL_FreeSurface(tempMask);
-			SDL_FreeSurface(tempBorderMask);
 		}
 	}
 
 	/*
 	SDL_Rect coordonnees;
 	int i = 0;
-	auto tHeight = (Height - (dominos[0]->h - 40) * 6) / 2;
-	auto tWidth = (Width - (dominos[0]->w - 40) * 7) / 2;
+	auto tHeight = (Height - (bordermask->h - 40) * 6) / 2;
+	auto tWidth = (Width - (bordermask->w - 40) * 7) / 2;
 	for (int z = 0; z < 5; ++z)
 	{
 		int i = 0;
@@ -749,8 +688,8 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 		{
 			for (int x = 0; x < 7; ++x)
 			{
-				coordonnees.x = x * (dominos[0]->w - 40 ) - z * 40 + tWidth;
-				coordonnees.y = y * (dominos[0]->h - 40) + z * 40 + tHeight;
+				coordonnees.x = x * (bordermask->w - 40 ) - z * 40 + tWidth;
+				coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
 				SDL_UpperBlit(dominos[i++], NULL, virtualscreen, &coordonnees);
 			}
 		}
@@ -791,8 +730,12 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 	coordonnees.y = 200;
 	SDL_UpperBlit(turn, NULL, virtualscreen, &coordonnees);
 
+#ifdef _DEBUG
 	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
 	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, NULL);
+#else
+	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
+#endif
 
 	SDL_RenderClear(renderer);
 	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
@@ -820,7 +763,7 @@ void GraphicBoard::WhatsLeft()
 	//SDL_UpperBlit(background, NULL, virtualscreen, NULL);
 	SDL_BlitScaled(background, NULL, virtualscreen, NULL);
 	/**/
-	auto tWitdh = (Width - (dominos[0]->h + 40 * 3)) >> 3;
+	auto tWitdh = (Width - (bordermask->h + 40 * 3)) >> 3;
 	SDL_Rect coordonnees;
 	int board[8][6];
 	for (int x = 0; x < 6; ++x)
@@ -842,8 +785,8 @@ void GraphicBoard::WhatsLeft()
 			int t = board[y][x];
 			for (int z = 0; z < board[y][x]; ++z)
 			{
-				coordonnees.x = x * (dominos[0]->h) + z * 40 + x * tWitdh;
-				coordonnees.y = y * (dominos[0]->h - 40);
+				coordonnees.x = x * (bordermask->h) + z * 40 + x * tWitdh;
+				coordonnees.y = y * (bordermask->h - 40);
 				SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
 			}
 		}

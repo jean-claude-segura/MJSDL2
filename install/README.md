@@ -21,3 +21,5 @@ But, keep in mind that I built it on my system and even if I assume it's virus f
 
 To build : SDL2 and SDL2_image in SDL and SDL_image directories at the same level than MJSDL2 directory. The solution should find them with the relative path.
 To run : SDL2.DLL and SDL2_image.dll needed.
+https://github.com/libsdl-org/SDL/releases/tag/release-2.30.2
+https://github.com/libsdl-org/SDL_image/releases/tag/release-2.8.2
