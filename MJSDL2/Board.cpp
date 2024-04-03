@@ -2,39 +2,40 @@
 
 Board::Board()
 {
+	std::array<std::array<std::array<bool, 5>, 8>, 12> BasePattern;
 	for (int z = 0; z < 5; ++z)
 		for (int y = 0; y < 8; ++y)
 			for (int x = 0; x < 12; ++x)
-				BasePattern[x][y][z] = -1;
+				BasePattern[x][y][z] = false;
 	for (int x = 0; x < 12; ++x)
 	{
-		BasePattern[x][0][0] = 1;
-		BasePattern[x][7][0] = 1;
-		BasePattern[x][3][0] = 1;
-		BasePattern[x][4][0] = 1;
+		BasePattern[x][0][0] = true;
+		BasePattern[x][7][0] = true;
+		BasePattern[x][3][0] = true;
+		BasePattern[x][4][0] = true;
 	}
 
 	for (int x = 2; x < 10; ++x)
 	{
-		BasePattern[x][1][0] = 1;
-		BasePattern[x][6][0] = 1;
+		BasePattern[x][1][0] = true;
+		BasePattern[x][6][0] = true;
 	}
 	for (int x = 1; x < 11; ++x)
 	{
-		BasePattern[x][2][0] = 1;
-		BasePattern[x][5][0] = 1;
+		BasePattern[x][2][0] = true;
+		BasePattern[x][5][0] = true;
 	}
 	for (int x = 3; x < 9; ++x)
 		for (int y = 1; y < 7; ++y)
-			BasePattern[x][y][1] = 1;
+			BasePattern[x][y][1] = true;
 
 	for (int x = 4; x < 8; ++x)
 		for (int y = 2; y < 6; ++y)
-			BasePattern[x][y][2] = 1;
+			BasePattern[x][y][2] = true;
 
 	for (int x = 5; x < 7; ++x)
 		for (int y = 3; y < 5; ++y)
-			BasePattern[x][y][3] = 1;
+			BasePattern[x][y][3] = true;
 
 	int index = 0;
 	for (int z = 0; z < 5; ++z)
@@ -43,7 +44,7 @@ Board::Board()
 		{
 			for (int x = 0; x < 12; ++x)
 			{
-				if (BasePattern[x][y][z] == 1) InitIndexToCoord[index++] = std::make_tuple(x, y, z);
+				if (BasePattern[x][y][z]) InitIndexToCoord[index++] = std::make_tuple(x, y, z);
 			}
 		}
 	}
@@ -73,11 +74,6 @@ Board::Board()
 
 bool Board::CompLogicalBoardDownLeft(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
 {
-	/*
-	auto yFloor = ((std::floor(yLeft) >= std::floor(yRight)) && (std::floor(yLeft) != std::floor(yRight) || xLeft <= xRight)); // Domino droite
-	auto yCeil = ((std::ceil(yLeft) >= std::ceil(yRight)) && (std::ceil(yLeft) != std::ceil(yRight) || xLeft <= xRight)); // Domino gauche
-	auto yNormal = (yLeft >= yRight) && (yLeft != yRight || xLeft <= xRight); // Domino droite
-	*/
 	return
 		(
 			std::get<2>(left) <= std::get<2>(right) &&
@@ -86,9 +82,9 @@ bool Board::CompLogicalBoardDownLeft(const std::tuple<double, double, double, in
 				(std::get<1>(left) >= std::get<1>(right)) && (std::get<1>(left) != std::get<1>(right) || std::get<0>(left) <= std::get<0>(right))
 				)
 			);
-	return !(std::get<2>(left) > std::get<2>(right) ||
+	/*return !(std::get<2>(left) > std::get<2>(right) ||
 		std::get<2>(left) == std::get<2>(right) &&
-		(std::get<1>(left) < std::get<1>(right) || std::get<1>(left) == std::get<1>(right) && std::get<0>(left) > std::get<0>(right)));
+		(std::get<1>(left) < std::get<1>(right) || std::get<1>(left) == std::get<1>(right) && std::get<0>(left) > std::get<0>(right)));*/
 }
 
 
@@ -227,16 +223,13 @@ void Board::InitBoard()
 
 	LogicalBoard.clear();
 	TilesMap.clear();
-	for (int z = 0; z < 5; ++z)
-		for (int y = 0; y < 8; ++y)
-			for (int x = 0; x < 12; ++x)
-				mOccupationBoard[std::make_tuple<double, double, double>(x, y, z)] = -1;
+	mOccupationBoard.clear();
 
 	int tempDominos[42] = {
 	4,4,4,4,4,4,4,4,4, // Bambous
 	4,4,4,4,4,4,4,4,4, // Cercles
 	4,4,4,4,4,4,4,4,4, // Caractères
-	4,4,4,4, // Honneurs
+	4,4,4,4, // Vents
 	4,4,4, // Dragons
 	1,1,1,1, // Saisons
 	1,1,1,1 // Fleurs
@@ -251,11 +244,10 @@ void Board::InitBoard()
 		} while (tempDominos[domino] == 0);
 		int debugdom = tempDominos[domino];
 		--tempDominos[domino];
+		mOccupationBoard[InitIndexToCoord[index]] = index;
 		auto x = std::get<0>(InitIndexToCoord[index]);
 		auto y = std::get<1>(InitIndexToCoord[index]);
 		auto z = std::get<2>(InitIndexToCoord[index]);
-		auto m = std::make_tuple(x, y, z);
-		mOccupationBoard[m] = index;
 		LogicalBoard.push_back(std::make_tuple(x, y, z, domino, index));
 		TilesMap[index] = domino;
 	}
@@ -326,7 +318,7 @@ void Board::RemoveTile(const int index)
 	int y = std::get<1>(*it);
 	int z = std::get<2>(*it);
 	LogicalBoard.erase(it);
-	mOccupationBoard[std::make_tuple<double, double, double>(x, y, z)] = -1;
+	mOccupationBoard.erase(std::make_tuple<double, double, double>(x, y, z));
 
 	auto itWL = std::find(WhatsLeft.begin(), WhatsLeft.end(), index);
 	if (itWL != WhatsLeft.end())
@@ -357,15 +349,15 @@ void Board::RemoveTile(const int index)
 	}
 	else
 	{
-		if (x < 11 && mOccupationBoard[std::make_tuple<double, double, double>(x+1, y, z)] >= 0 && ( z > 3 || mOccupationBoard[std::make_tuple<double, double, double>(x+1, y, z+1)] < 0 ))
+		if (x < 11 && mOccupationBoard.contains(std::make_tuple<double, double, double>(x+1, y, z)) && ( z > 3 || !mOccupationBoard.contains(std::make_tuple<double, double, double>(x+1, y, z+1))))
 			Removable[mOccupationBoard[std::make_tuple<double, double, double>(x+1, y, z)]] = true;
-		if (x > 0 && mOccupationBoard[std::make_tuple<double, double, double>(x-1, y, z)] >= 0 && (z > 3 || mOccupationBoard[std::make_tuple<double, double, double>(x-1, y, z+1)] < 0))
+		if (x > 0 && mOccupationBoard.contains(std::make_tuple<double, double, double>(x-1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple<double, double, double>(x-1, y, z+1))))
 			Removable[mOccupationBoard[std::make_tuple<double, double, double>(x - 1, y, z)]] = true;
-		if (z > 0)
+		if (z > 0) // mOccupationBoard[std::make_tuple<double, double, double>(x, y, z-1)] DOIT exister.
 		{
-			if (x < 11 && mOccupationBoard[std::make_tuple<double, double, double>(x+1, y, z-1)] < 0)
+			if (x < 11 && !mOccupationBoard.contains(std::make_tuple<double, double, double>(x+1, y, z-1)))
 				Removable[mOccupationBoard[std::make_tuple<double, double, double>(x, y, z-1)]] = true;
-			if (x > 0 && mOccupationBoard[std::make_tuple<double, double, double>(x-1, y, z-1)] < 0)
+			if (x > 0 && !mOccupationBoard.contains(std::make_tuple<double, double, double>(x-1, y, z-1)))
 				Removable[mOccupationBoard[std::make_tuple<double, double, double>(x, y, z-1)]] = true;
 		}
 	}

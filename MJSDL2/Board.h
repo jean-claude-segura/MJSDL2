@@ -34,7 +34,6 @@ private:
 	std::array<std::tuple<double, double, double>, 144> InitIndexToCoord;
 	std::vector<std::tuple<double, double, double, int, int>> LogicalBoard; // (x, y, z, domino, index)
 	std::vector<std::tuple<double, double, double, int, int>> RemovableBoard; // (x, y, z, domino, index)
-	std::array<std::array<std::array<int, 5>, 8>, 12> BasePattern;
 	std::array<bool, 144> Removable = {
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
