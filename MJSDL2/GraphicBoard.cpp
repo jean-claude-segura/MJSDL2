@@ -445,7 +445,6 @@ void GraphicBoard::setClicked(const int x, const int y)
 			switch (index)
 			{
 			case RESTART:
-				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				plateau.InitBoard();
 				plateau.SortBoard(direction);
 				itNextMove = plateau.GetMovesLeft().begin();
@@ -454,7 +453,6 @@ void GraphicBoard::setClicked(const int x, const int y)
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
 			case HINT:
-				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				if (itNextMove == plateau.GetMovesLeft().end())
 					itNextMove = plateau.GetMovesLeft().begin();
 				if (itNextMove != plateau.GetMovesLeft().end())
@@ -473,7 +471,6 @@ void GraphicBoard::setClicked(const int x, const int y)
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
 			case TURN:
-				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				++direction;
 				direction %= 4;
 				plateau.SortBoard(direction);
@@ -481,7 +478,6 @@ void GraphicBoard::setClicked(const int x, const int y)
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
 			case NORTH:
-				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				if (direction == 3)
 					direction = 0;
 				else if(direction == 2)
@@ -491,7 +487,6 @@ void GraphicBoard::setClicked(const int x, const int y)
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
 			case EAST:
-				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				if (direction == 0)
 					direction = 1;
 				else if (direction == 3)
@@ -501,7 +496,6 @@ void GraphicBoard::setClicked(const int x, const int y)
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
 			case SOUTH:
-				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				if (direction == 0)
 					direction = 3;
 				else if (direction == 1)
@@ -511,7 +505,6 @@ void GraphicBoard::setClicked(const int x, const int y)
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
 			case WEST:
-				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				if (direction == 1)
 					direction = 0;
 				else if (direction == 2)

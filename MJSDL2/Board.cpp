@@ -375,7 +375,12 @@ void Board::Tree(std::vector<std::tuple<double, double, double, int, int>>::iter
 	auto itFirst = std::find_if(itNextIn, RemovableBoard.end(),
 		[domino](const std::tuple<double, double, double, int, int>& in)
 		{
-			return std::get<3>(in) == domino;
+			return
+				(
+				std::get<3>(in) == domino ||
+				(34 <= std::get<3>(in) && std::get<3>(in) < 38 && 34 <= domino && domino < 38) || // Saisons
+				(38 <= std::get<3>(in) && std::get<3>(in) < 42 && 38 <= domino && domino < 42) // Fleurs.
+				);
 		}
 	);
 	if (itFirst != RemovableBoard.end())
@@ -387,7 +392,12 @@ void Board::Tree(std::vector<std::tuple<double, double, double, int, int>>::iter
 			itNext = std::find_if(++itNext, RemovableBoard.end(),
 				[domino](const std::tuple<double, double, double, int, int>& in)
 				{
-					return std::get<3>(in) == domino;
+					return
+						(
+							std::get<3>(in) == domino ||
+							(34 <= std::get<3>(in) && std::get<3>(in) < 38 && 34 <= domino && domino < 38) || // Saisons
+							(38 <= std::get<3>(in) && std::get<3>(in) < 42 && 38 <= domino && domino < 42) // Fleurs.
+							);
 				}
 			);
 			if (itNext != RemovableBoard.end())
