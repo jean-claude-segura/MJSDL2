@@ -68,11 +68,6 @@ Board::Board()
 	}
 	/**/
 
-	for (int z = 0; z < 5; ++z)
-		for (int y = 0; y < 8; ++y)
-			for (int x = 0; x < 12; ++x)
-				mOccupationBoard[std::make_tuple<double, double, double>(x, y, z)] = -1;
-
 	InitBoard();
 }
 
@@ -137,26 +132,21 @@ void Board::SortBoard(const uint8_t direction)
 	bool (*Comparateur)(const std::tuple<double, double, double, int, int>&left, const std::tuple<double, double, double, int, int>&right);
 	switch (direction)
 	{
+	default:
 	case 3:
 		Comparateur = Board::CompLogicalBoardDownLeft;
-		std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
 		break;
 	case 0:
 		Comparateur = Board::CompLogicalBoardUpLeft;
-		std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
 		break;
 	case 1:
 		Comparateur = Board::CompLogicalBoardUpRight;
-		std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
 		break;
 	case 2:
 		Comparateur = Board::CompLogicalBoardDownRight;
-		std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
-		break;
-	default:
 		break;
 	}
-	//std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
+	std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
 	std::vector< std::tuple<double, double, double, int, int>>::iterator it;
 	if (direction == 0 || direction == 3)
 	{
@@ -184,13 +174,6 @@ void Board::SortBoard(const uint8_t direction)
 		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 142; ++it);
 		if (it != LogicalBoard.end())
 		{
-			/*auto t = std::make_tuple(13, 8, 0, 0, 0);
-			it = std::find_if(LogicalBoard.begin(), LogicalBoard.end(),
-				[&t](const std::tuple<double, double, double, int, int>& in)
-				{
-					return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
-				}
-			);*/
 			auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
 			LogicalBoard.erase(it);
 			LogicalBoard.emplace_back(temp);
@@ -215,13 +198,6 @@ void Board::SortBoard(const uint8_t direction)
 			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 141; ++it);
 			if (it != LogicalBoard.end())
 			{
-				/*auto t = std::make_tuple(12, 8, 0, 0, 0);
-				it = std::find_if(LogicalBoard.begin(), LogicalBoard.end(),
-					[&t](const std::tuple<double, double, double, int, int>& in)
-					{
-						return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
-					}
-				);*/
 				auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
 				LogicalBoard.erase(it);
 				LogicalBoard.insert(LogicalBoard.begin(), temp);
@@ -229,13 +205,6 @@ void Board::SortBoard(const uint8_t direction)
 			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 142; ++it);
 			if (it != LogicalBoard.end())
 			{
-				/*auto t = std::make_tuple(13, 8, 0, 0, 0);
-				it = std::find_if(LogicalBoard.begin(), LogicalBoard.end(),
-					[&t](const std::tuple<double, double, double, int, int>& in)
-					{
-						return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
-					}
-				);*/
 				auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
 				LogicalBoard.erase(it);
 				LogicalBoard.insert(LogicalBoard.begin(), temp);
@@ -258,6 +227,10 @@ void Board::InitBoard()
 
 	LogicalBoard.clear();
 	TilesMap.clear();
+	for (int z = 0; z < 5; ++z)
+		for (int y = 0; y < 8; ++y)
+			for (int x = 0; x < 12; ++x)
+				mOccupationBoard[std::make_tuple<double, double, double>(x, y, z)] = -1;
 
 	int tempDominos[42] = {
 	4,4,4,4,4,4,4,4,4, // Bambous
@@ -289,7 +262,7 @@ void Board::InitBoard()
 
 	//SortBoard(true);
 
-	for(int index = 0; index < 140; ++index) Removable[index] = false;
+	for(int index = 0; index < 144; ++index) Removable[index] = false;
 	Removable[0x0] = true;
 	Removable[0xb] = true;
 	Removable[0xc] = true;
