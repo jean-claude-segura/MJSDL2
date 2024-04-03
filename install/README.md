@@ -25,10 +25,10 @@ https://en.wikipedia.org/wiki/Mahjong_tiles
 
 https://commons.wikimedia.org/wiki/User:Cangjie6
 
-https://commons.wikimedia.org/wiki/File:MJt1-.svg
+https://zh.wikipedia.org/wiki/File:MJd3rv1-.svg
 
 
-Full attribution coming for tiles (There are 42 tiles! I need to confirm the author for each of them!).
+Full attribution coming for the other tiles (There are 42 tiles! I need to confirm the author for each of them!).
 
 UPDATE : Seems they're all Cangjie6's : https://commons.wikimedia.org/wiki/User:Cangjie6
 

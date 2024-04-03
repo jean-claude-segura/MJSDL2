@@ -318,7 +318,7 @@ void GraphicBoard::LoadUI()
 	SDL_FreeSurface(temp);
 
 	temp = NULL;
-	LoadTile(temp, "./interface/blank.svg");
+	LoadTile(temp, "./interface/MJd3rv1-.svg");
 	turn = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
 	if (turn == NULL)
 	{
