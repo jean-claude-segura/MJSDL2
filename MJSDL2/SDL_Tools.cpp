@@ -185,7 +185,7 @@ void SDL_VerticalFlip(SDL_Surface* surface)
 	char* temp = new char[pitch]; // intermediate buffer
 	char* pixels = (char*)surface->pixels;
 
-	for (int i = 0; i < surface->h / 2; ++i) {
+	for (int i = 0; i < surface->h >> 1; ++i) {
 		// get pointers to the two rows to swap
 		char* row1 = pixels + i * pitch;
 		char* row2 = pixels + (surface->h - i - 1) * pitch;
@@ -197,6 +197,24 @@ void SDL_VerticalFlip(SDL_Surface* surface)
 	}
 
 	delete[] temp;
+
+	SDL_UnlockSurface(surface);
+}
+
+// Flip surface vertically.
+void SDL_HorizontalFlip(SDL_Surface* surface)
+{
+	SDL_LockSurface(surface);
+
+	Uint32* pixelsDeb = (Uint32*)surface->pixels;
+	Uint32* pixelsFin = (Uint32*)surface->pixels + surface->w * surface->h - 1;
+	Uint32 temp;
+
+	for (int i = 0; i < (surface->w * surface->h) >> 1; ++i, ++pixelsDeb, --pixelsFin) {
+		temp = *pixelsDeb;
+		*pixelsDeb = *pixelsFin;
+		*pixelsFin = temp;
+	}
 
 	SDL_UnlockSurface(surface);
 }

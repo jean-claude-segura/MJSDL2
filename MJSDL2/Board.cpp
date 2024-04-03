@@ -76,7 +76,7 @@ Board::Board()
 	InitBoard();
 }
 
-bool Board::CompLogicalBoard(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
+bool Board::CompLogicalBoardDownLeft(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
 {
 	/*
 	auto yFloor = ((std::floor(yLeft) >= std::floor(yRight)) && (std::floor(yLeft) != std::floor(yRight) || xLeft <= xRight)); // Domino droite
@@ -96,13 +96,20 @@ bool Board::CompLogicalBoard(const std::tuple<double, double, double, int, int>&
 		(std::get<1>(left) < std::get<1>(right) || std::get<1>(left) == std::get<1>(right) && std::get<0>(left) > std::get<0>(right)));
 }
 
-bool Board::CompLogicalBoardDown(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
+
+bool Board::CompLogicalBoardDownRight(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
 {
-	/*
-	auto yFloor = ((std::floor(yLeft) >= std::floor(yRight)) && (std::floor(yLeft) != std::floor(yRight) || xLeft <= xRight)); // Domino droite
-	auto yCeil = ((std::ceil(yLeft) >= std::ceil(yRight)) && (std::ceil(yLeft) != std::ceil(yRight) || xLeft <= xRight)); // Domino gauche
-	auto yNormal = (yLeft >= yRight) && (yLeft != yRight || xLeft <= xRight); // Domino droite
-	*/
+	return
+		(
+			std::get<2>(left) <= std::get<2>(right) &&
+			(
+				(std::get<2>(left) != std::get<2>(right)) ||
+				(std::get<1>(left) >= std::get<1>(right)) && (std::get<1>(left) != std::get<1>(right) || std::get<0>(left) > std::get<0>(right))
+				)
+			);
+}
+bool Board::CompLogicalBoardUpLeft(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
+{
 	return
 		(
 			std::get<2>(left) <= std::get<2>(right) &&
@@ -111,9 +118,18 @@ bool Board::CompLogicalBoardDown(const std::tuple<double, double, double, int, i
 				(std::get<1>(left) <= std::get<1>(right)) && (std::get<1>(left) != std::get<1>(right) || std::get<0>(left) <= std::get<0>(right))
 				)
 			);
-	return !(std::get<2>(left) > std::get<2>(right) ||
-		std::get<2>(left) == std::get<2>(right) &&
-		(std::get<1>(left) < std::get<1>(right) || std::get<1>(left) == std::get<1>(right) && std::get<0>(left) > std::get<0>(right)));
+}
+
+bool Board::CompLogicalBoardUpRight(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
+{
+	return
+		(
+			std::get<2>(left) <= std::get<2>(right) &&
+			(
+				(std::get<2>(left) != std::get<2>(right)) ||
+				(std::get<1>(left) <= std::get<1>(right)) && (std::get<1>(left) != std::get<1>(right) || std::get<0>(left) > std::get<0>(right))
+				)
+			);
 }
 
 void Board::SortBoard(const uint8_t direction)
@@ -122,15 +138,21 @@ void Board::SortBoard(const uint8_t direction)
 	switch (direction)
 	{
 	case 3:
-		Comparateur = Board::CompLogicalBoard;
+		Comparateur = Board::CompLogicalBoardDownLeft;
 		std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
 		break;
 	case 0:
-		Comparateur = Board::CompLogicalBoardDown;
+		Comparateur = Board::CompLogicalBoardUpLeft;
 		std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
 		break;
 	case 1:
+		Comparateur = Board::CompLogicalBoardUpRight;
+		std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
+		break;
 	case 2:
+		Comparateur = Board::CompLogicalBoardDownRight;
+		std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
+		break;
 	default:
 		break;
 	}
@@ -181,7 +203,51 @@ void Board::SortBoard(const uint8_t direction)
 			LogicalBoard.emplace_back(temp);
 		}
 	}
-
+	else if (direction == 1 || direction == 2)
+		{
+			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 140; ++it);
+			if (it != LogicalBoard.end())
+			{
+				auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
+				LogicalBoard.erase(it);
+				LogicalBoard.emplace_back(temp);
+			}
+			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 141; ++it);
+			if (it != LogicalBoard.end())
+			{
+				/*auto t = std::make_tuple(12, 8, 0, 0, 0);
+				it = std::find_if(LogicalBoard.begin(), LogicalBoard.end(),
+					[&t](const std::tuple<double, double, double, int, int>& in)
+					{
+						return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
+					}
+				);*/
+				auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
+				LogicalBoard.erase(it);
+				LogicalBoard.insert(LogicalBoard.begin(), temp);
+			}
+			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 142; ++it);
+			if (it != LogicalBoard.end())
+			{
+				/*auto t = std::make_tuple(13, 8, 0, 0, 0);
+				it = std::find_if(LogicalBoard.begin(), LogicalBoard.end(),
+					[&t](const std::tuple<double, double, double, int, int>& in)
+					{
+						return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
+					}
+				);*/
+				auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
+				LogicalBoard.erase(it);
+				LogicalBoard.insert(LogicalBoard.begin(), temp);
+			}
+			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && std::get<4>(*it) != 143; ++it);
+			if (it != LogicalBoard.end())
+			{
+				auto temp = std::make_tuple(std::get<0>(*it), std::get<1>(*it), std::get<2>(*it), std::get<3>(*it), std::get<4>(*it));
+				LogicalBoard.erase(it);
+				LogicalBoard.emplace_back(temp);
+			}
+		}
 }
 
 void Board::InitBoard()
