@@ -33,7 +33,6 @@ private:
 	std::map<std::tuple<double, double, double>, int> mOccupationBoard;
 	std::array<std::tuple<double, double, double>, 144> InitIndexToCoord;
 	std::vector<std::tuple<double, double, double, int, int>> LogicalBoard; // (x, y, z, domino, index)
-	std::vector<std::tuple<double, double, double, int, int>> RemovableBoard; // (x, y, z, domino, index)
 	std::array<bool, 144> Removable = {
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
@@ -48,7 +47,7 @@ private:
 		false, false, false, false
 	};
 	void RemoveTile(int);
-	void Tree(std::vector<std::tuple<double, double, double, int, int>>::iterator itNext, std::vector<std::pair<int, int>>& Moves, int domino);
+	void BuildMoves(std::vector<std::tuple<double, double, double, int, int>>& RemovableBoard, std::vector<std::tuple<double, double, double, int, int>>::iterator& itFirst, std::vector<std::pair<int, int>>& Moves);
 	std::vector<std::pair<int, int>> Moves;
 	void SetMoves();
 };
