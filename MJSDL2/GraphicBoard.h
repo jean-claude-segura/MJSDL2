@@ -90,5 +90,5 @@ private:
 	SDL_Rect ScreenRect;
 	int selected = -1;
 	std::vector<std::pair<int, int>>::const_iterator itNextMove;
-	bool turnboard = true;
+	uint8_t direction = 3;
 };

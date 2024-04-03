@@ -23,7 +23,7 @@ public:
 	int getNumberOfTilesLeft() { return WhatsLeft.size(); }
 	const std::vector<int>& getWhatsLeft() { return WhatsLeft; }
 	const std::vector<std::tuple<double, double, double, int, int>>& getLogicalBoard() { return LogicalBoard; }
-	void SortBoard(bool turn);
+	void SortBoard(const uint8_t direction);
 	
 private:
 	std::vector<int> WhatsLeft;

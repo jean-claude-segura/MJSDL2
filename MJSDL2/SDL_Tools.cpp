@@ -177,7 +177,7 @@ void SDL_SetGreyScale(SDL_Surface* src)
 }
 
 // Flip surface vertically.
-void flip_surface(SDL_Surface* surface)
+void SDL_VerticalFlip(SDL_Surface* surface)
 {
 	SDL_LockSurface(surface);
 

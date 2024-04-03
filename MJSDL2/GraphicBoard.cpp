@@ -75,6 +75,7 @@ GraphicBoard::GraphicBoard()
 	//SDL_UpdateWindowSurface(window);
 
 	itNextMove = plateau.GetMovesLeft().begin();
+	plateau.SortBoard(direction);
 	Refresh(true);
 }
 
@@ -445,8 +446,8 @@ void GraphicBoard::setClicked(const int x, const int y)
 			{
 			case RESTART:
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
-				turnboard = true;
 				plateau.InitBoard();
+				plateau.SortBoard(direction);
 				itNextMove = plateau.GetMovesLeft().begin();
 				LoadTiles();
 				Refresh(true);
@@ -473,28 +474,51 @@ void GraphicBoard::setClicked(const int x, const int y)
 				break;
 			case TURN:
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
-				turnboard = !turnboard;
-				plateau.SortBoard(turnboard);
+				++direction;
+				direction %= 4;
+				plateau.SortBoard(direction);
 				Refresh(true);
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
 			case NORTH:
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
-				turnboard = false;
-				plateau.SortBoard(turnboard);
+				if (direction == 3)
+					direction = 0;
+				else if(direction == 2)
+					direction = 1;
+				plateau.SortBoard(direction);
+				Refresh(true);
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				break;
+			case EAST:
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				if (direction == 0)
+					direction = 1;
+				else if (direction == 3)
+					direction = 2;
+				plateau.SortBoard(direction);
 				Refresh(true);
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
 			case SOUTH:
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
-				turnboard = true;
-				plateau.SortBoard(turnboard);
+				if (direction == 0)
+					direction = 3;
+				else if (direction == 1)
+					direction = 2;
+				plateau.SortBoard(direction);
 				Refresh(true);
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
-			case EAST:
-				break;
 			case WEST:
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+				if (direction == 1)
+					direction = 0;
+				else if (direction == 2)
+					direction = 3;
+				plateau.SortBoard(direction);
+				Refresh(true);
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
 			default:
 				break;
@@ -534,13 +558,13 @@ void GraphicBoard::RefreshMouseMap()
 		auto z = std::get<2>(tile);
 		auto domino = std::get<3>(tile);
 		auto index = std::get<4>(tile);
-		if (turnboard)
+		if (direction == 3)
 		{
 			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
 			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
 			SDL_SetColourOnOpaque(dominos[domino], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
 		}
-		else
+		else if(direction == 0)
 		{
 			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
 			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
@@ -548,11 +572,19 @@ void GraphicBoard::RefreshMouseMap()
 
 			// Récupération du domino :
 			SDL_UpperBlit(bordermask, NULL, temp, NULL);
-			flip_surface(temp);
+			SDL_VerticalFlip(temp);
 
 			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
 
 			SDL_FreeSurface(temp);
+		}
+		else if (direction == 1)
+		{
+			// Up - Right
+		}
+		else
+		{
+			// Down - Right
 		}
 	}
 
@@ -653,7 +685,7 @@ void GraphicBoard::RefreshExample()
 
 			auto tempBorderMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
-			flip_surface(tempBorderMask);
+			SDL_VerticalFlip(tempBorderMask);
 			coordonnees.y = (y + 2) * (bordermask->h - 40) - z * 40 + tHeight;
 			SDL_UpperBlit(tempBorderMask, NULL, virtualscreen, &coordonnees);
 
@@ -665,7 +697,7 @@ void GraphicBoard::RefreshExample()
 		{
 			auto tempBorderMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
-			flip_surface(tempBorderMask);
+			SDL_VerticalFlip(tempBorderMask);
 			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 
 			x += 2;
@@ -751,8 +783,9 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 		auto z = std::get<2>(tile);
 		auto domino = std::get<3>(tile);
 		auto index = std::get<4>(tile);
-		if (turnboard)
+		if (direction == 3)
 		{
+			// Down - Left
 			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
 			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
 			if (clicked[index])
@@ -760,11 +793,12 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			else
 				SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
 		}
-		else
+		else if(direction == 0)
 		{
+			// Up - Left
 			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			SDL_UpperBlit(bordermask, NULL, temp, NULL);
-			flip_surface(temp);
+			SDL_VerticalFlip(temp);
 			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 
 			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
@@ -788,6 +822,14 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 
 			SDL_FreeSurface(temp);
 			SDL_FreeSurface(tempMask);
+		}
+		else if (direction == 1)
+		{
+			// Up - Right
+		}
+		else
+		{
+			// Down - Right
 		}
 	}
 
