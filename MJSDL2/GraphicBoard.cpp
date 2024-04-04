@@ -859,7 +859,7 @@ void GraphicBoard::RefreshExample()
 
 void GraphicBoard::Refresh(bool refreshMouseMap)
 {
-	return RefreshTest();
+	return RefreshTest(refreshMouseMap);
 #ifdef _DEBUG
 	//return RefreshExample();
 #endif
@@ -1078,8 +1078,9 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 }
 
 #ifdef _DEBUG
-void GraphicBoard::RefreshTest()
+void GraphicBoard::RefreshTest(bool refreshMouseMap)
 {
+	if (refreshMouseMap) RefreshMouseMap();
 	SDL_RenderClear(renderer);
 
 	// Copie du fond :
@@ -1102,20 +1103,137 @@ void GraphicBoard::RefreshTest()
 		auto z = std::get<2>(tile);
 		auto domino = std::get<3>(tile);
 		auto index = std::get<4>(tile);
-
+		if (direction == 3)
 		{
 			// Down - Left
-			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
+			coordonnees.x = x * (dominos[domino]->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (dominos[domino]->h - 40) + z * 40 + tHeight;
+
 			coordonnees.w = dominos[domino]->w;
 			coordonnees.h = dominos[domino]->h;
-
 			coordonnees.x *= ScreenRect.w / (double)Width;
 			coordonnees.y *= ScreenRect.h / (double)Height;
 			coordonnees.w *= ScreenRect.w / (double)Width;
 			coordonnees.h *= ScreenRect.h / (double)Height;
 
 			auto texture = SDL_CreateTextureFromSurface(renderer, dominos[domino]);
+			SDL_RenderCopy(renderer, texture, NULL, &coordonnees);
+			SDL_DestroyTexture(texture);
+		}
+		else if (direction == 0)
+		{
+			// Up - Left
+			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
+
+			coordonnees.w = dominos[domino]->w;
+			coordonnees.h = dominos[domino]->h;
+			coordonnees.x *= ScreenRect.w / (double)Width;
+			coordonnees.y *= ScreenRect.h / (double)Height;
+			coordonnees.w *= ScreenRect.w / (double)Width;
+			coordonnees.h *= ScreenRect.h / (double)Height;
+
+			auto texture = SDL_CreateTextureFromSurface(renderer, bordermask);
+			SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, 0, NULL, SDL_FLIP_VERTICAL);
+			SDL_DestroyTexture(texture);
+
+			texture = SDL_CreateTextureFromSurface(renderer, faces[domino]);
+			SDL_Rect coord;
+			coord.x = 0;
+			coord.y = -38;
+
+			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
+
+			coordonnees.w = dominos[domino]->w;
+			coordonnees.h = dominos[domino]->h;
+			coordonnees.w *= ScreenRect.w / (double)Width;
+			coordonnees.h *= ScreenRect.h / (double)Height;
+
+			coordonnees.x += coord.x;
+			coordonnees.y += coord.y;
+			
+			coordonnees.x *= ScreenRect.w / (double)Width;
+			coordonnees.y *= ScreenRect.h / (double)Height;
+
+			SDL_RenderCopy(renderer, texture, NULL, &coordonnees);
+			SDL_DestroyTexture(texture);
+		}
+		else if (direction == 1)
+		{
+			// Up - Right
+			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
+			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
+
+			coordonnees.w = dominos[domino]->w;
+			coordonnees.h = dominos[domino]->h;
+			coordonnees.x *= ScreenRect.w / (double)Width;
+			coordonnees.y *= ScreenRect.h / (double)Height;
+			coordonnees.w *= ScreenRect.w / (double)Width;
+			coordonnees.h *= ScreenRect.h / (double)Height;
+
+			auto texture = SDL_CreateTextureFromSurface(renderer, bordermask);
+			SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, 180, NULL, SDL_FLIP_NONE);
+			SDL_DestroyTexture(texture);
+
+			texture = SDL_CreateTextureFromSurface(renderer, faces[domino]);
+			SDL_Rect coord;
+			coord.x = 33;
+			coord.y = -38;
+
+			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
+			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
+
+			coordonnees.w = dominos[domino]->w;
+			coordonnees.h = dominos[domino]->h;
+			coordonnees.w *= ScreenRect.w / (double)Width;
+			coordonnees.h *= ScreenRect.h / (double)Height;
+
+			coordonnees.x += coord.x;
+			coordonnees.y += coord.y;
+
+			coordonnees.x *= ScreenRect.w / (double)Width;
+			coordonnees.y *= ScreenRect.h / (double)Height;
+
+			SDL_RenderCopy(renderer, texture, NULL, &coordonnees);
+			SDL_DestroyTexture(texture);
+		}
+		else
+		{
+			// Down - Right
+			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
+			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
+
+			coordonnees.w = dominos[domino]->w;
+			coordonnees.h = dominos[domino]->h;
+			coordonnees.x *= ScreenRect.w / (double)Width;
+			coordonnees.y *= ScreenRect.h / (double)Height;
+			coordonnees.w *= ScreenRect.w / (double)Width;
+			coordonnees.h *= ScreenRect.h / (double)Height;
+
+			auto texture = SDL_CreateTextureFromSurface(renderer, bordermask);
+			SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, 0, NULL, SDL_FLIP_HORIZONTAL);
+			SDL_DestroyTexture(texture);
+
+			texture = SDL_CreateTextureFromSurface(renderer, faces[domino]);
+			SDL_Rect coord;
+			coord.x = 33;
+			coord.y = 0;
+
+			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
+			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
+
+			coordonnees.w = dominos[domino]->w;
+			coordonnees.h = dominos[domino]->h;
+			coordonnees.w *= ScreenRect.w / (double)Width;
+			coordonnees.h *= ScreenRect.h / (double)Height;
+
+			coordonnees.x += coord.x;
+			coordonnees.y += coord.y;
+
+			coordonnees.x *= ScreenRect.w / (double)Width;
+			coordonnees.y *= ScreenRect.h / (double)Height;
+
 			SDL_RenderCopy(renderer, texture, NULL, &coordonnees);
 			SDL_DestroyTexture(texture);
 		}
