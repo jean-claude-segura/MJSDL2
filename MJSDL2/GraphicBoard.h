@@ -13,13 +13,15 @@
 // https://fr.vecteezy.com/photo/2680573-texture-bois-fond-texture-bois
 // https://github.com/libsdl-org/SDL_ttf/tree/main/external
 
-#define	RESTART		0xFE
-#define	HINT		0xFD
-#define	TURN		0xFC
-#define	NORTH		0xFB
-#define	SOUTH		0xFA
-#define	EAST		0xF9
-#define	WEST		0xF8
+#define	DONTUSE		0xFF
+#define	EXIT		0xFE
+#define	RESTART		0xFD
+#define	HINT		0xFC
+#define	TURN		0xFB
+#define	NORTH		0xFA
+#define	SOUTH		0xF9
+#define	EAST		0xF8
+#define	WEST		0xF7
 
 class GraphicBoard
 {
@@ -30,7 +32,7 @@ public:
 
 private:
 	void Init();
-	void LoadTile(SDL_Surface* &tileSurface, const char* szPath);
+	void LoadTile(SDL_Surface*& tileSurface, const char* szPath);
 	void LoadTile(const int istart, const int iend, const std::string& path);
 	void LoadRamdomTileSet(const int istart, const int iend, const std::string& path);
 	void LoadTiles();
@@ -50,20 +52,21 @@ private:
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 	SDL_Surface
-		*virtualscreen,
-		*virtualmousescreen,
-		*mousescreen,
-		*tampon,
-		*background,
-		*restart,
-		*hint,
-		*turn,
-		*bordermask,
-		*facedown,
-		*Est,
-		*Sud,
-		*Ouest,
-		*Nord;
+		* virtualscreen,
+		* virtualmousescreen,
+		* mousescreen,
+		* tampon,
+		* background,
+		* bordermask,
+		* facedown,
+		* RestartBtn,
+		* HintBtn,
+		* TurnBtn,
+		* EstBtn,
+		* SudBtn,
+		* OuestBtn,
+		* NordBtn,
+		* ExitBtn;
 	//SDL_Surface* couches[5] = { NULL, NULL, NULL, NULL, NULL };
 	int Height, Width;
 	SDL_DisplayMode displayCapabilities;
@@ -72,7 +75,7 @@ private:
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
-		NULL, NULL, NULL, NULL, NULL , NULL, NULL		
+		NULL, NULL, NULL, NULL, NULL , NULL, NULL
 	};
 	Board plateau;
 	bool clicked[144] = {
@@ -92,5 +95,5 @@ private:
 	int selected;
 	std::vector<std::pair<int, int>>::const_iterator itNextMove;
 	uint8_t direction;
-	SDL_Event exit;
+	SDL_Event exitEvent;
 };
