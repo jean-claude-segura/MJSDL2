@@ -54,6 +54,8 @@ GraphicBoard::~GraphicBoard()
 		SDL_FreeSurface(SudBtn);
 	if (EstBtn != NULL)
 		SDL_FreeSurface(EstBtn);
+	if (ExitBtn != NULL)
+		SDL_FreeSurface(ExitBtn);
 	if (window != NULL)
 		SDL_DestroyWindow(window);
 	SDL_Quit();
@@ -345,6 +347,7 @@ void GraphicBoard::LoadUI()
 	{
 		SDL_BlitScaled(temp, NULL, TurnBtn, NULL);
 	}
+	SDL_FreeSurface(temp);
 
 	temp = NULL;
 	LoadTile(temp, "./interface/blank.svg");
@@ -358,6 +361,7 @@ void GraphicBoard::LoadUI()
 	{
 		SDL_BlitScaled(temp, NULL, HintBtn, NULL);
 	}
+	SDL_FreeSurface(temp);
 
 	temp = NULL;
 	LoadTile(temp, "./interface/blank.svg");
@@ -371,6 +375,21 @@ void GraphicBoard::LoadUI()
 	{
 		SDL_BlitScaled(temp, NULL, RestartBtn, NULL);
 	}
+	SDL_FreeSurface(temp);
+
+	temp = NULL;
+	LoadTile(temp, "./interface/blank.svg");
+	ExitBtn = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
+	if (ExitBtn == NULL)
+	{
+		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	else
+	{
+		SDL_BlitScaled(temp, NULL, ExitBtn, NULL);
+	}
+	SDL_FreeSurface(temp);
 }
 
 void GraphicBoard::setClicked(const int x, const int y)
@@ -523,6 +542,9 @@ void GraphicBoard::setClicked(const int x, const int y)
 				Refresh(true);
 				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 				break;
+			case EXIT:
+				SDL_PushEvent(&exitEvent);
+				break;
 			default:
 				break;
 			}
@@ -638,7 +660,10 @@ void GraphicBoard::RefreshMouseMap()
 	coordonnees.x = RestartBtn->w - 20;
 	coordonnees.y = 0;
 	SDL_SetColourOnOpaque(RestartBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, RESTART, 0x00, 0x00));
-
+	// Exit
+	coordonnees.x = virtualscreen->w - RestartBtn->w;
+	coordonnees.y = 0;
+	SDL_SetColourOnOpaque(ExitBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, EXIT, 0x00, 0x00));
 
 	SDL_BlitScaled(virtualmousescreen, NULL, mousescreen, NULL);
 }
@@ -980,6 +1005,10 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 	coordonnees.x = RestartBtn->w - 20;
 	coordonnees.y = 0;
 	SDL_UpperBlit(RestartBtn, NULL, virtualscreen, &coordonnees);
+	// Exit
+	coordonnees.x = virtualscreen->w - RestartBtn->w;
+	coordonnees.y = 0;
+	SDL_UpperBlit(ExitBtn, NULL, virtualscreen, &coordonnees);
 	/**/
 
 #ifdef _DEBUG
