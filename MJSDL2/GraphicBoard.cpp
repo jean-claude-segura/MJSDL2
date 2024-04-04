@@ -34,6 +34,11 @@ GraphicBoard::~GraphicBoard()
 		if (dominos[i] != NULL)
 			SDL_FreeSurface(dominos[i]);
 	}
+	for (int i = 0; i < 42; ++i)
+	{
+		if (faces[i] != NULL)
+			SDL_FreeSurface(faces[i]);
+	}
 	if (background != NULL)
 		SDL_FreeSurface(background);
 	if (RestartBtn != NULL)
@@ -75,6 +80,11 @@ void GraphicBoard::Init()
 		ThrowException(1);
 	}
 
+	if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2")) {
+		std::cout << stderr << "could not initialize render scale quality : " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+
 	SDL_DisplayMode DM;
 	SDL_GetCurrentDisplayMode(0, &DM);
 	Width = 3840;
@@ -91,14 +101,14 @@ void GraphicBoard::Init()
 		DM.w, DM.h,
 		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_VULKAN
 		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_OPENGL
-		SDL_WINDOW_SHOWN
+		SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN
 	);
 	if (window == NULL) {
 		std::cout << stderr << "could not create window: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 
-	renderer = SDL_CreateRenderer(window, -1, 0);
+	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	if (renderer == NULL)
 	{
 		std::cout << stderr << "could not create renderer: " << SDL_GetError() << std::endl;
@@ -160,6 +170,38 @@ void GraphicBoard::LoadTile(SDL_Surface*& tileSurface, const char* szPath)
 	SDL_FreeSurface(temp);
 }
 
+void GraphicBoard::LoadTile(SDL_Surface*& tileSurface, SDL_Surface*& faceSurface, const char* szPath)
+{
+	if (tileSurface != NULL)
+		SDL_FreeSurface(tileSurface);
+	if (faceSurface != NULL)
+		SDL_FreeSurface(faceSurface);
+	auto temp = IMG_Load(szPath);
+	tileSurface = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (tileSurface == NULL)
+	{
+		std::cout << stderr << "could not create tile " << szPath << " : " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	else
+	{
+		SDL_FreeSurface(temp);
+		faceSurface = SDL_CreateRGBSurface(0, tileSurface->w, tileSurface->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+		if (tileSurface == NULL)
+		{
+			std::cout << stderr << "could not create face " << szPath << " : " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
+		else
+		{
+			// Récupération du domino :
+			SDL_UpperBlit(tileSurface, NULL, faceSurface, NULL);
+			// Découpage de tout sauf de la face :
+			SDL_UpperBlitCut(facedown, faceSurface);
+		}
+	}
+}
+
 void GraphicBoard::LoadTile(const int istart, const int iend, const std::string& path)
 {
 	std::vector<std::string> vPaths;
@@ -174,7 +216,7 @@ void GraphicBoard::LoadTile(const int istart, const int iend, const std::string&
 	auto it = vPaths.begin();
 	for (int i = istart; i < iend; ++i)
 	{
-		LoadTile(dominos[i], it->c_str());
+		LoadTile(dominos[i], faces[i], it->c_str());
 		++it;
 	}
 }
@@ -253,11 +295,6 @@ void GraphicBoard::LoadTiles()
 
 void GraphicBoard::LoadResources()
 {
-	LoadTiles();
-	//LoadBackground("./background/10013168.jpg");
-	//LoadBackground("./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg");
-	LoadRandomBackground("./background/");
-
 	auto temp = IMG_Load("./tiles/Blank/blank.svg");
 	bordermask = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (bordermask == NULL)
@@ -275,6 +312,11 @@ void GraphicBoard::LoadResources()
 		ThrowException(1);
 	}
 	SDL_FreeSurface(temp);
+
+	LoadTiles();
+	//LoadBackground("./background/10013168.jpg");
+	//LoadBackground("./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg");
+	LoadRandomBackground("./background/");
 }
 
 void GraphicBoard::LoadUI()
@@ -855,12 +897,8 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coord.x = 0;
 			coord.y = -38;
 
-			// Récupération du domino :
-			SDL_UpperBlit(dominos[domino], NULL, tempMask, NULL);
-			// Découpage de tout sauf de la face :
-			SDL_UpperBlitCut(facedown, tempMask);
-			// Dessin du domino sans face sur le domino vierge :
-			SDL_UpperBlit(tempMask, NULL, temp, &coord);
+			// Dessin de la face du domino sur le domino vierge :
+			SDL_UpperBlit(faces[domino], NULL, temp, &coord);
 
 			if (clicked[index])
 				SDL_UpperBlitInverted(temp, virtualscreen, coordonnees);
@@ -885,12 +923,8 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coord.x = 33;
 			coord.y = -38;
 
-			// Récupération du domino :
-			SDL_UpperBlit(dominos[domino], NULL, tempMask, NULL);
-			// Découpage de tout sauf de la face :
-			SDL_UpperBlitCut(facedown, tempMask);
-			// Dessin du domino sans face sur le domino vierge :
-			SDL_UpperBlit(tempMask, NULL, temp, &coord);
+			// Dessin de la face du domino sur le domino vierge :
+			SDL_UpperBlit(faces[domino], NULL, temp, &coord);
 
 			if (clicked[index])
 				SDL_UpperBlitInverted(temp, virtualscreen, coordonnees);
@@ -916,12 +950,8 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coord.x = 33;
 			coord.y = 0;
 
-			// Récupération du domino :
-			SDL_UpperBlit(dominos[domino], NULL, tempMask, NULL);
-			// Découpage de tout sauf de la face :
-			SDL_UpperBlitCut(facedown, tempMask);
-			// Dessin du domino sans face sur le domino vierge :
-			SDL_UpperBlit(tempMask, NULL, temp, &coord);
+			// Dessin de la face du domino sur le domino vierge :
+			SDL_UpperBlit(faces[domino], NULL, temp, &coord);
 
 			if (clicked[index])
 				SDL_UpperBlitInverted(temp, virtualscreen, coordonnees);
@@ -1062,7 +1092,7 @@ void GraphicBoard::WhatsLeft()
 	for (int x = 0; x < 6; ++x)
 		for (int y = 7; y >= 0; --y)
 		{
-			int domino = y + x * 8;
+			int domino = y + (x << 3);
 			int t = board[y][x];
 			for (int z = 0; z < board[y][x]; ++z)
 			{

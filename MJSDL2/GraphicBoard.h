@@ -32,6 +32,7 @@ public:
 
 private:
 	void Init();
+	void LoadTile(SDL_Surface*& tileSurface, SDL_Surface*& faceSurface, const char* szPath);
 	void LoadTile(SDL_Surface*& tileSurface, const char* szPath);
 	void LoadTile(const int istart, const int iend, const std::string& path);
 	void LoadRamdomTileSet(const int istart, const int iend, const std::string& path);
@@ -67,10 +68,16 @@ private:
 		* OuestBtn,
 		* NordBtn,
 		* ExitBtn;
-	//SDL_Surface* couches[5] = { NULL, NULL, NULL, NULL, NULL };
 	int Height, Width;
 	SDL_DisplayMode displayCapabilities;
 	SDL_Surface* dominos[42] = { NULL, NULL, NULL, NULL, NULL , NULL, NULL,
+		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
+		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
+		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
+		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
+		NULL, NULL, NULL, NULL, NULL , NULL, NULL
+	};
+	SDL_Surface* faces[42] = { NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
