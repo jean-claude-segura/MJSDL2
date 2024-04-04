@@ -1077,7 +1077,18 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 	SDL_ShowCursor(true ? SDL_ENABLE : SDL_DISABLE);
 }
 
-#ifdef _DEBUG
+inline void Translate(SDL_Renderer * renderer, SDL_Surface *surface, SDL_Rect * rectsrs, SDL_Rect coordonnees, double angle, SDL_Point * point, SDL_RendererFlip flip, int w, int h, int Width, int Height, bool clicked = false)
+{
+	coordonnees.x *= w / (double)Width;
+	coordonnees.y *= h / (double)Height;
+	coordonnees.w *= w / (double)Width;
+	coordonnees.h *= h / (double)Height;
+
+	auto texture = SDL_CreateTextureFromSurface(renderer, surface);
+	SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
+	SDL_DestroyTexture(texture);
+}
+
 void GraphicBoard::RefreshTest(bool refreshMouseMap)
 {
 	if (refreshMouseMap) RefreshMouseMap();
@@ -1128,16 +1139,9 @@ void GraphicBoard::RefreshTest(bool refreshMouseMap)
 
 			coordonnees.w = dominos[domino]->w;
 			coordonnees.h = dominos[domino]->h;
-			coordonnees.x *= ScreenRect.w / (double)Width;
-			coordonnees.y *= ScreenRect.h / (double)Height;
-			coordonnees.w *= ScreenRect.w / (double)Width;
-			coordonnees.h *= ScreenRect.h / (double)Height;
 
-			auto texture = SDL_CreateTextureFromSurface(renderer, bordermask);
-			SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, 0, NULL, SDL_FLIP_VERTICAL);
-			SDL_DestroyTexture(texture);
+			Translate(renderer, bordermask, NULL, coordonnees, 0, NULL, SDL_FLIP_VERTICAL, ScreenRect.w, ScreenRect.h, Width, Height);
 
-			texture = SDL_CreateTextureFromSurface(renderer, faces[domino]);
 			SDL_Rect coord;
 			coord.x = 0;
 			coord.y = -38;
@@ -1147,17 +1151,11 @@ void GraphicBoard::RefreshTest(bool refreshMouseMap)
 
 			coordonnees.w = dominos[domino]->w;
 			coordonnees.h = dominos[domino]->h;
-			coordonnees.w *= ScreenRect.w / (double)Width;
-			coordonnees.h *= ScreenRect.h / (double)Height;
 
 			coordonnees.x += coord.x;
 			coordonnees.y += coord.y;
 			
-			coordonnees.x *= ScreenRect.w / (double)Width;
-			coordonnees.y *= ScreenRect.h / (double)Height;
-
-			SDL_RenderCopy(renderer, texture, NULL, &coordonnees);
-			SDL_DestroyTexture(texture);
+			Translate(renderer, faces[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height, clicked[index]);
 		}
 		else if (direction == 1)
 		{
@@ -1239,9 +1237,47 @@ void GraphicBoard::RefreshTest(bool refreshMouseMap)
 		}
 	}
 
+	// Défaite :
+	//SDL_SetTextureColorMod
+
+	// Interface :
+	// Ouest :
+	coordonnees.w = RestartBtn->w;
+	coordonnees.h = RestartBtn->h;
+	coordonnees.x = 0;
+	coordonnees.y = (RestartBtn->h - 20) * 4;
+	Translate(renderer, OuestBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	// Sud :
+	coordonnees.x = NordBtn->w - 20;
+	coordonnees.y = (RestartBtn->h - 20) * 5;
+	Translate(renderer, SudBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	// Turn :
+	coordonnees.x = RestartBtn->w - 20;
+	coordonnees.y = (RestartBtn->h - 20) * 4;
+	Translate(renderer, TurnBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	// Nord :
+	coordonnees.x = RestartBtn->w - 20;
+	coordonnees.y = (RestartBtn->h - 20) * 3;
+	Translate(renderer, NordBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	// Est :
+	coordonnees.x = (RestartBtn->w << 1) - 40;
+	coordonnees.y = (RestartBtn->h - 20) * 4;
+	Translate(renderer, EstBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	// Hint :
+	coordonnees.x = RestartBtn->w - 20;
+	coordonnees.y = RestartBtn->h - 20;
+	Translate(renderer, HintBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	// Restart :
+	coordonnees.x = RestartBtn->w - 20;
+	coordonnees.y = 0;
+	Translate(renderer, RestartBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	// Exit
+	coordonnees.x = Width - RestartBtn->w;
+	coordonnees.y = 0;
+	Translate(renderer, ExitBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+
 	SDL_RenderPresent(renderer);
 }
-#endif
 
 void GraphicBoard::WhatsLeft()
 {
