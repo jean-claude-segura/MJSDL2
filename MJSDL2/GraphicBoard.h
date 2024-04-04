@@ -27,9 +27,9 @@ public:
 	GraphicBoard();
 	~GraphicBoard();
 	void Loop();
-	void Init();
 
 private:
+	void Init();
 	void LoadTile(SDL_Surface* &tileSurface, const char* szPath);
 	void LoadTile(const int istart, const int iend, const std::string& path);
 	void LoadRamdomTileSet(const int istart, const int iend, const std::string& path);
@@ -91,5 +91,4 @@ private:
 	int selected = -1;
 	std::vector<std::pair<int, int>>::const_iterator itNextMove;
 	uint8_t direction = 3;
-	bool bInitDone = false;
 };

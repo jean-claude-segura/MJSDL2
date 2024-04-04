@@ -2,7 +2,6 @@
 
 GraphicBoard::GraphicBoard()
 {
-	bInitDone = false;
 }
 
 GraphicBoard::~GraphicBoard()
@@ -50,7 +49,6 @@ void GraphicBoard::ThrowException(const int i)
 
 void GraphicBoard::Init()
 {
-	plateau.InitFirst();
 	SDL_SetMainReady();
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -123,13 +121,13 @@ void GraphicBoard::Init()
 	SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));*/
 	//SDL_UpdateWindowSurface(window);
 
-	itNextMove = plateau.GetMovesLeft().begin();
+	plateau.InitBoard();
 	plateau.SortBoard(direction);
+	itNextMove = plateau.GetMovesLeft().begin();
 	Refresh(true);
-	bInitDone = true;
 }
 
-void GraphicBoard::LoadTile(SDL_Surface* &tileSurface, const char * szPath)
+void GraphicBoard::LoadTile(SDL_Surface*& tileSurface, const char* szPath)
 {
 	if (tileSurface != NULL)
 		SDL_FreeSurface(tileSurface);
@@ -143,15 +141,15 @@ void GraphicBoard::LoadTile(SDL_Surface* &tileSurface, const char * szPath)
 	SDL_FreeSurface(temp);
 }
 
-void GraphicBoard::LoadTile(const int istart, const int iend, const std::string & path)
+void GraphicBoard::LoadTile(const int istart, const int iend, const std::string& path)
 {
 	std::vector<std::string> vPaths;
 	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
-		if(!entry.is_directory())
+		if (!entry.is_directory())
 			vPaths.emplace_back(entry.path().string());
 	}
-	if(vPaths.size() != (iend - istart))
+	if (vPaths.size() != (iend - istart))
 		ThrowException(1);
 	std::sort(vPaths.begin(), vPaths.end());
 	auto it = vPaths.begin();
@@ -192,11 +190,11 @@ void GraphicBoard::LoadRandomBackground(const std::string& path)
 		if (!entry.is_directory())
 			vPaths.emplace_back(entry.path().string());
 	}
-		std::sort(vPaths.begin(), vPaths.end());
-		std::random_device r;
-		std::default_random_engine e1(r());
-		std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
-		LoadBackground(vPaths[uniform_dist(e1)]);
+	std::sort(vPaths.begin(), vPaths.end());
+	std::random_device r;
+	std::default_random_engine e1(r());
+	std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
+	LoadBackground(vPaths[uniform_dist(e1)]);
 }
 
 void GraphicBoard::LoadBackground(const std::string& path)
@@ -481,7 +479,7 @@ void GraphicBoard::setClicked(const int x, const int y)
 			case NORTH:
 				if (direction == 3)
 					direction = 0;
-				else if(direction == 2)
+				else if (direction == 2)
 					direction = 1;
 				plateau.SortBoard(direction);
 				Refresh(true);
@@ -558,7 +556,7 @@ void GraphicBoard::RefreshMouseMap()
 			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
 			SDL_SetColourOnOpaque(dominos[domino], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
 		}
-		else if(direction == 0)
+		else if (direction == 0)
 		{
 			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
 			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
@@ -580,7 +578,7 @@ void GraphicBoard::RefreshMouseMap()
 			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 			SDL_UpperBlit(bordermask, NULL, temp, NULL);
 			SDL_HorizontalFlip(temp);
-			
+
 			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
 
 			SDL_FreeSurface(temp);
@@ -806,7 +804,7 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			else
 				SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
 		}
-		else if(direction == 0)
+		else if (direction == 0)
 		{
 			// Up - Left
 			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
@@ -1061,66 +1059,62 @@ void GraphicBoard::WhatsLeft()
 
 void GraphicBoard::Loop()
 {
-	if (bInitDone)
+	Init();
+
+	SDL_Event event;
+	bool done = false;
+	while (!done && SDL_WaitEvent(&event)) // SDL_PollEvent(&event) et adieu l'autonomie...
 	{
-		SDL_Event event;
-		bool done = false;
-		while (!done && SDL_WaitEvent(&event)) // SDL_PollEvent(&event) et adieu l'autonomie...
+		switch (event.type)
 		{
-			switch (event.type)
+		case SDL_KEYDOWN:
+			switch (event.key.keysym.sym)
 			{
-			case SDL_KEYDOWN:
-				switch (event.key.keysym.sym)
-				{
-				case SDLK_RETURN:
-					break;
-				case SDLK_ESCAPE:
-					done = true;
-					break;
-				default:
-					break;
-				}
+			case SDLK_RETURN:
 				break;
-			case SDL_MOUSEBUTTONDOWN:
-				switch (event.button.button)
-				{
-				case SDL_BUTTON_LEFT:
-					while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
-					{
-						//setClicked(event.motion.x, event.motion.y);
-						setClicked(event.button.x, event.button.y);
-						//plateau.InitBoard();
-						//Refresh();
-						/*switch (event.type)
-						{
-						case SDL_MOUSEMOTION:
-							break;
-						default:
-							break;
-						}*/
-					}
-					break;
-				case SDL_BUTTON_RIGHT:
-					WhatsLeft();
-					while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
-					//plateau.InitBoard();
-					Refresh(false);
-					break;
-				default:
-					break;
-				}
-				break;
-				// Evénement déclenché par une fermeture de la fenêtre:
-			case SDL_QUIT:
+			case SDLK_ESCAPE:
 				done = true;
 				break;
 			default:
 				break;
 			}
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+			switch (event.button.button)
+			{
+			case SDL_BUTTON_LEFT:
+				while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
+				{
+					//setClicked(event.motion.x, event.motion.y);
+					setClicked(event.button.x, event.button.y);
+					//plateau.InitBoard();
+					//Refresh();
+					/*switch (event.type)
+					{
+					case SDL_MOUSEMOTION:
+						break;
+					default:
+						break;
+					}*/
+				}
+				break;
+			case SDL_BUTTON_RIGHT:
+				WhatsLeft();
+				while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
+				//plateau.InitBoard();
+				Refresh(false);
+				break;
+			default:
+				break;
+			}
+			break;
+			// Evénement déclenché par une fermeture de la fenêtre:
+		case SDL_QUIT:
+			done = true;
+			break;
+		default:
+			break;
 		}
 	}
-	else
-	{
-		ThrowException(1);
-	}
 }
+
