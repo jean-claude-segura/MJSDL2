@@ -43,8 +43,8 @@ private:
 	void Refresh(bool);
 #ifdef _DEBUG
 	void RefreshExample();
-	void RefreshTest(bool);
 #endif
+	void RefreshTest(bool);
 	void RefreshMouseMap();
 	void WhatsLeft();
 	void setClicked(const int x, const int y);
