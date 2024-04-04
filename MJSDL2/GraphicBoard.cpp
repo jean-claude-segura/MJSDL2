@@ -61,6 +61,8 @@ GraphicBoard::~GraphicBoard()
 		SDL_FreeSurface(EstBtn);
 	if (ExitBtn != NULL)
 		SDL_FreeSurface(ExitBtn);
+	if (textureBackground != NULL)
+		SDL_DestroyTexture(textureBackground);
 	if (window != NULL)
 		SDL_DestroyWindow(window);
 	SDL_Quit();
@@ -264,6 +266,12 @@ void GraphicBoard::LoadBackground(const std::string& path)
 	background = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (background == NULL) {
 		std::cout << stderr << "could not create background: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	textureBackground = SDL_CreateTextureFromSurface(renderer, background);
+	if (textureBackground == NULL)
+	{
+		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 	SDL_FreeSurface(temp);
@@ -851,6 +859,7 @@ void GraphicBoard::RefreshExample()
 
 void GraphicBoard::Refresh(bool refreshMouseMap)
 {
+	return RefreshTest();
 #ifdef _DEBUG
 	//return RefreshExample();
 #endif
@@ -1067,6 +1076,54 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 
 	SDL_ShowCursor(true ? SDL_ENABLE : SDL_DISABLE);
 }
+
+#ifdef _DEBUG
+void GraphicBoard::RefreshTest()
+{
+	SDL_RenderClear(renderer);
+
+	// Copie du fond :
+	if (SDL_RenderCopy(renderer, textureBackground, NULL, NULL) < 0)
+	{
+		std::cout << stderr << "could not copy renderer: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+
+	// Placement des dominos :
+	SDL_Rect coordonnees;
+
+	auto tWidth = (Width - (bordermask->w - 40) * 12) >> 1;
+	auto tHeight = (Height - (bordermask->h - 40) >> 3) >> 1;
+
+	for(const auto & tile : plateau.getLogicalBoard())
+	{
+		auto x = std::get<0>(tile);
+		auto y = std::get<1>(tile);
+		auto z = std::get<2>(tile);
+		auto domino = std::get<3>(tile);
+		auto index = std::get<4>(tile);
+
+		{
+			// Down - Left
+			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
+			coordonnees.w = dominos[domino]->w;
+			coordonnees.h = dominos[domino]->h;
+
+			coordonnees.x *= ScreenRect.w / (double)Width;
+			coordonnees.y *= ScreenRect.h / (double)Height;
+			coordonnees.w *= ScreenRect.w / (double)Width;
+			coordonnees.h *= ScreenRect.h / (double)Height;
+
+			auto texture = SDL_CreateTextureFromSurface(renderer, dominos[domino]);
+			SDL_RenderCopy(renderer, texture, NULL, &coordonnees);
+			SDL_DestroyTexture(texture);
+		}
+	}
+
+	SDL_RenderPresent(renderer);
+}
+#endif
 
 void GraphicBoard::WhatsLeft()
 {

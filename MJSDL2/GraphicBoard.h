@@ -43,6 +43,7 @@ private:
 	void Refresh(bool);
 #ifdef _DEBUG
 	void RefreshExample();
+	void RefreshTest();
 #endif
 	void RefreshMouseMap();
 	void WhatsLeft();
@@ -68,6 +69,7 @@ private:
 		* OuestBtn,
 		* NordBtn,
 		* ExitBtn;
+	SDL_Texture* textureBackground;
 	int Height, Width;
 	SDL_DisplayMode displayCapabilities;
 	SDL_Surface* dominos[42] = { NULL, NULL, NULL, NULL, NULL , NULL, NULL,
