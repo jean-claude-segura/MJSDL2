@@ -361,11 +361,23 @@ void Board::RemoveTile(const int index)
 	}
 }
 
-void Board::RemovePairOfTiles(const int first, const int second)
+bool Board::RemovePairOfTiles(const int first, const int second)
 {
-	RemoveTile(first);
-	RemoveTile(second);
-	SetMoves();
+	bool bRetour = false;
+	auto left = TilesMap[first];
+	auto right = TilesMap[second];
+	if (
+		left == right ||
+		(34 <= left && left < 38 && 34 <= right && right < 38) || // Saisons
+		(38 <= left && left < 42 && 38 <= right && right < 42) // Fleurs.
+		)
+	{
+		RemoveTile(first);
+		RemoveTile(second);
+		SetMoves();
+		bRetour = true;
+	}
+	return bRetour;
 }
 
 void Board::BuildMoves(std::vector<std::tuple<double, double, double, int, int>>& RemovableBoard, std::vector<std::tuple<double, double, double, int, int>>::iterator& itFirst, std::vector<std::pair<int, int>>& Moves)

@@ -17,7 +17,7 @@ public:
 	void InitBoard();
 	const int getDominoFromIndex(const int index) { return TilesMap[index]; }
 	const bool getRemovableFromIndex(const int index) { return Removable[index]; }
-	void RemovePairOfTiles(const int, const int);
+	bool RemovePairOfTiles(const int, const int);
 	const bool IsBlocked() { return Moves.size() == 0; }
 	const int HowManyMovesLeft() { return Moves.size(); }
 	const std::vector<std::pair<int, int>>& GetMovesLeft() { return Moves; }

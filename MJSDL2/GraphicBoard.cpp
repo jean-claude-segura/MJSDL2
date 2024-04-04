@@ -1,7 +1,24 @@
 #include "GraphicBoard.h"
 
-GraphicBoard::GraphicBoard()
+GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height (0), Width(0), ScreenRect({0,0,0,0})
 {
+	window = NULL;
+	virtualscreen = NULL;
+	virtualmousescreen = NULL;
+	mousescreen = NULL;
+	tampon = NULL;
+	renderer = NULL;
+	background = NULL;
+	restart = NULL;
+	hint = NULL;
+	turn = NULL;
+	bordermask = NULL;
+	facedown = NULL;
+	Est = NULL;
+	Sud = NULL;
+	Ouest = NULL;
+	Nord = NULL;
+	exit.type = SDL_QUIT;
 }
 
 GraphicBoard::~GraphicBoard()
@@ -380,16 +397,9 @@ void GraphicBoard::setClicked(const int x, const int y)
 					}
 					else
 					{
-						int left = plateau.getDominoFromIndex(selected);
-						int right = plateau.getDominoFromIndex(index);
-						if (
-							left == right ||
-							(34 <= left && left < 38 && 34 <= right && right < 38) || // Saisons
-							(38 <= left && left < 42 && 38 <= right && right < 42) // Fleurs.
-							)
+						clicked[index] = true;
+						if (plateau.RemovePairOfTiles(selected, index))
 						{
-							clicked[index] = true;
-							plateau.RemovePairOfTiles(selected, index);
 							int temp = selected;
 							selected = -1;
 							Refresh(true);
@@ -412,6 +422,7 @@ void GraphicBoard::setClicked(const int x, const int y)
 						}
 						else
 						{
+							clicked[index] = false;
 #ifdef _DEBUG
 							std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
@@ -1073,7 +1084,7 @@ void GraphicBoard::Loop()
 			case SDLK_RETURN:
 				break;
 			case SDLK_ESCAPE:
-				done = true;
+				SDL_PushEvent(&exit);
 				break;
 			default:
 				break;
