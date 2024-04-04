@@ -7,7 +7,7 @@ int main()
 	try
 	{
 		GraphicBoard plateau;
-
+		plateau.Init();
 		plateau.Loop();
 	}
 	catch (...)

@@ -2,6 +2,55 @@
 
 GraphicBoard::GraphicBoard()
 {
+	bInitDone = false;
+}
+
+GraphicBoard::~GraphicBoard()
+{
+	if (tampon != NULL)
+		SDL_FreeSurface(tampon);
+	if (virtualscreen != NULL)
+		SDL_FreeSurface(virtualscreen);
+	if (renderer != NULL)
+		SDL_DestroyRenderer(renderer);
+	for (int i = 0; i < 42; ++i)
+	{
+		if (dominos[i] != NULL)
+			SDL_FreeSurface(dominos[i]);
+	}
+	if (background != NULL)
+		SDL_FreeSurface(background);
+	if (restart != NULL)
+		SDL_FreeSurface(restart);
+	if (hint != NULL)
+		SDL_FreeSurface(hint);
+	if (turn != NULL)
+		SDL_FreeSurface(turn);
+	if (bordermask != NULL)
+		SDL_FreeSurface(bordermask);
+	if (facedown != NULL)
+		SDL_FreeSurface(facedown);
+	if (Nord != NULL)
+		SDL_FreeSurface(Nord);
+	if (Ouest != NULL)
+		SDL_FreeSurface(Ouest);
+	if (Sud != NULL)
+		SDL_FreeSurface(Sud);
+	if (Est != NULL)
+		SDL_FreeSurface(Est);
+	if (window != NULL)
+		SDL_DestroyWindow(window);
+	SDL_Quit();
+}
+
+void GraphicBoard::ThrowException(const int i)
+{
+	throw i;
+}
+
+void GraphicBoard::Init()
+{
+	plateau.InitFirst();
 	SDL_SetMainReady();
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -38,9 +87,9 @@ GraphicBoard::GraphicBoard()
 		std::cout << stderr << "could not create renderer: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
-	
+
 	virtualscreen = SDL_CreateRGBSurface(0, Width, Height, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-	if(virtualscreen == NULL)
+	if (virtualscreen == NULL)
 	{
 		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
 		ThrowException(1);
@@ -69,7 +118,7 @@ GraphicBoard::GraphicBoard()
 
 	LoadResources();
 	LoadUI();
-	
+
 	/*screenSurface = SDL_GetWindowSurface(window);
 	SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));*/
 	//SDL_UpdateWindowSurface(window);
@@ -77,55 +126,7 @@ GraphicBoard::GraphicBoard()
 	itNextMove = plateau.GetMovesLeft().begin();
 	plateau.SortBoard(direction);
 	Refresh(true);
-}
-
-GraphicBoard::~GraphicBoard()
-{
-	FreeResources();
-}
-
-void GraphicBoard::ThrowException(const int i)
-{
-	FreeResources();
-	throw i;
-}
-
-void GraphicBoard::FreeResources()
-{
-	if (tampon != NULL)
-		SDL_FreeSurface(tampon);
-	if (virtualscreen != NULL)
-		SDL_FreeSurface(virtualscreen);
-	if (renderer != NULL)
-		SDL_DestroyRenderer(renderer);
-	for (int i = 0; i < 42; ++i)
-	{
-		if (dominos[i] != NULL)
-			SDL_FreeSurface(dominos[i]);
-	}
-	if (background != NULL)
-		SDL_FreeSurface(background);
-	if (restart != NULL)
-		SDL_FreeSurface(restart);
-	if (hint != NULL)
-		SDL_FreeSurface(hint);
-	if (turn != NULL)
-		SDL_FreeSurface(turn);
-	if (bordermask != NULL)
-		SDL_FreeSurface(bordermask);
-	if (facedown != NULL)
-		SDL_FreeSurface(facedown);
-	if (Nord != NULL)
-		SDL_FreeSurface(Nord);
-	if (Ouest != NULL)
-		SDL_FreeSurface(Ouest);
-	if (Sud != NULL)
-		SDL_FreeSurface(Sud);
-	if (Est != NULL)
-		SDL_FreeSurface(Est);
-	if (window != NULL)
-		SDL_DestroyWindow(window);
-	SDL_Quit();
+	bInitDone = true;
 }
 
 void GraphicBoard::LoadTile(SDL_Surface* &tileSurface, const char * szPath)
@@ -1060,59 +1061,66 @@ void GraphicBoard::WhatsLeft()
 
 void GraphicBoard::Loop()
 {
-	SDL_Event event;
-	bool done = false;
-	while (!done && SDL_WaitEvent(&event)) // SDL_PollEvent(&event) et adieu l'autonomie...
+	if (bInitDone)
 	{
-		switch (event.type)
+		SDL_Event event;
+		bool done = false;
+		while (!done && SDL_WaitEvent(&event)) // SDL_PollEvent(&event) et adieu l'autonomie...
 		{
-		case SDL_KEYDOWN:
-			switch (event.key.keysym.sym)
+			switch (event.type)
 			{
-			case SDLK_RETURN:
+			case SDL_KEYDOWN:
+				switch (event.key.keysym.sym)
+				{
+				case SDLK_RETURN:
+					break;
+				case SDLK_ESCAPE:
+					done = true;
+					break;
+				default:
+					break;
+				}
 				break;
-			case SDLK_ESCAPE:
+			case SDL_MOUSEBUTTONDOWN:
+				switch (event.button.button)
+				{
+				case SDL_BUTTON_LEFT:
+					while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
+					{
+						//setClicked(event.motion.x, event.motion.y);
+						setClicked(event.button.x, event.button.y);
+						//plateau.InitBoard();
+						//Refresh();
+						/*switch (event.type)
+						{
+						case SDL_MOUSEMOTION:
+							break;
+						default:
+							break;
+						}*/
+					}
+					break;
+				case SDL_BUTTON_RIGHT:
+					WhatsLeft();
+					while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
+					//plateau.InitBoard();
+					Refresh(false);
+					break;
+				default:
+					break;
+				}
+				break;
+				// Evénement déclenché par une fermeture de la fenêtre:
+			case SDL_QUIT:
 				done = true;
 				break;
 			default:
 				break;
 			}
-			break;
-		case SDL_MOUSEBUTTONDOWN:
-			switch (event.button.button)
-			{
-			case SDL_BUTTON_LEFT:
-				while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
-				{
-					//setClicked(event.motion.x, event.motion.y);
-					setClicked(event.button.x, event.button.y);
-					//plateau.InitBoard();
-					//Refresh();
-					/*switch (event.type)
-					{
-					case SDL_MOUSEMOTION:
-						break;
-					default:
-						break;
-					}*/
-				}
-				break;
-			case SDL_BUTTON_RIGHT:
-				WhatsLeft();
-				while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
-				//plateau.InitBoard();
-				Refresh(false);
-				break;
-			default:
-				break;
-			}
-			break;
-			// Evénement déclenché par une fermeture de la fenêtre:
-		case SDL_QUIT:
-			done = true;
-			break;
-		default:
-			break;
 		}
+	}
+	else
+	{
+		ThrowException(1);
 	}
 }

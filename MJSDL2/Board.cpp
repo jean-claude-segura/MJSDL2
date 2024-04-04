@@ -2,6 +2,10 @@
 
 Board::Board()
 {
+	bInitDone = false;
+}
+void Board::InitFirst()
+{
 	std::array<std::array<std::array<bool, 5>, 8>, 12> BasePattern;
 	for (int z = 0; z < 5; ++z)
 		for (int y = 0; y < 8; ++y)

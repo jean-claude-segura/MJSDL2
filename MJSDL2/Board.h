@@ -26,6 +26,7 @@ public:
 	const std::vector<int>& getWhatsLeft() { return WhatsLeft; }
 	const std::vector<std::tuple<double, double, double, int, int>>& getLogicalBoard() { return LogicalBoard; }
 	void SortBoard(const uint8_t direction);
+	void InitFirst();
 	
 private:
 	std::vector<int> WhatsLeft;
@@ -50,4 +51,5 @@ private:
 	void BuildMoves(std::vector<std::tuple<double, double, double, int, int>>& RemovableBoard, std::vector<std::tuple<double, double, double, int, int>>::iterator& itFirst, std::vector<std::pair<int, int>>& Moves);
 	std::vector<std::pair<int, int>> Moves;
 	void SetMoves();
+	bool bInitDone = false;
 };
