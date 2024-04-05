@@ -3,65 +3,59 @@
 GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height (0), Width(0), ScreenRect({0,0,0,0})
 {
 	window = NULL;
-	virtualscreen = NULL;
-	virtualmousescreen = NULL;
-	mousescreen = NULL;
-	tampon = NULL;
 	renderer = NULL;
-	background = NULL;
 	RestartBtn = NULL;
 	HintBtn = NULL;
 	TurnBtn = NULL;
-	bordermask = NULL;
-	facedown = NULL;
 	EstBtn = NULL;
 	SudBtn = NULL;
 	OuestBtn = NULL;
 	NordBtn = NULL;
+	ExitBtn = NULL;
 	exitEvent.type = SDL_QUIT;
 	textureBackground = NULL;
+	virtualmousescreen = NULL;
+	mousescreen = NULL;
+	mousemask = NULL;
 }
 
 GraphicBoard::~GraphicBoard()
 {
-	if (tampon != NULL)
-		SDL_FreeSurface(tampon);
-	if (virtualscreen != NULL)
-		SDL_FreeSurface(virtualscreen);
+	if (virtualmousescreen != NULL)
+		SDL_FreeSurface(virtualmousescreen);
+	if (mousescreen != NULL)
+		SDL_FreeSurface(mousescreen);
+	if (mousemask != NULL)
+		SDL_FreeSurface(mousemask);
+
 	if (renderer != NULL)
 		SDL_DestroyRenderer(renderer);
 	for (int i = 0; i < 42; ++i)
 	{
 		if (dominos[i] != NULL)
-			SDL_FreeSurface(dominos[i]);
+			SDL_DestroyTexture(dominos[i]);
 	}
 	for (int i = 0; i < 42; ++i)
 	{
 		if (faces[i] != NULL)
-			SDL_FreeSurface(faces[i]);
+			SDL_DestroyTexture(faces[i]);
 	}
-	if (background != NULL)
-		SDL_FreeSurface(background);
 	if (RestartBtn != NULL)
-		SDL_FreeSurface(RestartBtn);
+		SDL_DestroyTexture(RestartBtn);
 	if (HintBtn != NULL)
-		SDL_FreeSurface(HintBtn);
+		SDL_DestroyTexture(HintBtn);
 	if (TurnBtn != NULL)
-		SDL_FreeSurface(TurnBtn);
-	if (bordermask != NULL)
-		SDL_FreeSurface(bordermask);
-	if (facedown != NULL)
-		SDL_FreeSurface(facedown);
+		SDL_DestroyTexture(TurnBtn);
 	if (NordBtn != NULL)
-		SDL_FreeSurface(NordBtn);
+		SDL_DestroyTexture(NordBtn);
 	if (OuestBtn != NULL)
-		SDL_FreeSurface(OuestBtn);
+		SDL_DestroyTexture(OuestBtn);
 	if (SudBtn != NULL)
-		SDL_FreeSurface(SudBtn);
+		SDL_DestroyTexture(SudBtn);
 	if (EstBtn != NULL)
-		SDL_FreeSurface(EstBtn);
+		SDL_DestroyTexture(EstBtn);
 	if (ExitBtn != NULL)
-		SDL_FreeSurface(ExitBtn);
+		SDL_DestroyTexture(ExitBtn);
 	if (textureBackground != NULL)
 		SDL_DestroyTexture(textureBackground);
 	if (window != NULL)
@@ -93,7 +87,6 @@ void GraphicBoard::Init()
 	Width = 3840;
 	Height = 2160;
 
-	//SDL_GetDisplayMode(0, 0, &displayCapabilities);
 	ScreenRect.h = DM.h;
 	ScreenRect.w = DM.w;
 	ScreenRect.x = 0;
@@ -120,24 +113,10 @@ void GraphicBoard::Init()
 
 	SDL_RenderSetLogicalSize(renderer, Width, Height);
 
-	virtualscreen = SDL_CreateRGBSurface(0, Width, Height, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-	if (virtualscreen == NULL)
-	{
-		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-
 	virtualmousescreen = SDL_CreateRGBSurface(0, Width, Height, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 	if (virtualmousescreen == NULL)
 	{
 		std::cout << stderr << "could not create virtual mouse screen: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-
-	tampon = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-	if (tampon == NULL)
-	{
-		std::cout << stderr << "could not create buffer: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 
@@ -161,39 +140,47 @@ void GraphicBoard::Init()
 	Refresh(true);
 }
 
-void GraphicBoard::LoadTile(SDL_Surface*& tileSurface, const char* szPath)
+void GraphicBoard::LoadTile(SDL_Texture*& tileTexture, const char* szPath)
 {
-	if (tileSurface != NULL)
-		SDL_FreeSurface(tileSurface);
+	if (tileTexture != NULL)
+		SDL_DestroyTexture(tileTexture);
 	auto temp = IMG_Load(szPath);
-	tileSurface = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-	if (tileSurface == NULL)
+	auto tileSurface = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
+	if (tileTexture == NULL)
 	{
+		SDL_FreeSurface(temp);
+		SDL_FreeSurface(tileSurface);
 		std::cout << stderr << "could not create tile " << szPath << " : " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
+	SDL_FreeSurface(tileSurface);
 	SDL_FreeSurface(temp);
 }
 
-void GraphicBoard::LoadTile(SDL_Surface*& tileSurface, SDL_Surface*& faceSurface, const char* szPath)
+void GraphicBoard::LoadTile(SDL_Texture*& tileTexture, SDL_Texture*& faceTexture, const char* szPath, SDL_Surface * facedown)
 {
-	if (tileSurface != NULL)
-		SDL_FreeSurface(tileSurface);
-	if (faceSurface != NULL)
-		SDL_FreeSurface(faceSurface);
+	if (tileTexture != NULL)
+		SDL_DestroyTexture(tileTexture);
+	if (faceTexture != NULL)
+		SDL_DestroyTexture(faceTexture);
 	auto temp = IMG_Load(szPath);
-	tileSurface = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-	if (tileSurface == NULL)
+	auto tileSurface = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
+	if (tileTexture == NULL)
 	{
+		SDL_FreeSurface(temp);
+		SDL_FreeSurface(tileSurface);
 		std::cout << stderr << "could not create tile " << szPath << " : " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 	else
 	{
 		SDL_FreeSurface(temp);
-		faceSurface = SDL_CreateRGBSurface(0, tileSurface->w, tileSurface->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+		auto faceSurface = SDL_CreateRGBSurface(0, tileSurface->w, tileSurface->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 		if (tileSurface == NULL)
 		{
+			SDL_FreeSurface(tileSurface);
 			std::cout << stderr << "could not create face " << szPath << " : " << SDL_GetError() << std::endl;
 			ThrowException(1);
 		}
@@ -203,49 +190,63 @@ void GraphicBoard::LoadTile(SDL_Surface*& tileSurface, SDL_Surface*& faceSurface
 			SDL_UpperBlit(tileSurface, NULL, faceSurface, NULL);
 			// Découpage de tout sauf de la face :
 			SDL_UpperBlitCut(facedown, faceSurface);
+			faceTexture = SDL_CreateTextureFromSurface(renderer, faceSurface);
+			SDL_FreeSurface(faceSurface);
+			SDL_FreeSurface(tileSurface);
 		}
 	}
 }
 
 void GraphicBoard::LoadTile(const int istart, const int iend, const std::string& path)
 {
-	std::vector<std::string> vPaths;
-	for (const auto& entry : std::filesystem::directory_iterator(path))
+	auto temp = IMG_Load("./tiles/Blank/facedown.svg");
+	auto facedown = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (facedown == NULL)
 	{
-		if (!entry.is_directory())
-			vPaths.emplace_back(entry.path().string());
-	}
-	if (vPaths.size() != (iend - istart))
+		std::cout << stderr << "could not create tile mask: " << SDL_GetError() << std::endl;
 		ThrowException(1);
-	std::sort(vPaths.begin(), vPaths.end());
-	auto it = vPaths.begin();
-	for (int i = istart; i < iend; ++i)
-	{
-		LoadTile(dominos[i], faces[i], it->c_str());
-		++it;
 	}
+	else
+	{
+		std::vector<std::string> vPaths;
+		for (const auto& entry : std::filesystem::directory_iterator(path))
+		{
+			if (!entry.is_directory())
+				vPaths.emplace_back(entry.path().string());
+		}
+		if (vPaths.size() != (iend - istart))
+			ThrowException(1);
+		std::sort(vPaths.begin(), vPaths.end());
+		auto it = vPaths.begin();
+		for (int i = istart; i < iend; ++i)
+		{
+			LoadTile(dominos[i], faces[i], it->c_str(), facedown);
+			++it;
+		}
+	}
+	SDL_FreeSurface(temp);
 }
 
 void GraphicBoard::LoadRamdomTileSet(const int istart, const int iend, const std::string& path)
 {
-	std::vector<std::string> vPaths;
-	for (const auto& entry : std::filesystem::directory_iterator(path))
-	{
-		if (entry.is_directory())
-			vPaths.emplace_back(entry.path().string());
-	}
-	if (vPaths.empty())
-	{
-		LoadTile(istart, iend, path);
-	}
-	else
-	{
-		std::sort(vPaths.begin(), vPaths.end());
-		std::random_device r;
-		std::default_random_engine e1(r());
-		std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
-		LoadTile(istart, iend, vPaths[uniform_dist(e1)]);
-	}
+		std::vector<std::string> vPaths;
+		for (const auto& entry : std::filesystem::directory_iterator(path))
+		{
+			if (entry.is_directory())
+				vPaths.emplace_back(entry.path().string());
+		}
+		if (vPaths.empty())
+		{
+			LoadTile(istart, iend, path);
+		}
+		else
+		{
+			std::sort(vPaths.begin(), vPaths.end());
+			std::random_device r;
+			std::default_random_engine e1(r());
+			std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
+			LoadTile(istart, iend, vPaths[uniform_dist(e1)]);
+		}
 }
 
 void GraphicBoard::LoadRandomBackground(const std::string& path)
@@ -266,7 +267,7 @@ void GraphicBoard::LoadRandomBackground(const std::string& path)
 void GraphicBoard::LoadBackground(const std::string& path)
 {
 	auto temp = IMG_Load(path.c_str());
-	background = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	auto background = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (background == NULL) {
 		std::cout << stderr << "could not create background: " << SDL_GetError() << std::endl;
 		ThrowException(1);
@@ -277,6 +278,7 @@ void GraphicBoard::LoadBackground(const std::string& path)
 		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
+	SDL_FreeSurface(background);
 	SDL_FreeSurface(temp);
 }
 
@@ -307,19 +309,10 @@ void GraphicBoard::LoadTiles()
 void GraphicBoard::LoadResources()
 {
 	auto temp = IMG_Load("./tiles/Blank/blank.svg");
-	bordermask = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-	if (bordermask == NULL)
+	mousemask = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (mousemask == NULL)
 	{
-		std::cout << stderr << "could not create tile mask: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	SDL_FreeSurface(temp);
-
-	temp = IMG_Load("./tiles/Blank/facedown.svg");
-	facedown = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-	if (facedown == NULL)
-	{
-		std::cout << stderr << "could not create tile mask: " << SDL_GetError() << std::endl;
+		std::cout << stderr << "could not create mouse mask: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 	SDL_FreeSurface(temp);
@@ -330,119 +323,48 @@ void GraphicBoard::LoadResources()
 	LoadRandomBackground("./background/");
 }
 
+void GraphicBoard::LoadButton(SDL_Texture* &button, const std::string &strPath, const std::string& strName)
+{
+	if (button != NULL)
+		SDL_DestroyTexture(button);
+	auto temp = IMG_Load(strPath.c_str());
+	auto tileSurface = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	auto buttonSurface = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
+	if (buttonSurface == NULL)
+	{
+		SDL_FreeSurface(temp);
+		SDL_FreeSurface(tileSurface);
+		std::cout << stderr << "could not create button surface " << strPath << " : " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	else
+	{
+		SDL_BlitScaled(tileSurface, NULL, buttonSurface, NULL);
+		button = SDL_CreateTextureFromSurface(renderer, buttonSurface);
+		if (button == NULL)
+		{
+			SDL_FreeSurface(temp);
+			SDL_FreeSurface(tileSurface);
+			SDL_FreeSurface(buttonSurface);
+			std::cout << stderr << "could not create button texture " << strPath << " : " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
+		SDL_FreeSurface(buttonSurface);
+		SDL_FreeSurface(tileSurface);
+		SDL_FreeSurface(temp);
+	}
+}
+
 void GraphicBoard::LoadUI()
 {
-	SDL_Surface* temp = NULL;
-	LoadTile(temp, "./interface/MJf1-.svg");
-	EstBtn = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
-	if (EstBtn == NULL)
-	{
-		std::cout << stderr << "could not create Est: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	else
-	{
-		SDL_BlitScaled(temp, NULL, EstBtn, NULL);
-	}
-	SDL_FreeSurface(temp);
-
-	temp = NULL;
-	LoadTile(temp, "./interface/MJf2-.svg");
-	SudBtn = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
-	if (SudBtn == NULL)
-	{
-		std::cout << stderr << "could not create Sud: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	else
-	{
-		SDL_BlitScaled(temp, NULL, SudBtn, NULL);
-	}
-	SDL_FreeSurface(temp);
-
-	temp = NULL;
-	LoadTile(temp, "./interface/MJf3-.svg");
-	OuestBtn = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
-	if (OuestBtn == NULL)
-	{
-		std::cout << stderr << "could not create Ouest: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	else
-	{
-		SDL_BlitScaled(temp, NULL, OuestBtn, NULL);
-	}
-	SDL_FreeSurface(temp);
-
-	temp = NULL;
-	LoadTile(temp, "./interface/MJf4-.svg");
-	NordBtn = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
-	if (NordBtn == NULL)
-	{
-		std::cout << stderr << "could not create Nord: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	else
-	{
-		SDL_BlitScaled(temp, NULL, NordBtn, NULL);
-	}
-	SDL_FreeSurface(temp);
-
-	temp = NULL;
-	LoadTile(temp, "./interface/MJd3rv1-.svg");
-	TurnBtn = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
-	if (TurnBtn == NULL)
-	{
-		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	else
-	{
-		SDL_BlitScaled(temp, NULL, TurnBtn, NULL);
-	}
-	SDL_FreeSurface(temp);
-
-	temp = NULL;
-	LoadTile(temp, "./interface/blank.svg");
-	HintBtn = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
-	if (HintBtn == NULL)
-	{
-		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	else
-	{
-		SDL_BlitScaled(temp, NULL, HintBtn, NULL);
-	}
-	SDL_FreeSurface(temp);
-
-	temp = NULL;
-	LoadTile(temp, "./interface/blank.svg");
-	RestartBtn = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
-	if (RestartBtn == NULL)
-	{
-		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	else
-	{
-		SDL_BlitScaled(temp, NULL, RestartBtn, NULL);
-	}
-	SDL_FreeSurface(temp);
-
-	temp = NULL;
-	LoadTile(temp, "./interface/blank.svg");
-	ExitBtn = SDL_CreateRGBSurface(0, temp->w / 2, temp->h / 2, temp->format->BitsPerPixel, temp->format->Rmask, temp->format->Gmask, temp->format->Bmask, temp->format->Amask);
-	if (ExitBtn == NULL)
-	{
-		std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	else
-	{
-		SDL_BlitScaled(temp, NULL, ExitBtn, NULL);
-	}
-	SDL_FreeSurface(temp);
+	LoadButton(EstBtn, "./interface/MJf1-.svg", "EstBtn");
+	LoadButton(SudBtn, "./interface/MJf2-.svg", "SudBtn");
+	LoadButton(OuestBtn, "./interface/MJf3-.svg", "OuestBtn");
+	LoadButton(NordBtn, "./interface/MJf4-.svg", "NordBtn");
+	LoadButton(TurnBtn, "./interface/MJd3rv1-.svg", "TurnBtn");
+	LoadButton(HintBtn, "./interface/blank.svg", "HintBtn");
+	LoadButton(RestartBtn, "./interface/blank.svg", "RestartBtn");
+	LoadButton(ExitBtn, "./interface/blank.svg", "ExitBtn");
 }
 
 void GraphicBoard::InterfaceClicked(int index)
@@ -633,8 +555,8 @@ void GraphicBoard::RefreshMouseMap()
 	// Placement des dominos :
 	SDL_Rect coordonnees;
 
-	auto tWidth = (Width - (bordermask->w - 40) * 12) >> 1;
-	auto tHeight = (Height - (bordermask->h - 40) >> 3) >> 1;
+	auto tWidth = (Width - (mousemask->w - 40) * 12) >> 1;
+	auto tHeight = (Height - (mousemask->h - 40) >> 3) >> 1;
 
 	for (auto& tile : plateau.getLogicalBoard())
 	{
@@ -645,22 +567,22 @@ void GraphicBoard::RefreshMouseMap()
 		auto index = std::get<4>(tile);
 		if (direction == 3)
 		{
-			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
-			coordonnees.w = bordermask->w;
-			coordonnees.h = bordermask->h;
-			SDL_SetColourOnOpaque(dominos[domino], virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
+			coordonnees.x = x * (mousemask->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (mousemask->h - 40) + z * 40 + tHeight;
+			coordonnees.w = mousemask->w;
+			coordonnees.h = mousemask->h;
+			SDL_SetColourOnOpaque(mousemask, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
 		}
 		else if (direction == 0)
 		{
-			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-			coordonnees.w = bordermask->w;
-			coordonnees.h = bordermask->h;
-			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			coordonnees.x = x * (mousemask->w - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (mousemask->h - 40) - z * 40 + tHeight;
+			coordonnees.w = mousemask->w;
+			coordonnees.h = mousemask->h;
+			auto temp = SDL_CreateRGBSurface(0, mousemask->w, mousemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 
 			// Récupération du domino :
-			SDL_UpperBlit(bordermask, NULL, temp, NULL);
+			SDL_UpperBlit(mousemask, NULL, temp, NULL);
 			SDL_VerticalFlip(temp);
 
 			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
@@ -669,13 +591,13 @@ void GraphicBoard::RefreshMouseMap()
 		}
 		else if (direction == 1)
 		{
-			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-			coordonnees.w = bordermask->w;
-			coordonnees.h = bordermask->h;
+			coordonnees.x = x * (mousemask->w - 40) + z * 40 + tWidth;
+			coordonnees.y = y * (mousemask->h - 40) - z * 40 + tHeight;
+			coordonnees.w = mousemask->w;
+			coordonnees.h = mousemask->h;
 			// Up - Right
-			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(bordermask, NULL, temp, NULL);
+			auto temp = SDL_CreateRGBSurface(0, mousemask->w, mousemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(mousemask, NULL, temp, NULL);
 			SDL_HorizontalFlip(temp);
 
 			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
@@ -685,12 +607,12 @@ void GraphicBoard::RefreshMouseMap()
 		else
 		{
 			// Down - Right
-			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
-			coordonnees.w = bordermask->w;
-			coordonnees.h = bordermask->h;
-			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(bordermask, NULL, temp, NULL);
+			coordonnees.x = x * (mousemask->w - 40) + z * 40 + tWidth;
+			coordonnees.y = y * (mousemask->h - 40) + z * 40 + tHeight;
+			coordonnees.w = mousemask->w;
+			coordonnees.h = mousemask->h;
+			auto temp = SDL_CreateRGBSurface(0, mousemask->w, mousemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			SDL_UpperBlit(mousemask, NULL, temp, NULL);
 			SDL_HorizontalFlip(temp);
 			SDL_VerticalFlip(temp);
 
@@ -699,428 +621,81 @@ void GraphicBoard::RefreshMouseMap()
 			SDL_FreeSurface(temp);
 		}
 	}
-
+	/*
 	// Ouest :
 	coordonnees.x = 0;
-	coordonnees.y = (RestartBtn->h - 20) * 4;
+	coordonnees.y = (size.y - 20) * 4;
 	coordonnees.w = RestartBtn->w;
-	coordonnees.h = RestartBtn->h;
+	coordonnees.h = size.y;
 	SDL_SetColourOnOpaque(OuestBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, WEST, 0x00, 0x00));
 	// Sud :
 	coordonnees.x = NordBtn->w - 20;
-	coordonnees.y = (RestartBtn->h - 20) * 5;
+	coordonnees.y = (size.y - 20) * 5;
 	coordonnees.w = RestartBtn->w;
-	coordonnees.h = RestartBtn->h;
+	coordonnees.h = size.y;
 	SDL_SetColourOnOpaque(SudBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, SOUTH, 0x00, 0x00));
 	// Turn :
 	coordonnees.x = RestartBtn->w - 20;
-	coordonnees.y = (RestartBtn->h - 20) * 4;
+	coordonnees.y = (size.y - 20) * 4;
 	coordonnees.w = RestartBtn->w;
-	coordonnees.h = RestartBtn->h;
+	coordonnees.h = size.y;
 	SDL_SetColourOnOpaque(TurnBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, TURN, 0x00, 0x00));
 	// Nord :
 	coordonnees.x = RestartBtn->w - 20;
-	coordonnees.y = (RestartBtn->h - 20) * 3;
+	coordonnees.y = (size.y - 20) * 3;
 	coordonnees.w = RestartBtn->w;
-	coordonnees.h = RestartBtn->h;
+	coordonnees.h = size.y;
 	SDL_SetColourOnOpaque(NordBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, NORTH, 0x00, 0x00));
 	// Est :
 	coordonnees.x = (RestartBtn->w << 1) - 40;
-	coordonnees.y = (RestartBtn->h - 20) * 4;
+	coordonnees.y = (size.y - 20) * 4;
 	coordonnees.w = RestartBtn->w;
-	coordonnees.h = RestartBtn->h;
+	coordonnees.h = size.y;
 	SDL_SetColourOnOpaque(EstBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, EAST, 0x00, 0x00));
 	// Hint :
 	coordonnees.x = RestartBtn->w - 20;
-	coordonnees.y = RestartBtn->h - 20;
+	coordonnees.y = size.y - 20;
 	coordonnees.w = RestartBtn->w;
-	coordonnees.h = RestartBtn->h;
+	coordonnees.h = size.y;
 	SDL_SetColourOnOpaque(HintBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, HINT, 0x00, 0x00));
 	// Restart :
 	coordonnees.x = RestartBtn->w - 20;
 	coordonnees.y = 0;
 	coordonnees.w = RestartBtn->w;
-	coordonnees.h = RestartBtn->h;
+	coordonnees.h = size.y;
 	SDL_SetColourOnOpaque(RestartBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, RESTART, 0x00, 0x00));
 	// Exit
 	coordonnees.x = virtualscreen->w - RestartBtn->w;
 	coordonnees.y = 0;
 	coordonnees.w = RestartBtn->w;
-	coordonnees.h = RestartBtn->h;
+	coordonnees.h = size.y;
 	SDL_SetColourOnOpaque(ExitBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, EXIT, 0x00, 0x00));
 
 	SDL_BlitScaled(virtualmousescreen, NULL, mousescreen, NULL);
+	*/
 }
 
 #ifdef _DEBUG
 void GraphicBoard::RefreshExample()
 {
-	// Copie du fond :
-	//SDL_UpperBlit(background, NULL, virtualscreen, NULL);
-	SDL_BlitScaled(background, NULL, virtualscreen, NULL);
-
-	// Placement des dominos :
-	SDL_Rect coordonnees;
-
-	auto tWidth = (Width - (bordermask->w - 40) * 12) >> 1;
-	auto tHeight = (Height - (bordermask->h - 40) >> 3) >> 1;
-
-	auto& tile = *plateau.getLogicalBoard().begin();
-	{
-		/**/
-		auto x = std::get<0>(tile);
-		auto y = std::get<1>(tile);
-		auto z = std::get<2>(tile);
-		auto domino = std::get<3>(tile);
-		auto index = std::get<4>(tile);
-
-		/**/
-		/**/
-		{
-			x += 2;
-			SDL_Rect coord;
-			coord.x = 0;
-			coord.y = 0;
-			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
-
-			coordonnees.y = (y - 2) * (bordermask->h - 40) - z * 40 + tHeight;
-			SDL_UpperBlit(dominos[0], NULL, virtualscreen, &coordonnees);
-
-			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-			SDL_UpperBlit(facedown, NULL, virtualscreen, &coordonnees);
-
-			coordonnees.y = (y + 2) * (bordermask->h - 40) - z * 40 + tHeight;
-			auto tempBorderMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
-			SDL_UpperBlit(tempBorderMask, NULL, virtualscreen, &coordonnees);
-			SDL_FreeSurface(tempBorderMask);
-		}
-		/**/
-		/**/
-		{
-
-			x += 2;
-			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
-
-			SDL_Rect coord;
-			coord.x = 0;
-			coord.y = 0;
-
-			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			// Récupération du domino :
-			SDL_UpperBlit(dominos[0], NULL, tempMask, NULL);
-			// Découpage de tout sauf de la face :
-			SDL_UpperBlitCut(facedown, tempMask);
-			coordonnees.y = (y - 1) * (bordermask->h - 40) - z * 40 + tHeight;
-			SDL_UpperBlit(tempMask, NULL, virtualscreen, &coordonnees);
-
-			auto tempBorderMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
-			SDL_VerticalFlip(tempBorderMask);
-			coordonnees.y = (y + 2) * (bordermask->h - 40) - z * 40 + tHeight;
-			SDL_UpperBlit(tempBorderMask, NULL, virtualscreen, &coordonnees);
-
-			SDL_FreeSurface(tempMask);
-			SDL_FreeSurface(tempBorderMask);
-		}
-		/**/
-		/**/
-		{
-			auto tempBorderMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(bordermask, NULL, tempBorderMask, NULL);
-			SDL_VerticalFlip(tempBorderMask);
-			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-
-			x += 2;
-			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_Rect coord;
-			coord.x = 0;
-			coord.y = -38;
-
-			// Récupération du domino :
-			SDL_UpperBlit(dominos[0], NULL, tempMask, NULL);
-			// Découpage de tout sauf de la face :
-			SDL_UpperBlitCut(facedown, tempMask);
-			// Dessin du domino sans face :
-			SDL_UpperBlit(tempBorderMask, NULL, temp, NULL);
-			// Dessin de la face sur de domino :
-			SDL_UpperBlit(tempMask, NULL, temp, &coord);
-
-			SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
-
-			SDL_FreeSurface(temp);
-			SDL_FreeSurface(tempMask);
-			SDL_FreeSurface(tempBorderMask);
-		}
-		/**/
-	}
-
-	// Interface :
-	coordonnees.x = 0;
-	coordonnees.y = 0;
-	SDL_UpperBlit(RestartBtn, NULL, virtualscreen, &coordonnees);
-	coordonnees.x = 0;
-	coordonnees.y = 100;
-	SDL_UpperBlit(HintBtn, NULL, virtualscreen, &coordonnees);
-	coordonnees.x = 0;
-	coordonnees.y = 200;
-	SDL_UpperBlit(TurnBtn, NULL, virtualscreen, &coordonnees);
-
-	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
-
-	SDL_RenderClear(renderer);
-	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
-	if (texture == NULL)
-	{
-		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	if (SDL_RenderCopy(renderer, texture, NULL, NULL) < 0)
-	{
-		std::cout << stderr << "could not copy renderer: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-
-	SDL_DestroyTexture(texture);
-
-	SDL_RenderPresent(renderer);
-
-	SDL_ShowCursor(true ? SDL_ENABLE : SDL_DISABLE);
 }
 #endif
+
+inline void Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* rectsrs, SDL_Rect coordonnees, double angle = 0, SDL_Point* point = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE, bool clicked = false)
+{
+	if (clicked)
+	{
+		SDL_SetTextureColorMod(texture, 0.3 * 255, 0.59 * 255, 0.11 * 255);
+		SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
+		SDL_SetTextureColorMod(texture, 255, 255, 255);
+	}
+	else
+	{
+		SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
+	}
+}
 
 void GraphicBoard::Refresh(bool refreshMouseMap)
-{
-	return RefreshTextureBased(refreshMouseMap);
-#ifdef _DEBUG
-	//return RefreshExample();
-#endif
-	if (refreshMouseMap) RefreshMouseMap();
-	// Copie du fond :
-	//SDL_UpperBlit(background, NULL, virtualscreen, NULL);
-	SDL_BlitScaled(background, NULL, virtualscreen, NULL);
-
-	// Placement des dominos :
-	SDL_Rect coordonnees;
-
-	auto tWidth = (Width - (bordermask->w - 40) * 12) >> 1;
-	auto tHeight = (Height - (bordermask->h - 40) >> 3) >> 1;
-
-	for (auto& tile : plateau.getLogicalBoard())
-	{
-		auto x = std::get<0>(tile);
-		auto y = std::get<1>(tile);
-		auto z = std::get<2>(tile);
-		auto domino = std::get<3>(tile);
-		auto index = std::get<4>(tile);
-		if (direction == 3)
-		{
-			// Down - Left
-			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
-			if (clicked[index])
-				SDL_UpperBlitInverted(dominos[domino], virtualscreen, coordonnees);
-			else
-				SDL_UpperBlit(dominos[domino], NULL, virtualscreen, &coordonnees);
-		}
-		else if (direction == 0)
-		{
-			// Up - Left
-			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(bordermask, NULL, temp, NULL);
-			SDL_VerticalFlip(temp);
-			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-
-			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-
-			SDL_Rect coord;
-			coord.x = 0;
-			coord.y = -38;
-
-			// Dessin de la face du domino sur le domino vierge :
-			SDL_UpperBlit(faces[domino], NULL, temp, &coord);
-
-			if (clicked[index])
-				SDL_UpperBlitInverted(temp, virtualscreen, coordonnees);
-			else
-				SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
-
-			SDL_FreeSurface(temp);
-			SDL_FreeSurface(tempMask);
-		}
-		else if (direction == 1)
-		{
-			// Up - Right
-			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(bordermask, NULL, temp, NULL);
-			SDL_HorizontalFlip(temp);
-			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-
-			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-
-			SDL_Rect coord;
-			coord.x = 33;
-			coord.y = -38;
-
-			// Dessin de la face du domino sur le domino vierge :
-			SDL_UpperBlit(faces[domino], NULL, temp, &coord);
-
-			if (clicked[index])
-				SDL_UpperBlitInverted(temp, virtualscreen, coordonnees);
-			else
-				SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
-
-			SDL_FreeSurface(temp);
-			SDL_FreeSurface(tempMask);
-		}
-		else
-		{
-			// Down - Right
-			auto temp = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(bordermask, NULL, temp, NULL);
-			SDL_HorizontalFlip(temp);
-			SDL_VerticalFlip(temp);
-			auto tempMask = SDL_CreateRGBSurface(0, bordermask->w, bordermask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-
-			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
-
-			SDL_Rect coord;
-			coord.x = 33;
-			coord.y = 0;
-
-			// Dessin de la face du domino sur le domino vierge :
-			SDL_UpperBlit(faces[domino], NULL, temp, &coord);
-
-			if (clicked[index])
-				SDL_UpperBlitInverted(temp, virtualscreen, coordonnees);
-			else
-				SDL_UpperBlit(temp, NULL, virtualscreen, &coordonnees);
-
-			SDL_FreeSurface(temp);
-			SDL_FreeSurface(tempMask);
-		}
-	}
-
-	/*
-	SDL_Rect coordonnees;
-	int i = 0;
-	auto tHeight = (Height - (bordermask->h - 40) * 6) / 2;
-	auto tWidth = (Width - (bordermask->w - 40) * 7) / 2;
-	for (int z = 0; z < 5; ++z)
-	{
-		int i = 0;
-		for (int y = 5; y >= 0; --y)
-		{
-			for (int x = 0; x < 7; ++x)
-			{
-				coordonnees.x = x * (bordermask->w - 40 ) - z * 40 + tWidth;
-				coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
-				SDL_UpperBlit(dominos[i++], NULL, virtualscreen, &coordonnees);
-			}
-		}
-	}
-	/**/
-
-	if (plateau.IsBlocked())
-	{
-		if (plateau.IsEmpty())
-		{
-			auto success = SDL_CreateRGBSurface(0, virtualscreen->w, virtualscreen->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			if (success == NULL)
-			{
-				std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
-				ThrowException(1);
-			}
-			else
-			{
-				SDL_FillRect(success, NULL, SDL_MapRGBA(success->format, 0x00, 0xFF, 0x00, 0xA0));
-				SDL_UpperBlit(success, NULL, virtualscreen, NULL);
-				SDL_FreeSurface(success);
-			}
-		}
-		else
-		{
-			SDL_SetGreyScale(virtualscreen);
-		}
-	}
-
-	// Interface :
-	// Ouest :
-	coordonnees.x = 0;
-	coordonnees.y = (RestartBtn->h - 20) * 4;
-	SDL_UpperBlit(OuestBtn, NULL, virtualscreen, &coordonnees);
-	// Sud :
-	coordonnees.x = NordBtn->w - 20;
-	coordonnees.y = (RestartBtn->h - 20) * 5;
-	SDL_UpperBlit(SudBtn, NULL, virtualscreen, &coordonnees);
-	// Turn :
-	coordonnees.x = RestartBtn->w - 20;
-	coordonnees.y = (RestartBtn->h - 20) * 4;
-	SDL_UpperBlit(TurnBtn, NULL, virtualscreen, &coordonnees);
-	// Nord :
-	coordonnees.x = RestartBtn->w - 20;
-	coordonnees.y = (RestartBtn->h - 20) * 3;
-	SDL_UpperBlit(NordBtn, NULL, virtualscreen, &coordonnees);
-	// Est :
-	coordonnees.x = (RestartBtn->w << 1) - 40;
-	coordonnees.y = (RestartBtn->h - 20) * 4;
-	SDL_UpperBlit(EstBtn, NULL, virtualscreen, &coordonnees);
-	// Hint :
-	coordonnees.x = RestartBtn->w - 20;
-	coordonnees.y = RestartBtn->h - 20;
-	SDL_UpperBlit(HintBtn, NULL, virtualscreen, &coordonnees);
-	// Restart :
-	coordonnees.x = RestartBtn->w - 20;
-	coordonnees.y = 0;
-	SDL_UpperBlit(RestartBtn, NULL, virtualscreen, &coordonnees);
-	// Exit
-	coordonnees.x = virtualscreen->w - RestartBtn->w;
-	coordonnees.y = 0;
-	SDL_UpperBlit(ExitBtn, NULL, virtualscreen, &coordonnees);
-	/**/
-
-#ifdef _DEBUG
-	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
-	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, NULL);
-#else
-	SDL_BlitScaled(virtualscreen, NULL, tampon, NULL);
-#endif
-
-	SDL_RenderClear(renderer);
-	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
-	if (texture == NULL)
-	{
-		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	if (SDL_RenderCopy(renderer, texture, NULL, NULL) < 0)
-	{
-		std::cout << stderr << "could not copy renderer: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-
-	SDL_DestroyTexture(texture);
-
-	SDL_RenderPresent(renderer);
-
-	SDL_ShowCursor(true ? SDL_ENABLE : SDL_DISABLE);
-}
-
-inline void Translate(SDL_Renderer * renderer, SDL_Surface *surface, SDL_Rect * rectsrs, SDL_Rect coordonnees, double angle, SDL_Point * point, SDL_RendererFlip flip, bool clicked = false)
-{
-	auto texture = SDL_CreateTextureFromSurface(renderer, surface);
-	if (clicked)
-		SDL_SetTextureColorMod(texture, 0xFF, 0xFF, 0xFF);
-	SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
-	SDL_DestroyTexture(texture);
-}
-
-void GraphicBoard::RefreshTextureBased(bool refreshMouseMap)
 {
 	if (refreshMouseMap) RefreshMouseMap();
 	SDL_RenderClear(renderer);
@@ -1135,10 +710,12 @@ void GraphicBoard::RefreshTextureBased(bool refreshMouseMap)
 	// Placement des dominos :
 	SDL_Rect coordonnees;
 
-	auto tWidth = (Width - (bordermask->w - 40) * 12) >> 1;
-	auto tHeight = (Height - (bordermask->h - 40) >> 3) >> 1;
+	SDL_Point sizeMask;
+	SDL_QueryTexture(dominos[0], NULL, NULL, &sizeMask.x, &sizeMask.y);
+	auto tWidth = (Width - (sizeMask.x - 40) * 12) >> 1;
+	auto tHeight = (Height - (sizeMask.y - 40) >> 3) >> 1;
 
-	for(const auto & tile : plateau.getLogicalBoard())
+	for (const auto& tile : plateau.getLogicalBoard())
 	{
 		auto x = std::get<0>(tile);
 		auto y = std::get<1>(tile);
@@ -1148,60 +725,65 @@ void GraphicBoard::RefreshTextureBased(bool refreshMouseMap)
 		if (direction == 3)
 		{
 			// Down - Left
-			coordonnees.x = x * (dominos[domino]->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (dominos[domino]->h - 40) + z * 40 + tHeight;
-			coordonnees.w = dominos[domino]->w;
-			coordonnees.h = dominos[domino]->h;
+			SDL_Point size;
+			SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+			coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
+			coordonnees.w = size.x;
+			coordonnees.h = size.y;
 
-			auto texture = SDL_CreateTextureFromSurface(renderer, dominos[domino]);
-			if (clicked[index]) // GIMP : Gray = (Red * 0.3 + Green * 0.59 + Blue * 0.11)
-				SDL_SetTextureColorMod(texture, 0.3*255, 0.59*255, 0.11*255);
-			SDL_RenderCopy(renderer, texture, NULL, &coordonnees);
-			SDL_DestroyTexture(texture);
+			/*if (clicked[index]) // GIMP : Gray = (Red * 0.3 + Green * 0.59 + Blue * 0.11)
+				SDL_SetTextureColorMod(texture, 0.3*255, 0.59*255, 0.11*255);*/
+			Translate(renderer, dominos[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, clicked[index]);
 		}
 		else if (direction == 0)
 		{
 			// Up - Left
-			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-			coordonnees.w = dominos[domino]->w;
-			coordonnees.h = dominos[domino]->h;
+			SDL_Point size;
+			SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+			coordonnees.x = x * (sizeMask.x - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
+			coordonnees.w = size.x;
+			coordonnees.h = size.y;
 
-			Translate(renderer, bordermask, NULL, coordonnees, 0, NULL, SDL_FLIP_VERTICAL, clicked[index]);
+			Translate(renderer, dominos[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_VERTICAL, clicked[index]);
 
 			SDL_Rect coord;
 			coord.x = 0;
 			coord.y = -38;
+			SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
+			coordonnees.x = x * (sizeMask.x - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
 
-			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-
-			coordonnees.w = dominos[domino]->w;
-			coordonnees.h = dominos[domino]->h;
+			coordonnees.w = size.x;
+			coordonnees.h = size.y;
 
 			coordonnees.x += coord.x;
 			coordonnees.y += coord.y;
-			
+
 			Translate(renderer, faces[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, clicked[index]);
 		}
 		else if (direction == 1)
 		{
 			// Up - Right
-			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-			coordonnees.w = dominos[domino]->w;
-			coordonnees.h = dominos[domino]->h;
+			auto texture = dominos[domino];
+			SDL_Point size;
+			SDL_QueryTexture(texture, NULL, NULL, &size.x, &size.y);
+			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
+			coordonnees.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
+			coordonnees.w = size.x;
+			coordonnees.h = size.y;
 
-			Translate(renderer, bordermask, NULL, coordonnees, 180, NULL, SDL_FLIP_NONE, clicked[index]);
+			Translate(renderer, dominos[domino], NULL, coordonnees, 180, NULL, SDL_FLIP_NONE, clicked[index]);
 
 			SDL_Rect coord;
 			coord.x = 33;
 			coord.y = -38;
-
-			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-			coordonnees.w = dominos[domino]->w;
-			coordonnees.h = dominos[domino]->h;
+			SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
+			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
+			coordonnees.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
+			coordonnees.w = size.x;
+			coordonnees.h = size.y;
 
 			coordonnees.x += coord.x;
 			coordonnees.y += coord.y;
@@ -1211,22 +793,24 @@ void GraphicBoard::RefreshTextureBased(bool refreshMouseMap)
 		else
 		{
 			// Down - Right
-			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
+			SDL_Point size;
+			SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
+			coordonnees.y = y * (sizeMask.y - 40) + z * 40 + tHeight;
 
-			coordonnees.w = dominos[domino]->w;
-			coordonnees.h = dominos[domino]->h;
+			coordonnees.w = size.x;
+			coordonnees.h = size.y;
 
-			Translate(renderer, bordermask, NULL, coordonnees, 0, NULL, SDL_FLIP_HORIZONTAL, clicked[index]);
+			Translate(renderer, dominos[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_HORIZONTAL, clicked[index]);
 
 			SDL_Rect coord;
 			coord.x = 33;
 			coord.y = 0;
-
-			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
-			coordonnees.w = dominos[domino]->w;
-			coordonnees.h = dominos[domino]->h;
+			SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
+			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
+			coordonnees.y = y * (sizeMask.y - 40) + z * 40 + tHeight;
+			coordonnees.w = size.x;
+			coordonnees.h = size.y;
 
 			coordonnees.x += coord.x;
 			coordonnees.y += coord.y;
@@ -1237,42 +821,46 @@ void GraphicBoard::RefreshTextureBased(bool refreshMouseMap)
 
 	// Défaite :
 	//SDL_SetTextureColorMod
-
+	/**/
 	// Interface :
 	// Ouest :
-	coordonnees.w = RestartBtn->w;
-	coordonnees.h = RestartBtn->h;
+	SDL_Point size;
+	SDL_QueryTexture(RestartBtn, NULL, NULL, &size.x, &size.y);
+
+	coordonnees.w = size.x;
+	coordonnees.h = size.y;
 	coordonnees.x = 0;
-	coordonnees.y = (RestartBtn->h - 20) * 4;
+	coordonnees.y = (size.y - 20) * 4;
 	Translate(renderer, OuestBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Sud :
-	coordonnees.x = NordBtn->w - 20;
-	coordonnees.y = (RestartBtn->h - 20) * 5;
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 5;
 	Translate(renderer, SudBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Turn :
-	coordonnees.x = RestartBtn->w - 20;
-	coordonnees.y = (RestartBtn->h - 20) * 4;
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 4;
 	Translate(renderer, TurnBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Nord :
-	coordonnees.x = RestartBtn->w - 20;
-	coordonnees.y = (RestartBtn->h - 20) * 3;
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 3;
 	Translate(renderer, NordBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Est :
-	coordonnees.x = (RestartBtn->w << 1) - 40;
-	coordonnees.y = (RestartBtn->h - 20) * 4;
+	coordonnees.x = (size.x << 1) - 40;
+	coordonnees.y = (size.y - 20) * 4;
 	Translate(renderer, EstBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Hint :
-	coordonnees.x = RestartBtn->w - 20;
-	coordonnees.y = RestartBtn->h - 20;
+	coordonnees.x = size.x - 20;
+	coordonnees.y = size.y - 20;
 	Translate(renderer, HintBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Restart :
-	coordonnees.x = RestartBtn->w - 20;
+	coordonnees.x = size.x - 20;
 	coordonnees.y = 0;
 	Translate(renderer, RestartBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Exit
-	coordonnees.x = Width - RestartBtn->w;
+	coordonnees.x = Width - size.x;
 	coordonnees.y = 0;
 	Translate(renderer, ExitBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
+	/**/
 
 
 //#define _SEEMOUSEMAP
@@ -1311,7 +899,9 @@ void GraphicBoard::WhatsLeft()
 	}
 
 	/**/
-	auto tWitdh = (Width - (bordermask->h + 40 * 3)) >> 3;
+	SDL_Point sizeMask;
+	SDL_QueryTexture(dominos[0], NULL, NULL, &sizeMask.x, &sizeMask.y);
+	auto tWitdh = (Width - (sizeMask.y + 40 * 3)) >> 3;
 	SDL_Rect coordonnees;
 	int board[8][6];
 	for (int x = 0; x < 6; ++x)
@@ -1333,10 +923,12 @@ void GraphicBoard::WhatsLeft()
 			int t = board[y][x];
 			for (int z = 0; z < board[y][x]; ++z)
 			{
-				coordonnees.x = x * (bordermask->h) + z * 40 + x * tWitdh;
-				coordonnees.y = y * (bordermask->h - 40);
-				coordonnees.w = dominos[domino]->w;
-				coordonnees.h = dominos[domino]->h;
+				SDL_Point size;
+				SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+				coordonnees.x = x * sizeMask.y + z * 40 + x * tWitdh;
+				coordonnees.y = y * (sizeMask.y - 40);
+				coordonnees.w = size.x;
+				coordonnees.h = size.y;
 				Translate(renderer, dominos[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, false);
 			}
 		}

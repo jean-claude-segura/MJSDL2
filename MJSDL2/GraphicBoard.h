@@ -32,8 +32,8 @@ public:
 
 private:
 	void Init();
-	void LoadTile(SDL_Surface*& tileSurface, SDL_Surface*& faceSurface, const char* szPath);
-	void LoadTile(SDL_Surface*& tileSurface, const char* szPath);
+	void LoadTile(SDL_Texture*& tileSurface, SDL_Texture*& faceSurface, const char* szPath, SDL_Surface* facedown);
+	void LoadTile(SDL_Texture*& tileSurface, const char* szPath);
 	void LoadTile(const int istart, const int iend, const std::string& path);
 	void LoadRamdomTileSet(const int istart, const int iend, const std::string& path);
 	void LoadTiles();
@@ -44,24 +44,22 @@ private:
 #ifdef _DEBUG
 	void RefreshExample();
 #endif
-	void RefreshTextureBased(bool);
 	void RefreshMouseMap();
 	void WhatsLeft();
 	void InterfaceClicked(int index);
 	void setClicked(const int x, const int y);
 	void ThrowException(const int);
 	void LoadUI();
+	void LoadButton(SDL_Texture*& button, const std::string& strPath, const std::string& strName);
 
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 	SDL_Surface
-		* virtualscreen,
 		* virtualmousescreen,
 		* mousescreen,
-		* tampon,
-		* background,
-		* bordermask,
-		* facedown,
+		* mousemask;
+	SDL_Texture
+		* textureBackground,
 		* RestartBtn,
 		* HintBtn,
 		* TurnBtn,
@@ -70,17 +68,15 @@ private:
 		* OuestBtn,
 		* NordBtn,
 		* ExitBtn;
-	SDL_Texture* textureBackground;
 	int Height, Width;
-	SDL_DisplayMode displayCapabilities;
-	SDL_Surface* dominos[42] = { NULL, NULL, NULL, NULL, NULL , NULL, NULL,
+	SDL_Texture* dominos[42] = { NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL
 	};
-	SDL_Surface* faces[42] = { NULL, NULL, NULL, NULL, NULL , NULL, NULL,
+	SDL_Texture* faces[42] = { NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
