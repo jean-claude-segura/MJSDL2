@@ -46,6 +46,7 @@ private:
 #endif
 	void RefreshMouseMap();
 	void WhatsLeft();
+	void InterfaceClicked(int index);
 	void setClicked(const int x, const int y);
 	void ThrowException(const int);
 	void LoadUI();
