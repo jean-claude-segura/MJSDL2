@@ -44,7 +44,7 @@ private:
 #ifdef _DEBUG
 	void RefreshExample();
 #endif
-	void RefreshTest(bool);
+	void RefreshTextureBased(bool);
 	void RefreshMouseMap();
 	void WhatsLeft();
 	void setClicked(const int x, const int y);

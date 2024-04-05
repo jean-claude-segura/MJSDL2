@@ -117,6 +117,9 @@ void GraphicBoard::Init()
 		ThrowException(1);
 	}
 
+	SDL_RenderSetScale(renderer,
+		ScreenRect.w / (double)Width, ScreenRect.h / (double)Height);
+
 	virtualscreen = SDL_CreateRGBSurface(0, Width, Height, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 	if (virtualscreen == NULL)
 	{
@@ -859,7 +862,7 @@ void GraphicBoard::RefreshExample()
 
 void GraphicBoard::Refresh(bool refreshMouseMap)
 {
-	return RefreshTest(refreshMouseMap);
+	return RefreshTextureBased(refreshMouseMap);
 #ifdef _DEBUG
 	//return RefreshExample();
 #endif
@@ -1077,19 +1080,16 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 	SDL_ShowCursor(true ? SDL_ENABLE : SDL_DISABLE);
 }
 
-inline void Translate(SDL_Renderer * renderer, SDL_Surface *surface, SDL_Rect * rectsrs, SDL_Rect coordonnees, double angle, SDL_Point * point, SDL_RendererFlip flip, int w, int h, int Width, int Height, bool clicked = false)
+inline void Translate(SDL_Renderer * renderer, SDL_Surface *surface, SDL_Rect * rectsrs, SDL_Rect coordonnees, double angle, SDL_Point * point, SDL_RendererFlip flip, bool clicked = false)
 {
-	coordonnees.x *= w / (double)Width;
-	coordonnees.y *= h / (double)Height;
-	coordonnees.w *= w / (double)Width;
-	coordonnees.h *= h / (double)Height;
-
 	auto texture = SDL_CreateTextureFromSurface(renderer, surface);
+	if (clicked)
+		SDL_SetTextureColorMod(texture, 0xFF, 0xFF, 0xFF);
 	SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
 	SDL_DestroyTexture(texture);
 }
 
-void GraphicBoard::RefreshTest(bool refreshMouseMap)
+void GraphicBoard::RefreshTextureBased(bool refreshMouseMap)
 {
 	if (refreshMouseMap) RefreshMouseMap();
 	SDL_RenderClear(renderer);
@@ -1119,15 +1119,12 @@ void GraphicBoard::RefreshTest(bool refreshMouseMap)
 			// Down - Left
 			coordonnees.x = x * (dominos[domino]->w - 40) - z * 40 + tWidth;
 			coordonnees.y = y * (dominos[domino]->h - 40) + z * 40 + tHeight;
-
 			coordonnees.w = dominos[domino]->w;
 			coordonnees.h = dominos[domino]->h;
-			coordonnees.x *= ScreenRect.w / (double)Width;
-			coordonnees.y *= ScreenRect.h / (double)Height;
-			coordonnees.w *= ScreenRect.w / (double)Width;
-			coordonnees.h *= ScreenRect.h / (double)Height;
 
 			auto texture = SDL_CreateTextureFromSurface(renderer, dominos[domino]);
+			if (clicked[index]) // GIMP : Gray = (Red * 0.3 + Green * 0.59 + Blue * 0.11)
+				SDL_SetTextureColorMod(texture, 0.3*255, 0.59*255, 0.11*255);
 			SDL_RenderCopy(renderer, texture, NULL, &coordonnees);
 			SDL_DestroyTexture(texture);
 		}
@@ -1136,11 +1133,10 @@ void GraphicBoard::RefreshTest(bool refreshMouseMap)
 			// Up - Left
 			coordonnees.x = x * (bordermask->w - 40) - z * 40 + tWidth;
 			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-
 			coordonnees.w = dominos[domino]->w;
 			coordonnees.h = dominos[domino]->h;
 
-			Translate(renderer, bordermask, NULL, coordonnees, 0, NULL, SDL_FLIP_VERTICAL, ScreenRect.w, ScreenRect.h, Width, Height);
+			Translate(renderer, bordermask, NULL, coordonnees, 0, NULL, SDL_FLIP_VERTICAL, clicked[index]);
 
 			SDL_Rect coord;
 			coord.x = 0;
@@ -1155,46 +1151,31 @@ void GraphicBoard::RefreshTest(bool refreshMouseMap)
 			coordonnees.x += coord.x;
 			coordonnees.y += coord.y;
 			
-			Translate(renderer, faces[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height, clicked[index]);
+			Translate(renderer, faces[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, clicked[index]);
 		}
 		else if (direction == 1)
 		{
 			// Up - Right
 			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
 			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-
 			coordonnees.w = dominos[domino]->w;
 			coordonnees.h = dominos[domino]->h;
-			coordonnees.x *= ScreenRect.w / (double)Width;
-			coordonnees.y *= ScreenRect.h / (double)Height;
-			coordonnees.w *= ScreenRect.w / (double)Width;
-			coordonnees.h *= ScreenRect.h / (double)Height;
 
-			auto texture = SDL_CreateTextureFromSurface(renderer, bordermask);
-			SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, 180, NULL, SDL_FLIP_NONE);
-			SDL_DestroyTexture(texture);
+			Translate(renderer, bordermask, NULL, coordonnees, 180, NULL, SDL_FLIP_NONE, clicked[index]);
 
-			texture = SDL_CreateTextureFromSurface(renderer, faces[domino]);
 			SDL_Rect coord;
 			coord.x = 33;
 			coord.y = -38;
 
 			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
 			coordonnees.y = y * (bordermask->h - 40) - z * 40 + tHeight;
-
 			coordonnees.w = dominos[domino]->w;
 			coordonnees.h = dominos[domino]->h;
-			coordonnees.w *= ScreenRect.w / (double)Width;
-			coordonnees.h *= ScreenRect.h / (double)Height;
 
 			coordonnees.x += coord.x;
 			coordonnees.y += coord.y;
 
-			coordonnees.x *= ScreenRect.w / (double)Width;
-			coordonnees.y *= ScreenRect.h / (double)Height;
-
-			SDL_RenderCopy(renderer, texture, NULL, &coordonnees);
-			SDL_DestroyTexture(texture);
+			Translate(renderer, faces[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, clicked[index]);
 		}
 		else
 		{
@@ -1204,36 +1185,22 @@ void GraphicBoard::RefreshTest(bool refreshMouseMap)
 
 			coordonnees.w = dominos[domino]->w;
 			coordonnees.h = dominos[domino]->h;
-			coordonnees.x *= ScreenRect.w / (double)Width;
-			coordonnees.y *= ScreenRect.h / (double)Height;
-			coordonnees.w *= ScreenRect.w / (double)Width;
-			coordonnees.h *= ScreenRect.h / (double)Height;
 
-			auto texture = SDL_CreateTextureFromSurface(renderer, bordermask);
-			SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, 0, NULL, SDL_FLIP_HORIZONTAL);
-			SDL_DestroyTexture(texture);
+			Translate(renderer, bordermask, NULL, coordonnees, 0, NULL, SDL_FLIP_HORIZONTAL, clicked[index]);
 
-			texture = SDL_CreateTextureFromSurface(renderer, faces[domino]);
 			SDL_Rect coord;
 			coord.x = 33;
 			coord.y = 0;
 
 			coordonnees.x = x * (bordermask->w - 40) + z * 40 + tWidth;
 			coordonnees.y = y * (bordermask->h - 40) + z * 40 + tHeight;
-
 			coordonnees.w = dominos[domino]->w;
 			coordonnees.h = dominos[domino]->h;
-			coordonnees.w *= ScreenRect.w / (double)Width;
-			coordonnees.h *= ScreenRect.h / (double)Height;
 
 			coordonnees.x += coord.x;
 			coordonnees.y += coord.y;
 
-			coordonnees.x *= ScreenRect.w / (double)Width;
-			coordonnees.y *= ScreenRect.h / (double)Height;
-
-			SDL_RenderCopy(renderer, texture, NULL, &coordonnees);
-			SDL_DestroyTexture(texture);
+			Translate(renderer, faces[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, clicked[index]);
 		}
 	}
 
@@ -1246,35 +1213,35 @@ void GraphicBoard::RefreshTest(bool refreshMouseMap)
 	coordonnees.h = RestartBtn->h;
 	coordonnees.x = 0;
 	coordonnees.y = (RestartBtn->h - 20) * 4;
-	Translate(renderer, OuestBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	Translate(renderer, OuestBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Sud :
 	coordonnees.x = NordBtn->w - 20;
 	coordonnees.y = (RestartBtn->h - 20) * 5;
-	Translate(renderer, SudBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	Translate(renderer, SudBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Turn :
 	coordonnees.x = RestartBtn->w - 20;
 	coordonnees.y = (RestartBtn->h - 20) * 4;
-	Translate(renderer, TurnBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	Translate(renderer, TurnBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Nord :
 	coordonnees.x = RestartBtn->w - 20;
 	coordonnees.y = (RestartBtn->h - 20) * 3;
-	Translate(renderer, NordBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	Translate(renderer, NordBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Est :
 	coordonnees.x = (RestartBtn->w << 1) - 40;
 	coordonnees.y = (RestartBtn->h - 20) * 4;
-	Translate(renderer, EstBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	Translate(renderer, EstBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Hint :
 	coordonnees.x = RestartBtn->w - 20;
 	coordonnees.y = RestartBtn->h - 20;
-	Translate(renderer, HintBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	Translate(renderer, HintBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Restart :
 	coordonnees.x = RestartBtn->w - 20;
 	coordonnees.y = 0;
-	Translate(renderer, RestartBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	Translate(renderer, RestartBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 	// Exit
 	coordonnees.x = Width - RestartBtn->w;
 	coordonnees.y = 0;
-	Translate(renderer, ExitBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, ScreenRect.w, ScreenRect.h, Width, Height);
+	Translate(renderer, ExitBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
 
 	SDL_RenderPresent(renderer);
 }
