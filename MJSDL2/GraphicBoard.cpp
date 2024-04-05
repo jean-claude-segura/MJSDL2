@@ -15,7 +15,6 @@ GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height (0), Width(0),
 	exitEvent.type = SDL_QUIT;
 	textureBackground = NULL;
 	virtualmousescreen = NULL;
-	mousescreen = NULL;
 	mousemask = NULL;
 }
 
@@ -23,8 +22,6 @@ GraphicBoard::~GraphicBoard()
 {
 	if (virtualmousescreen != NULL)
 		SDL_FreeSurface(virtualmousescreen);
-	if (mousescreen != NULL)
-		SDL_FreeSurface(mousescreen);
 	if (mousemask != NULL)
 		SDL_FreeSurface(mousemask);
 
@@ -40,6 +37,8 @@ GraphicBoard::~GraphicBoard()
 		if (faces[i] != NULL)
 			SDL_DestroyTexture(faces[i]);
 	}
+	if (Inverted != NULL)
+		SDL_DestroyTexture(Inverted);
 	if (RestartBtn != NULL)
 		SDL_DestroyTexture(RestartBtn);
 	if (HintBtn != NULL)
@@ -117,13 +116,6 @@ void GraphicBoard::Init()
 	if (virtualmousescreen == NULL)
 	{
 		std::cout << stderr << "could not create virtual mouse screen: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-
-	mousescreen = SDL_CreateRGBSurface(0, ScreenRect.w, ScreenRect.h, 32, 0xFF, 0xFF00, 0xFF0000, 0xFF000000);
-	if (mousescreen == NULL)
-	{
-		std::cout << stderr << "could not create mouse screen: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 
@@ -315,6 +307,13 @@ void GraphicBoard::LoadResources()
 		std::cout << stderr << "could not create mouse mask: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
+	mousemasktiny = SDL_CreateRGBSurface(0, mousemask->w >> 1, mousemask->h >> 1, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+	if (mousemasktiny == NULL)
+	{
+		std::cout << stderr << "could not create mouse mask: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	SDL_UpperBlitScaled(mousemask, NULL, mousemasktiny, NULL);
 	SDL_FreeSurface(temp);
 
 	LoadTiles();
@@ -464,8 +463,8 @@ void GraphicBoard::InterfaceClicked(int index)
 
 void GraphicBoard::setClicked(const int x, const int y)
 {
-	Uint8* p = (Uint8*)mousescreen->pixels + y * mousescreen->pitch + x * mousescreen->format->BytesPerPixel;
-	Uint32 index = *(Uint32*)p & 0xFF;
+	Uint32* pixel = (Uint32*)virtualmousescreen->pixels + (x + y * virtualmousescreen->w );
+	Uint32 index = (*pixel) & 0xFF;
 	if (index != 255) // Not background.
 	{
 		if (index < 144)
@@ -571,7 +570,7 @@ void GraphicBoard::RefreshMouseMap()
 			coordonnees.y = y * (mousemask->h - 40) + z * 40 + tHeight;
 			coordonnees.w = mousemask->w;
 			coordonnees.h = mousemask->h;
-			SDL_SetColourOnOpaque(mousemask, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
+			SDL_SetColourOnOpaque(mousemask, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, index));
 		}
 		else if (direction == 0)
 		{
@@ -585,7 +584,7 @@ void GraphicBoard::RefreshMouseMap()
 			SDL_UpperBlit(mousemask, NULL, temp, NULL);
 			SDL_VerticalFlip(temp);
 
-			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
+			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, index));
 
 			SDL_FreeSurface(temp);
 		}
@@ -600,7 +599,7 @@ void GraphicBoard::RefreshMouseMap()
 			SDL_UpperBlit(mousemask, NULL, temp, NULL);
 			SDL_HorizontalFlip(temp);
 
-			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
+			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, index));
 
 			SDL_FreeSurface(temp);
 		}
@@ -616,63 +615,65 @@ void GraphicBoard::RefreshMouseMap()
 			SDL_HorizontalFlip(temp);
 			SDL_VerticalFlip(temp);
 
-			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, index, 0x00, 0x00));
+			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, index));
 
 			SDL_FreeSurface(temp);
 		}
 	}
-	/*
+	/**/
+	SDL_Point size{ mousemasktiny->w, mousemasktiny->h };
+	
+	coordonnees.w = size.x;
+	coordonnees.h = size.y;
 	// Ouest :
 	coordonnees.x = 0;
 	coordonnees.y = (size.y - 20) * 4;
-	coordonnees.w = RestartBtn->w;
+	coordonnees.w = mousemasktiny->w;
 	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(OuestBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, WEST, 0x00, 0x00));
+	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, WEST));
 	// Sud :
-	coordonnees.x = NordBtn->w - 20;
+	coordonnees.x = mousemasktiny->w - 20;
 	coordonnees.y = (size.y - 20) * 5;
-	coordonnees.w = RestartBtn->w;
+	coordonnees.w = mousemasktiny->w;
 	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(SudBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, SOUTH, 0x00, 0x00));
+	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, SOUTH));
 	// Turn :
-	coordonnees.x = RestartBtn->w - 20;
+	coordonnees.x = mousemasktiny->w - 20;
 	coordonnees.y = (size.y - 20) * 4;
-	coordonnees.w = RestartBtn->w;
+	coordonnees.w = mousemasktiny->w;
 	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(TurnBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, TURN, 0x00, 0x00));
+	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, TURN));
 	// Nord :
-	coordonnees.x = RestartBtn->w - 20;
+	coordonnees.x = mousemasktiny->w - 20;
 	coordonnees.y = (size.y - 20) * 3;
-	coordonnees.w = RestartBtn->w;
+	coordonnees.w = mousemasktiny->w;
 	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(NordBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, NORTH, 0x00, 0x00));
+	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, NORTH));
 	// Est :
-	coordonnees.x = (RestartBtn->w << 1) - 40;
+	coordonnees.x = (mousemasktiny->w << 1) - 40;
 	coordonnees.y = (size.y - 20) * 4;
-	coordonnees.w = RestartBtn->w;
+	coordonnees.w = mousemasktiny->w;
 	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(EstBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, EAST, 0x00, 0x00));
+	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, EAST));
 	// Hint :
-	coordonnees.x = RestartBtn->w - 20;
+	coordonnees.x = mousemasktiny->w - 20;
 	coordonnees.y = size.y - 20;
-	coordonnees.w = RestartBtn->w;
+	coordonnees.w = mousemasktiny->w;
 	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(HintBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, HINT, 0x00, 0x00));
+	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, HINT));
 	// Restart :
-	coordonnees.x = RestartBtn->w - 20;
+	coordonnees.x = mousemasktiny->w - 20;
 	coordonnees.y = 0;
-	coordonnees.w = RestartBtn->w;
+	coordonnees.w = mousemasktiny->w;
 	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(RestartBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, RESTART, 0x00, 0x00));
+	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, RESTART));
 	// Exit
-	coordonnees.x = virtualscreen->w - RestartBtn->w;
+	coordonnees.x = virtualmousescreen->w - mousemasktiny->w;
 	coordonnees.y = 0;
-	coordonnees.w = RestartBtn->w;
+	coordonnees.w = mousemasktiny->w;
 	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(ExitBtn, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, EXIT, 0x00, 0x00));
-
-	SDL_BlitScaled(virtualmousescreen, NULL, mousescreen, NULL);
-	*/
+	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, EXIT));
+	/**/
 }
 
 #ifdef _DEBUG
@@ -681,13 +682,51 @@ void GraphicBoard::RefreshExample()
 }
 #endif
 
-inline void Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* rectsrs, SDL_Rect coordonnees, double angle = 0, SDL_Point* point = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE, bool clicked = false)
+inline void Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* rectsrc, SDL_Rect coordonnees, SDL_Texture * Inverted, double angle = 0, SDL_Point* point = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE, bool clicked = false)
 {
 	if (clicked)
 	{
-		SDL_SetTextureColorMod(texture, 0.3 * 255, 0.59 * 255, 0.11 * 255);
-		SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
-		SDL_SetTextureColorMod(texture, 255, 255, 255);
+		if(true)
+		{
+			Uint8 r, g, b;
+			SDL_GetTextureColorMod(texture, &r, &g, &b);
+			SDL_SetTextureColorMod(texture, 255 >> 1, 255 >> 1, 255 >> 1);
+			SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
+			SDL_SetTextureColorMod(texture, r, g, b);
+		}
+		else
+		{
+			//https://discourse.libsdl.org/t/sdl-composecustomblendmode-error-in-windows/35241/1
+			/*auto renderTarget = SDL_GetRenderTarget(renderer);
+			SDL_BlendMode textureBlendMode;
+			SDL_GetTextureBlendMode(texture, &textureBlendMode);*/
+			auto S = texture;
+			auto T = Inverted;
+			auto SDLRenderer = renderer;
+			//SDL_GetTextureBlendMode(texture, &textureBlendMode);
+			{
+				/*if (Inverted != NULL)
+					SDL_DestroyTexture(Inverted);*/
+				int w, h;
+				SDL_SetTextureBlendMode(S, SDL_ComposeCustomBlendMode(
+					SDL_BLENDFACTOR_ONE,
+					SDL_BLENDFACTOR_ONE,
+					SDL_BLENDOPERATION_REV_SUBTRACT,
+					SDL_BLENDFACTOR_ONE,
+					SDL_BLENDFACTOR_ONE,
+					SDL_BLENDOPERATION_REV_SUBTRACT));
+				if (T) SDL_DestroyTexture(T);
+				SDL_QueryTexture(S, NULL, NULL, &w, &h);
+				T = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
+				SDL_SetRenderTarget(SDLRenderer, T);
+				SDL_SetRenderDrawColor(SDLRenderer, 255, 255, 255, 255);
+				SDL_RenderClear(SDLRenderer);
+				//SDL_RenderCopy(SDLRenderer, S, NULL, NULL);
+				SDL_RenderCopyEx(SDLRenderer, S, NULL, &coordonnees, angle, NULL, flip);
+			}
+			//SDL_SetRenderTarget(renderer, renderTarget);
+			//SDL_SetTextureBlendMode(texture, textureBlendMode);
+		}
 	}
 	else
 	{
@@ -734,7 +773,7 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 
 			/*if (clicked[index]) // GIMP : Gray = (Red * 0.3 + Green * 0.59 + Blue * 0.11)
 				SDL_SetTextureColorMod(texture, 0.3*255, 0.59*255, 0.11*255);*/
-			Translate(renderer, dominos[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, clicked[index]);
+			Translate(renderer, dominos[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE, clicked[index]);
 		}
 		else if (direction == 0)
 		{
@@ -746,7 +785,7 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coordonnees.w = size.x;
 			coordonnees.h = size.y;
 
-			Translate(renderer, dominos[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_VERTICAL, clicked[index]);
+			Translate(renderer, dominos[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_VERTICAL, clicked[index]);
 
 			SDL_Rect coord;
 			coord.x = 0;
@@ -761,7 +800,7 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coordonnees.x += coord.x;
 			coordonnees.y += coord.y;
 
-			Translate(renderer, faces[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, clicked[index]);
+			Translate(renderer, faces[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE, clicked[index]);
 		}
 		else if (direction == 1)
 		{
@@ -774,7 +813,7 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coordonnees.w = size.x;
 			coordonnees.h = size.y;
 
-			Translate(renderer, dominos[domino], NULL, coordonnees, 180, NULL, SDL_FLIP_NONE, clicked[index]);
+			Translate(renderer, dominos[domino], NULL, coordonnees, Inverted, 180, NULL, SDL_FLIP_NONE, clicked[index]);
 
 			SDL_Rect coord;
 			coord.x = 33;
@@ -788,7 +827,7 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coordonnees.x += coord.x;
 			coordonnees.y += coord.y;
 
-			Translate(renderer, faces[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, clicked[index]);
+			Translate(renderer, faces[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE, clicked[index]);
 		}
 		else
 		{
@@ -801,7 +840,7 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coordonnees.w = size.x;
 			coordonnees.h = size.y;
 
-			Translate(renderer, dominos[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_HORIZONTAL, clicked[index]);
+			Translate(renderer, dominos[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_HORIZONTAL, clicked[index]);
 
 			SDL_Rect coord;
 			coord.x = 33;
@@ -815,7 +854,7 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coordonnees.x += coord.x;
 			coordonnees.y += coord.y;
 
-			Translate(renderer, faces[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, clicked[index]);
+			Translate(renderer, faces[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE, clicked[index]);
 		}
 	}
 
@@ -831,44 +870,44 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 	coordonnees.h = size.y;
 	coordonnees.x = 0;
 	coordonnees.y = (size.y - 20) * 4;
-	Translate(renderer, OuestBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
+	Translate(renderer, OuestBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
 	// Sud :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 5;
-	Translate(renderer, SudBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
+	Translate(renderer, SudBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
 	// Turn :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 4;
-	Translate(renderer, TurnBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
+	Translate(renderer, TurnBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
 	// Nord :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 3;
-	Translate(renderer, NordBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
+	Translate(renderer, NordBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
 	// Est :
 	coordonnees.x = (size.x << 1) - 40;
 	coordonnees.y = (size.y - 20) * 4;
-	Translate(renderer, EstBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
+	Translate(renderer, EstBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
 	// Hint :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = size.y - 20;
-	Translate(renderer, HintBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
+	Translate(renderer, HintBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
 	// Restart :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = 0;
-	Translate(renderer, RestartBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
+	Translate(renderer, RestartBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
 	// Exit
 	coordonnees.x = Width - size.x;
 	coordonnees.y = 0;
-	Translate(renderer, ExitBtn, NULL, coordonnees, 0, NULL, SDL_FLIP_NONE);
+	Translate(renderer, ExitBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
 	/**/
 
 
 //#define _SEEMOUSEMAP
 #ifdef _SEEMOUSEMAP
 	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, NULL);
-	SDL_BlitScaled(mousescreen, NULL, tampon, NULL);
+	//SDL_BlitScaled(mousescreen, NULL, tampon, NULL);
 
-	auto texture = SDL_CreateTextureFromSurface(renderer, tampon);
+	auto texture = SDL_CreateTextureFromSurface(renderer, virtualmousescreen);
 	if (texture == NULL)
 	{
 		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
@@ -929,7 +968,7 @@ void GraphicBoard::WhatsLeft()
 				coordonnees.y = y * (sizeMask.y - 40);
 				coordonnees.w = size.x;
 				coordonnees.h = size.y;
-				Translate(renderer, dominos[domino], NULL, coordonnees, 0, NULL, SDL_FLIP_NONE, false);
+				Translate(renderer, dominos[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE, false);
 			}
 		}
 	/**/

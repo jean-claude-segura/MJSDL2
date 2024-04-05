@@ -56,8 +56,8 @@ private:
 	SDL_Renderer* renderer;
 	SDL_Surface
 		* virtualmousescreen,
-		* mousescreen,
-		* mousemask;
+		* mousemask,
+		* mousemasktiny;
 	SDL_Texture
 		* textureBackground,
 		* RestartBtn,
@@ -67,7 +67,8 @@ private:
 		* SudBtn,
 		* OuestBtn,
 		* NordBtn,
-		* ExitBtn;
+		* ExitBtn,
+		* Inverted;
 	int Height, Width;
 	SDL_Texture* dominos[42] = { NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,
