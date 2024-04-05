@@ -686,7 +686,7 @@ inline void Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* re
 {
 	if (clicked)
 	{
-		if(true)
+		if(false)
 		{
 			Uint8 r, g, b;
 			SDL_GetTextureColorMod(texture, &r, &g, &b);
@@ -696,17 +696,16 @@ inline void Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* re
 		}
 		else
 		{
-			//https://discourse.libsdl.org/t/sdl-composecustomblendmode-error-in-windows/35241/1
-			/*auto renderTarget = SDL_GetRenderTarget(renderer);
+			// https://discourse.libsdl.org/t/sdl-composecustomblendmode-error-in-windows/35241/1
+			// https://stackoverflow.com/questions/75873908/how-to-copy-a-texture-to-another-texture-without-pointing-to-the-same-texture
+			auto renderTarget = SDL_GetRenderTarget(renderer);
 			SDL_BlendMode textureBlendMode;
-			SDL_GetTextureBlendMode(texture, &textureBlendMode);*/
+			SDL_GetTextureBlendMode(texture, &textureBlendMode);
 			auto S = texture;
 			auto T = Inverted;
 			auto SDLRenderer = renderer;
 			//SDL_GetTextureBlendMode(texture, &textureBlendMode);
 			{
-				/*if (Inverted != NULL)
-					SDL_DestroyTexture(Inverted);*/
 				int w, h;
 				SDL_SetTextureBlendMode(S, SDL_ComposeCustomBlendMode(
 					SDL_BLENDFACTOR_ONE,
@@ -721,11 +720,12 @@ inline void Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* re
 				SDL_SetRenderTarget(SDLRenderer, T);
 				SDL_SetRenderDrawColor(SDLRenderer, 255, 255, 255, 255);
 				SDL_RenderClear(SDLRenderer);
-				//SDL_RenderCopy(SDLRenderer, S, NULL, NULL);
-				SDL_RenderCopyEx(SDLRenderer, S, NULL, &coordonnees, angle, NULL, flip);
+				SDL_RenderCopy(SDLRenderer, S, NULL, NULL);
+				//SDL_RenderCopyEx(SDLRenderer, S, NULL, &coordonnees, angle, NULL, flip);
 			}
-			//SDL_SetRenderTarget(renderer, renderTarget);
-			//SDL_SetTextureBlendMode(texture, textureBlendMode);
+			SDL_SetRenderTarget(renderer, renderTarget);
+			SDL_SetTextureBlendMode(texture, textureBlendMode);
+			SDL_RenderCopyEx(SDLRenderer, T, NULL, &coordonnees, angle, NULL, flip);
 		}
 	}
 	else
