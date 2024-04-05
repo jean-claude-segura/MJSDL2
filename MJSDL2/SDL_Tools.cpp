@@ -148,8 +148,12 @@ void SDL_SetColourOnOpaque(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordo
 void SDL_SetGreyScale(SDL_Surface* src)
 {
 	// GIMP : Gray = (Red * 0.3 + Green * 0.59 + Blue * 0.11)
+	// 0.3 * 255 + 0.59 * 255 + 0.11 * 255
+	// (Red * 76.5 + Green * 150.45 + Blue * 28.05)
 	// BT.709 : Gray = (Red * 0.2126 + Green * 0.7152 + Blue * 0.0722)
+	// (Red * 54.213 + Green * 182.38875 + Blue * 18.411)
 	// BT.601 : Gray = (Red * 0.299 + Green * 0.587 + Blue * 0.114)
+	// (Red * 76.245 + Green * 149.685 + Blue * 29.07)
 	if (SDL_MUSTLOCK(src))
 		SDL_LockSurface(src);
 
@@ -167,7 +171,10 @@ void SDL_SetGreyScale(SDL_Surface* src)
 			auto r = (src->format->Rmask & *bufferZ) >> 16;
 			auto g = (src->format->Gmask & *bufferZ) >> 8;
 			auto b = src->format->Bmask & *bufferZ;
-			Uint8 avg = (77 * r + 150 * g + 29 * b) >> 8;
+			//Uint8 avg = (77 * r + 150 * g + 29 * b) >> 8; // Org
+			//Uint8 avg = (77 * r + 150 * g + 28 * b) >> 8; // GIMP
+			Uint8 avg = (54 * r + 182 * g + 18 * b) >> 8; // BT.709
+			//Uint8 avg = (76 * r + 150 * g + 29 * b) >> 8; // BT.601
 			*bufferZ = avg << 16 | avg << 8 | avg | Amask;
 		}
 	}
