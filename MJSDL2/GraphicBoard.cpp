@@ -589,15 +589,15 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 
 bool GraphicBoard::isButtonClicked(const int x, const int y)
 {
-	Uint8* p = (Uint8*)mousescreen->pixels + y * mousescreen->pitch + x * mousescreen->format->BytesPerPixel;
-	Uint32 index = *(Uint32*)p & 0xFF;
+	Uint32* pixel = (Uint32*)virtualmousescreen->pixels + (x + y * virtualmousescreen->w);
+	Uint32 index = (*pixel) & 0xFF;
 	return index != 255; // Background.
 }
 
 void GraphicBoard::setRightClicked(const int x, const int y)
 {
-	Uint8* p = (Uint8*)mousescreen->pixels + y * mousescreen->pitch + x * mousescreen->format->BytesPerPixel;
-	Uint32 index = *(Uint32*)p & 0xFF;
+	Uint32* pixel = (Uint32*)virtualmousescreen->pixels + (x + y * virtualmousescreen->w);
+	Uint32 index = (*pixel) & 0xFF;
 	if (143 < index && index < 255) // Background / Tiles
 	{
 		// Interface clicked :
