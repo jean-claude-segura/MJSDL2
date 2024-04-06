@@ -856,8 +856,34 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
 			SDL_SetTextureColorMod(texture, r, g, b);
 		}
-		else
 	*/
+	if (plateau.IsBlocked())
+	{
+		if (plateau.IsEmpty())
+		{
+			/*
+			auto success = SDL_CreateRGBSurface(0, virtualscreen->w, virtualscreen->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			if (success == NULL)
+			{
+				std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
+				ThrowException(1);
+			}
+			else
+			{
+				SDL_FillRect(success, NULL, SDL_MapRGBA(success->format, 0x00, 0xFF, 0x00, 0xA0));
+				SDL_UpperBlit(success, NULL, virtualscreen, NULL);
+				SDL_FreeSurface(success);
+			}
+			/**/
+		}
+		else
+		{
+			/*
+			SDL_SetGreyScale(virtualscreen);
+			/**/
+		}
+	}
+	
 	// Interface :
 	// Ouest :
 	SDL_Point size;
@@ -965,7 +991,7 @@ void GraphicBoard::WhatsLeft()
 				coordonnees.y = y * (sizeMask.y - 40);
 				coordonnees.w = size.x;
 				coordonnees.h = size.y;
-				Translate(renderer, dominos[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE, false);
+				SDL_RenderCopy(renderer, dominos[domino], NULL, &coordonnees);
 			}
 		}
 	/**/
