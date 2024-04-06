@@ -25,6 +25,9 @@
 
 class GraphicBoard
 {
+private:
+	inline void Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect coordonnees, double angle = 0, SDL_Point* point = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE, bool clicked = false);
+	inline SDL_Texture* SetFace(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect coordonnees, SDL_Texture*& Face);
 public:
 	GraphicBoard();
 	~GraphicBoard();
@@ -99,7 +102,6 @@ private:
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false
 	};
-	SDL_Rect ScreenRect;
 	int selected;
 	std::vector<std::pair<int, int>>::const_iterator itNextMove;
 	uint8_t direction;

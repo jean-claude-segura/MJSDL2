@@ -1,6 +1,6 @@
 #include "GraphicBoard.h"
 
-GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height (0), Width(0), ScreenRect({0,0,0,0})
+GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height (0), Width(0)
 {
 	window = NULL;
 	renderer = NULL;
@@ -17,17 +17,21 @@ GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height (0), Width(0),
 	virtualmousescreen = NULL;
 	mousemask = NULL;
 	FaceMask = NULL;
+	mousemasktiny = NULL;
+	Inverted = NULL;
 }
 
 GraphicBoard::~GraphicBoard()
 {
+	// Surfaces :
 	if (virtualmousescreen != NULL)
 		SDL_FreeSurface(virtualmousescreen);
+	if (mousemasktiny != NULL)
+		SDL_FreeSurface(mousemask);
 	if (mousemask != NULL)
 		SDL_FreeSurface(mousemask);
 
-	if (renderer != NULL)
-		SDL_DestroyRenderer(renderer);
+	// Texture;
 	for (int i = 0; i < 42; ++i)
 	{
 		if (dominos[i] != NULL)
@@ -60,8 +64,16 @@ GraphicBoard::~GraphicBoard()
 		SDL_DestroyTexture(ExitBtn);
 	if (textureBackground != NULL)
 		SDL_DestroyTexture(textureBackground);
+
+	// Renderer :
+	if (renderer != NULL)
+		SDL_DestroyRenderer(renderer);
+
+	// Windows :
 	if (window != NULL)
 		SDL_DestroyWindow(window);
+
+	IMG_Quit();
 	SDL_Quit();
 }
 
@@ -86,13 +98,7 @@ void GraphicBoard::Init()
 
 	SDL_DisplayMode DM;
 	SDL_GetCurrentDisplayMode(0, &DM);
-	Width = 3840;
-	Height = 2160;
 
-	ScreenRect.h = DM.h;
-	ScreenRect.w = DM.w;
-	ScreenRect.x = 0;
-	ScreenRect.y = 0;
 	window = SDL_CreateWindow(
 		"Mah Jongg SDL2",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -113,6 +119,8 @@ void GraphicBoard::Init()
 		ThrowException(1);
 	}
 
+	Width = 3840;
+	Height = 2160;
 	SDL_RenderSetLogicalSize(renderer, Width, Height);
 
 	virtualmousescreen = SDL_CreateRGBSurface(0, Width, Height, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
@@ -167,11 +175,13 @@ void GraphicBoard::LoadTile(SDL_Texture*& tileTexture, const char* szPath)
 	tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
 	if (tileTexture == NULL)
 	{
-		SDL_FreeSurface(temp);
 		SDL_FreeSurface(tileSurface);
+		SDL_FreeSurface(temp);
 		std::cout << stderr << "could not create tile " << szPath << " : " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
+	SDL_FreeSurface(tileSurface);
+	SDL_FreeSurface(temp);
 }
 
 void GraphicBoard::LoadTile(const int istart, const int iend, const std::string& path)
@@ -235,14 +245,20 @@ void GraphicBoard::LoadBackground(const std::string& path)
 	auto temp = IMG_Load(path.c_str());
 	auto background = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (background == NULL) {
+		SDL_FreeSurface(temp);
 		std::cout << stderr << "could not create background: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
-	textureBackground = SDL_CreateTextureFromSurface(renderer, background);
-	if (textureBackground == NULL)
+	else
 	{
-		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
-		ThrowException(1);
+		textureBackground = SDL_CreateTextureFromSurface(renderer, background);
+		if (textureBackground == NULL)
+		{
+			SDL_FreeSurface(background);
+			SDL_FreeSurface(temp);
+			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
 	}
 	SDL_FreeSurface(background);
 	SDL_FreeSurface(temp);
@@ -660,37 +676,7 @@ void GraphicBoard::RefreshExample()
 }
 #endif
 
-/*
-* https://discourse.libsdl.org/t/sdl-composecustomblendmode-error-in-windows/35241/1
-*/
-inline SDL_Texture* SDL_InvertTexture(SDL_Renderer* renderer, SDL_Texture* src, SDL_Texture*& tgt)
-{
-	auto renderTarget = SDL_GetRenderTarget(renderer);
-	auto SDLRenderer = renderer;
-	{
-		int w, h;
-		SDL_BlendMode textureBlendMode;
-		SDL_GetTextureBlendMode(src, &textureBlendMode);
-		if (SDL_SetTextureBlendMode(src, SDL_ComposeCustomBlendMode(
-			SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
-			SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD)) == 0)
-		{
-			if (tgt != NULL) SDL_DestroyTexture(tgt);
-			SDL_QueryTexture(src, NULL, NULL, &w, &h);
-			tgt = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
-			SDL_SetRenderTarget(SDLRenderer, tgt);
-			SDL_SetRenderDrawColor(SDLRenderer, 255, 255, 255, 0);
-			SDL_RenderClear(SDLRenderer);
-			SDL_RenderCopy(SDLRenderer, src, NULL, NULL);
-			SDL_SetTextureBlendMode(tgt, textureBlendMode);
-		}
-		SDL_SetTextureBlendMode(src, textureBlendMode);
-	}
-	SDL_SetRenderTarget(renderer, renderTarget);
-	return tgt;
-}
-
-inline void Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* rectsrc, SDL_Rect coordonnees, SDL_Texture * Inverted, double angle = 0, SDL_Point* point = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE, bool clicked = false)
+inline void GraphicBoard::Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect coordonnees, double angle, SDL_Point* point, SDL_RendererFlip flip, bool clicked)
 {
 	if (clicked)
 	{
@@ -702,67 +688,7 @@ inline void Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* re
 	}
 }
 
-/*
-* https://stackoverflow.com/questions/75873908/how-to-copy-a-texture-to-another-texture-without-pointing-to-the-same-texture
-*/
-inline SDL_Texture* SDL_DuplicateTexture(SDL_Renderer* renderer, SDL_Texture* src, SDL_Texture*& tgt)
-{
-	Uint32 format;
-	int w, h;
-	SDL_BlendMode blendmode;
-
-	// Save the current rendering target (will be NULL if it is the current window)
-	auto renderTarget = SDL_GetRenderTarget(renderer);
-
-	// Get all properties from the texture we are duplicating
-	SDL_QueryTexture(src, &format, NULL, &w, &h);
-	SDL_GetTextureBlendMode(src, &blendmode);
-
-	// Create a new texture with the same properties as the one we are duplicating
-	if (tgt != NULL)
-		SDL_DestroyTexture(tgt);
-	tgt = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, w, h);
-
-	// Set its blending mode and make it the render target
-	SDL_SetTextureBlendMode(tgt, SDL_BLENDMODE_NONE);
-	SDL_SetRenderTarget(renderer, tgt);
-
-	// Render the full original texture onto the new one
-	SDL_RenderCopy(renderer, src, NULL, NULL);
-
-	// Change the blending mode of the new texture to the same as the original one
-	SDL_SetTextureBlendMode(tgt, blendmode);
-
-	// Restore the render target
-	SDL_SetRenderTarget(renderer, renderTarget);
-
-	// Return the new texture
-	return tgt;
-}
-
-inline SDL_Texture* SDL_CutTextureOnAlpha(SDL_Renderer* renderer, SDL_Texture* src, SDL_Texture*& tgt)
-{
-	auto renderTarget = SDL_GetRenderTarget(renderer);
-	auto SDLRenderer = renderer;
-	{
-		int w, h;
-		SDL_BlendMode textureBlendMode;
-		SDL_GetTextureBlendMode(src, &textureBlendMode);
-		if (SDL_SetTextureBlendMode(src, SDL_ComposeCustomBlendMode(
-			SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ZERO, SDL_BLENDOPERATION_ADD,
-			SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ZERO, SDL_BLENDOPERATION_MINIMUM)) == 0)
-		{
-			SDL_SetRenderTarget(SDLRenderer, tgt);
-			SDL_RenderCopy(SDLRenderer, src, NULL, NULL);
-			SDL_SetTextureBlendMode(tgt, textureBlendMode);
-		}
-		SDL_SetTextureBlendMode(src, textureBlendMode);
-	}
-	SDL_SetRenderTarget(renderer, renderTarget);
-	return tgt;
-}
-
-inline SDL_Texture* SetFace(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* rectsrc, SDL_Rect coordonnees, SDL_Texture*& Face, SDL_Texture* FaceMask)
+inline SDL_Texture* GraphicBoard::SetFace(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect coordonnees, SDL_Texture*& Face)
 {
 	SDL_Texture* faceMaskCopy = NULL;
 	SDL_DuplicateTexture(renderer, FaceMask, faceMaskCopy);
@@ -813,7 +739,10 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coordonnees.w = size.x;
 			coordonnees.h = size.y;
 
-			Translate(renderer, dominos[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE, clicked[index]);
+			if (clicked[index])
+				SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, dominos[domino], Inverted), NULL, &coordonnees);
+			else
+				SDL_RenderCopy(renderer, dominos[domino], NULL, &coordonnees);
 		}
 		else if (direction == 0)
 		{
@@ -825,24 +754,23 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coordonnees.w = size.x;
 			coordonnees.h = size.y;
 
-			Translate(renderer, dominos[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_VERTICAL, clicked[index]);
+			Translate(renderer, dominos[domino], coordonnees, 0, NULL, SDL_FLIP_VERTICAL, clicked[index]);
 
 			SDL_Rect coord;
-			coord.x = 0;
-			coord.y = -38;
 			if(faces[domino] == NULL)
-				SetFace(renderer, dominos[domino], NULL, coordonnees, faces[domino], FaceMask);
+				SetFace(renderer, dominos[domino], coordonnees, faces[domino]);
 			SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
 			coordonnees.x = x * (sizeMask.x - 40) - z * 40 + tWidth;
 			coordonnees.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
-
+			coordonnees.x += 0;
+			coordonnees.y += -38;
 			coordonnees.w = size.x;
 			coordonnees.h = size.y;
 
-			coordonnees.x += coord.x;
-			coordonnees.y += coord.y;
-
-			Translate(renderer, faces[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE, clicked[index]);
+			if (clicked[index])
+				SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, faces[domino], Inverted), NULL, &coordonnees);
+			else
+				SDL_RenderCopy(renderer, faces[domino], NULL, &coordonnees);
 		}
 		else if (direction == 1)
 		{
@@ -855,23 +783,22 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coordonnees.w = size.x;
 			coordonnees.h = size.y;
 
-			Translate(renderer, dominos[domino], NULL, coordonnees, Inverted, 180, NULL, SDL_FLIP_NONE, clicked[index]);
+			Translate(renderer, dominos[domino], coordonnees, 180, NULL, SDL_FLIP_NONE, clicked[index]);
 
-			SDL_Rect coord;
-			coord.x = 33;
-			coord.y = -38;
 			if (faces[domino] == NULL)
-				SetFace(renderer, dominos[domino], NULL, coordonnees, faces[domino], FaceMask);
+				SetFace(renderer, dominos[domino], coordonnees, faces[domino]);
 			SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
 			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
 			coordonnees.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
+			coordonnees.x += 33;
+			coordonnees.y += -38;
 			coordonnees.w = size.x;
 			coordonnees.h = size.y;
 
-			coordonnees.x += coord.x;
-			coordonnees.y += coord.y;
-
-			Translate(renderer, faces[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE, clicked[index]);
+			if (clicked[index])
+				SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, faces[domino], Inverted), NULL, &coordonnees);
+			else
+				SDL_RenderCopy(renderer, faces[domino], NULL, &coordonnees);
 		}
 		else
 		{
@@ -880,27 +807,25 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
 			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
 			coordonnees.y = y * (sizeMask.y - 40) + z * 40 + tHeight;
-
 			coordonnees.w = size.x;
 			coordonnees.h = size.y;
 
-			Translate(renderer, dominos[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_HORIZONTAL, clicked[index]);
+			Translate(renderer, dominos[domino], coordonnees, 0, NULL, SDL_FLIP_HORIZONTAL, clicked[index]);
 
-			SDL_Rect coord;
-			coord.x = 33;
-			coord.y = 0;
 			if (faces[domino] == NULL)
-				SetFace(renderer, dominos[domino], NULL, coordonnees, faces[domino], FaceMask);
+				SetFace(renderer, dominos[domino], coordonnees, faces[domino]);
 			SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
 			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
 			coordonnees.y = y * (sizeMask.y - 40) + z * 40 + tHeight;
+			coordonnees.x += 33;
+			coordonnees.y += 0;
 			coordonnees.w = size.x;
 			coordonnees.h = size.y;
 
-			coordonnees.x += coord.x;
-			coordonnees.y += coord.y;
-
-			Translate(renderer, faces[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE, clicked[index]);
+			if (clicked[index])
+				SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, faces[domino], Inverted), NULL, &coordonnees);
+			else
+				SDL_RenderCopy(renderer, faces[domino], NULL, &coordonnees);
 		}
 	}
 
@@ -952,35 +877,35 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 	coordonnees.h = size.y;
 	coordonnees.x = 0;
 	coordonnees.y = (size.y - 20) * 4;
-	Translate(renderer, OuestBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
+	SDL_RenderCopy(renderer, OuestBtn, NULL, &coordonnees);
 	// Sud :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 5;
-	Translate(renderer, SudBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
+	SDL_RenderCopy(renderer, SudBtn, NULL, &coordonnees);
 	// Turn :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 4;
-	Translate(renderer, TurnBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
+	SDL_RenderCopy(renderer, TurnBtn, NULL, &coordonnees);
 	// Nord :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 3;
-	Translate(renderer, NordBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
+	SDL_RenderCopy(renderer, NordBtn, NULL, &coordonnees);
 	// Est :
 	coordonnees.x = (size.x << 1) - 40;
 	coordonnees.y = (size.y - 20) * 4;
-	Translate(renderer, EstBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
+	SDL_RenderCopy(renderer, EstBtn, NULL, &coordonnees);
 	// Hint :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = size.y - 20;
-	Translate(renderer, HintBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
+	SDL_RenderCopy(renderer, HintBtn, NULL, &coordonnees);
 	// Restart :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = 0;
-	Translate(renderer, RestartBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
+	SDL_RenderCopy(renderer, RestartBtn, NULL, &coordonnees);
 	// Exit
 	coordonnees.x = Width - size.x;
 	coordonnees.y = 0;
-	Translate(renderer, ExitBtn, NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE);
+	SDL_RenderCopy(renderer, ExitBtn, NULL, &coordonnees);
 	/**/
 
 
