@@ -27,7 +27,7 @@ GraphicBoard::~GraphicBoard()
 	if (virtualmousescreen != NULL)
 		SDL_FreeSurface(virtualmousescreen);
 	if (mousemasktiny != NULL)
-		SDL_FreeSurface(mousemask);
+		SDL_FreeSurface(mousemasktiny);
 	if (mousemask != NULL)
 		SDL_FreeSurface(mousemask);
 
