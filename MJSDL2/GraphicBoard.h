@@ -32,6 +32,7 @@ public:
 
 private:
 	void Init();
+	void LoadFaceMask();
 	void LoadTile(SDL_Texture*& tileSurface, SDL_Texture*& faceSurface, const char* szPath, SDL_Surface* facedown);
 	void LoadTile(SDL_Texture*& tileSurface, const char* szPath);
 	void LoadTile(const int istart, const int iend, const std::string& path);
@@ -68,7 +69,8 @@ private:
 		* OuestBtn,
 		* NordBtn,
 		* ExitBtn,
-		* Inverted;
+		* Inverted,
+		* FaceMask;
 	int Height, Width;
 	SDL_Texture* dominos[42] = { NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,

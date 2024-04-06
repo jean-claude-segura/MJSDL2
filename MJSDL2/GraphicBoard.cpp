@@ -16,6 +16,7 @@ GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height (0), Width(0),
 	textureBackground = NULL;
 	virtualmousescreen = NULL;
 	mousemask = NULL;
+	FaceMask = NULL;
 }
 
 GraphicBoard::~GraphicBoard()
@@ -37,6 +38,8 @@ GraphicBoard::~GraphicBoard()
 		if (faces[i] != NULL)
 			SDL_DestroyTexture(faces[i]);
 	}
+	if (FaceMask != NULL)
+		SDL_DestroyTexture(FaceMask);
 	if (Inverted != NULL)
 		SDL_DestroyTexture(Inverted);
 	if (RestartBtn != NULL)
@@ -132,6 +135,29 @@ void GraphicBoard::Init()
 	Refresh(true);
 }
 
+void GraphicBoard::LoadFaceMask()
+{
+	auto temp = IMG_Load("./tiles/Blank/facedown.svg");
+	auto facedown = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (facedown == NULL) {
+		std::cout << stderr << "could not create background: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	else
+	{
+		FaceMask = SDL_CreateTextureFromSurface(renderer, facedown);
+		if (FaceMask == NULL)
+		{
+			SDL_FreeSurface(facedown);
+			SDL_FreeSurface(temp);
+			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
+		SDL_FreeSurface(facedown);
+		SDL_FreeSurface(temp);
+	}
+}
+
 void GraphicBoard::LoadTile(SDL_Texture*& tileTexture, const char* szPath)
 {
 	if (tileTexture != NULL)
@@ -216,29 +242,30 @@ void GraphicBoard::LoadTile(const int istart, const int iend, const std::string&
 			++it;
 		}
 	}
+	SDL_FreeSurface(facedown);
 	SDL_FreeSurface(temp);
 }
 
 void GraphicBoard::LoadRamdomTileSet(const int istart, const int iend, const std::string& path)
 {
-		std::vector<std::string> vPaths;
-		for (const auto& entry : std::filesystem::directory_iterator(path))
-		{
-			if (entry.is_directory())
-				vPaths.emplace_back(entry.path().string());
-		}
-		if (vPaths.empty())
-		{
-			LoadTile(istart, iend, path);
-		}
-		else
-		{
-			std::sort(vPaths.begin(), vPaths.end());
-			std::random_device r;
-			std::default_random_engine e1(r());
-			std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
-			LoadTile(istart, iend, vPaths[uniform_dist(e1)]);
-		}
+	std::vector<std::string> vPaths;
+	for (const auto& entry : std::filesystem::directory_iterator(path))
+	{
+		if (entry.is_directory())
+			vPaths.emplace_back(entry.path().string());
+	}
+	if (vPaths.empty())
+	{
+		LoadTile(istart, iend, path);
+	}
+	else
+	{
+		std::sort(vPaths.begin(), vPaths.end());
+		std::random_device r;
+		std::default_random_engine e1(r());
+		std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
+		LoadTile(istart, iend, vPaths[uniform_dist(e1)]);
+	}
 }
 
 void GraphicBoard::LoadRandomBackground(const std::string& path)
@@ -304,17 +331,21 @@ void GraphicBoard::LoadResources()
 	mousemask = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (mousemask == NULL)
 	{
+		SDL_FreeSurface(temp);
 		std::cout << stderr << "could not create mouse mask: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 	mousemasktiny = SDL_CreateRGBSurface(0, mousemask->w >> 1, mousemask->h >> 1, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 	if (mousemasktiny == NULL)
 	{
+		SDL_FreeSurface(temp);
 		std::cout << stderr << "could not create mouse mask: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 	SDL_UpperBlitScaled(mousemask, NULL, mousemasktiny, NULL);
 	SDL_FreeSurface(temp);
+
+	LoadFaceMask();
 
 	LoadTiles();
 	//LoadBackground("./background/10013168.jpg");
@@ -682,43 +713,127 @@ void GraphicBoard::RefreshExample()
 }
 #endif
 
+/*
+* https://discourse.libsdl.org/t/sdl-composecustomblendmode-error-in-windows/35241/1
+*/
+inline SDL_Texture* SDL_InvertTexture(SDL_Renderer* renderer, SDL_Texture* src, SDL_Texture*& tgt)
+{
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+	auto SDLRenderer = renderer;
+	{
+		int w, h;
+		SDL_BlendMode textureBlendMode;
+		SDL_GetTextureBlendMode(src, &textureBlendMode);
+		if (SDL_SetTextureBlendMode(src, SDL_ComposeCustomBlendMode(
+			SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
+			SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD)) == 0)
+		{
+			if (tgt != NULL) SDL_DestroyTexture(tgt);
+			SDL_QueryTexture(src, NULL, NULL, &w, &h);
+			tgt = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
+			SDL_SetRenderTarget(SDLRenderer, tgt);
+			SDL_SetRenderDrawColor(SDLRenderer, 255, 255, 255, 0);
+			SDL_RenderClear(SDLRenderer);
+			SDL_RenderCopy(SDLRenderer, src, NULL, NULL);
+			SDL_SetTextureBlendMode(tgt, textureBlendMode);
+		}
+		SDL_SetTextureBlendMode(src, textureBlendMode);
+	}
+	SDL_SetRenderTarget(renderer, renderTarget);
+	return tgt;
+}
+
 inline void Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* rectsrc, SDL_Rect coordonnees, SDL_Texture * Inverted, double angle = 0, SDL_Point* point = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE, bool clicked = false)
 {
 	if (clicked)
 	{
-		// https://discourse.libsdl.org/t/sdl-composecustomblendmode-error-in-windows/35241/1
-		// https://stackoverflow.com/questions/75873908/how-to-copy-a-texture-to-another-texture-without-pointing-to-the-same-texture
-		auto renderTarget = SDL_GetRenderTarget(renderer);
-		SDL_BlendMode textureBlendMode;
-		SDL_GetTextureBlendMode(texture, &textureBlendMode);
-		auto S = texture;
-		auto T = Inverted;
-		auto SDLRenderer = renderer;
-		{
-			int w, h;
-			if (SDL_SetTextureBlendMode(S, SDL_ComposeCustomBlendMode(
-				SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
-				SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD)) == 0)
-			{
-				if (T != NULL) SDL_DestroyTexture(T);
-				SDL_QueryTexture(S, NULL, NULL, &w, &h);
-				T = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
-				SDL_SetRenderTarget(SDLRenderer, T);
-				SDL_SetRenderDrawColor(SDLRenderer, 255, 255, 255, 0);
-				SDL_RenderClear(SDLRenderer);
-				SDL_RenderCopy(SDLRenderer, S, NULL, NULL);
-			}
-		}
-		SDL_SetRenderTarget(renderer, renderTarget);
-		SDL_SetTextureBlendMode(texture, textureBlendMode);
-		SDL_SetTextureBlendMode(T, textureBlendMode);
-		SDL_RenderCopyEx(renderer, T, NULL, &coordonnees, angle, NULL, flip);
-
+		SDL_RenderCopyEx(renderer, SDL_InvertTexture(renderer, texture, Inverted), NULL, &coordonnees, angle, NULL, flip);
 	}
 	else
 	{
 		SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
 	}
+}
+
+/*
+* https://stackoverflow.com/questions/75873908/how-to-copy-a-texture-to-another-texture-without-pointing-to-the-same-texture
+*/
+inline SDL_Texture* SDL_DuplicateTexture(SDL_Renderer* renderer, SDL_Texture* src, SDL_Texture*& tgt)
+{
+	Uint32 format;
+	int w, h;
+	SDL_BlendMode blendmode;
+
+	// Save the current rendering target (will be NULL if it is the current window)
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+
+	// Get all properties from the texture we are duplicating
+	SDL_QueryTexture(src, &format, NULL, &w, &h);
+	SDL_GetTextureBlendMode(src, &blendmode);
+
+	// Create a new texture with the same properties as the one we are duplicating
+	if (tgt != NULL)
+		SDL_DestroyTexture(tgt);
+	tgt = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, w, h);
+
+	// Set its blending mode and make it the render target
+	SDL_SetTextureBlendMode(tgt, SDL_BLENDMODE_NONE);
+	SDL_SetRenderTarget(renderer, tgt);
+
+	// Render the full original texture onto the new one
+	SDL_RenderCopy(renderer, src, NULL, NULL);
+
+	// Change the blending mode of the new texture to the same as the original one
+	SDL_SetTextureBlendMode(tgt, blendmode);
+
+	// Restore the render target
+	SDL_SetRenderTarget(renderer, renderTarget);
+
+	// Return the new texture
+	return tgt;
+}
+
+inline SDL_Texture* SDL_CutTextureOnAlpha(SDL_Renderer* renderer, SDL_Texture* src, SDL_Texture*& tgt)
+{
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+	auto SDLRenderer = renderer;
+	{
+		int w, h;
+		SDL_BlendMode textureBlendMode;
+		SDL_GetTextureBlendMode(src, &textureBlendMode);
+		if (SDL_SetTextureBlendMode(src, SDL_ComposeCustomBlendMode(
+			SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ZERO, SDL_BLENDOPERATION_ADD,
+			SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ZERO, SDL_BLENDOPERATION_MINIMUM)) == 0)
+		{
+			/*if (tgt != NULL) SDL_DestroyTexture(tgt);
+			SDL_QueryTexture(src, NULL, NULL, &w, &h);
+			tgt = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);*/
+			SDL_SetRenderTarget(SDLRenderer, tgt);
+			//SDL_SetRenderDrawColor(SDLRenderer, 255, 255, 255, 0);
+			//SDL_RenderClear(SDLRenderer);
+			SDL_RenderCopy(SDLRenderer, src, NULL, NULL);
+			SDL_SetTextureBlendMode(tgt, textureBlendMode);
+		}
+		SDL_SetTextureBlendMode(src, textureBlendMode);
+	}
+	SDL_SetRenderTarget(renderer, renderTarget);
+	return tgt;
+}
+
+inline SDL_Texture* GetFace(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* rectsrc, SDL_Rect coordonnees, SDL_Texture*& Face, SDL_Texture* FaceMask)
+{
+	SDL_Texture* faceMaskCopy = NULL;
+	SDL_DuplicateTexture(renderer, FaceMask, faceMaskCopy);
+
+	SDL_CutTextureOnAlpha(renderer, texture, faceMaskCopy);
+
+	SDL_DuplicateTexture(renderer, faceMaskCopy, Face);
+
+	SDL_DestroyTexture(faceMaskCopy);
+
+	SDL_RenderCopy(renderer, Face, NULL, &coordonnees);
+
+	return Face;
 }
 
 void GraphicBoard::Refresh(bool refreshMouseMap)
@@ -761,6 +876,8 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			/*if (clicked[index]) // GIMP : Gray = (Red * 0.3 + Green * 0.59 + Blue * 0.11)
 				SDL_SetTextureColorMod(texture, 0.3*255, 0.59*255, 0.11*255);*/
 			Translate(renderer, dominos[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE, clicked[index]);
+
+			//GetFace(renderer, dominos[domino], NULL, coordonnees, faces[domino], FaceMask);
 		}
 		else if (direction == 0)
 		{
