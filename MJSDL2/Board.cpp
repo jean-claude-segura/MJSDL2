@@ -411,6 +411,11 @@ void Board::BuildMoves(std::vector<std::tuple<double, double, double, int, int>>
 	}
 }
 
+bool Board::CompRemovableBoard(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
+{
+	return std::get<3>(left) < std::get<3>(right);
+}
+
 void Board::SetMoves()
 {
 	std::vector<std::tuple<double, double, double, int, int>> RemovableBoard; // (x, y, z, domino, index)
@@ -420,6 +425,7 @@ void Board::SetMoves()
 	}
 
 	Moves.clear();
+	std::sort(RemovableBoard.begin(), RemovableBoard.end(), CompRemovableBoard);
 	auto itFirst = RemovableBoard.begin();
 	BuildMoves(RemovableBoard, itFirst, Moves);
 }
