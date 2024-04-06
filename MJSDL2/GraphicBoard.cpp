@@ -743,7 +743,7 @@ inline void GraphicBoard::RenderCopy(const double x, const double y, const doubl
 	SDL_DestroyTexture(tgt);
 }
 
-void GraphicBoard::Refresh(bool refreshMouseMap)
+void GraphicBoard::Refresh(const bool refreshMouseMap)
 {
 	if (refreshMouseMap) RefreshMouseMap();
 	SDL_RenderClear(renderer);

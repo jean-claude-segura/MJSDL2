@@ -26,7 +26,7 @@
 class GraphicBoard
 {
 private:
-	inline SDL_Texture* SetFace(SDL_Texture* texture, SDL_Rect coordonnees, SDL_Texture*& Face);
+	inline SDL_Texture* SetFace(SDL_Texture* texture, const SDL_Rect coordonnees, SDL_Texture*& Face);
 	inline void RenderCopy(const double x, const double y, const double z, const int domino, const int index, const SDL_Point& org, const SDL_Point& shift, const double angle, const SDL_RendererFlip flip);
 public:
 	GraphicBoard();
@@ -43,13 +43,13 @@ private:
 	void LoadRandomBackground(const std::string& path);
 	void LoadBackground(const std::string& path);
 	void LoadResources();
-	void Refresh(bool);
+	void Refresh(const bool);
 #ifdef _DEBUG
 	void RefreshExample();
 #endif
 	void RefreshMouseMap();
 	void WhatsLeft();
-	void InterfaceClicked(int index);
+	void InterfaceClicked(const int index);
 	void setClicked(const int x, const int y);
 	void ThrowException(const int);
 	void LoadUI();
