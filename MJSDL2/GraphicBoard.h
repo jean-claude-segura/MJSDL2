@@ -28,6 +28,7 @@ class GraphicBoard
 private:
 	inline SDL_Texture* SetFace(SDL_Texture* texture, const SDL_Rect coordonnees, SDL_Texture*& Face);
 	inline void RenderCopy(const double x, const double y, const double z, const int domino, const int index, const SDL_Point& org, const SDL_Point& shift, const double angle, const SDL_RendererFlip flip);
+	inline void RenderCopyMouseMap(SDL_Texture* Mask, SDL_Rect coordonnees, Uint32 colour, const double angle, const SDL_RendererFlip flip);
 public:
 	GraphicBoard();
 	~GraphicBoard();
@@ -36,6 +37,7 @@ public:
 private:
 	void Init();
 	void LoadFaceMask();
+	void LoadMouseMask();
 	void LoadTile(SDL_Texture*& tileSurface, const char* szPath);
 	void LoadTile(const int istart, const int iend, const std::string& path);
 	void LoadRamdomTileSet(const int istart, const int iend, const std::string& path);
@@ -59,10 +61,6 @@ private:
 
 	SDL_Window* window;
 	SDL_Renderer* renderer;
-	SDL_Surface
-		* virtualmousescreen,
-		* mousemask,
-		* mousemasktiny;
 	SDL_Texture
 		* textureBackground,
 		* RestartBtn,
@@ -74,7 +72,9 @@ private:
 		* NordBtn,
 		* ExitBtn,
 		* Inverted,
-		* FaceMask;
+		* FaceMask,
+		* textureMouseMap,
+		* MouseMask;
 	int Height, Width;
 	SDL_Texture* dominos[42] = { NULL, NULL, NULL, NULL, NULL , NULL, NULL,
 		NULL, NULL, NULL, NULL, NULL , NULL, NULL,

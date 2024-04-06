@@ -106,3 +106,18 @@ inline SDL_Texture* SDL_CutTextureOnAlpha(SDL_Renderer* renderer, SDL_Texture* s
 	SDL_SetRenderTarget(renderer, renderTarget);
 	return tgt;
 }
+
+inline Uint32 SDL_TextureReadPixel(SDL_Renderer * renderer, SDL_Texture * texture, const SDL_Point p, int WIDTH)
+{
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+	SDL_Rect textRec;
+	textRec.x = p.x;
+	textRec.y = p.y;
+	textRec.w = 1;
+	textRec.h = 1;
+	Uint32 value;
+	SDL_SetRenderTarget(renderer, texture);
+	SDL_RenderReadPixels(renderer, &textRec, SDL_PIXELFORMAT_ARGB8888, &value, 32 * WIDTH);
+	SDL_SetRenderTarget(renderer, renderTarget);
+	return value;
+}

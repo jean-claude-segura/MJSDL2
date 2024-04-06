@@ -14,24 +14,16 @@ GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height (0), Width(0)
 	ExitBtn = NULL;
 	exitEvent.type = SDL_QUIT;
 	textureBackground = NULL;
-	virtualmousescreen = NULL;
-	mousemask = NULL;
+	MouseMask = NULL;
 	FaceMask = NULL;
-	mousemasktiny = NULL;
 	Inverted = NULL;
 }
 
 GraphicBoard::~GraphicBoard()
 {
-	// Surfaces :
-	if (virtualmousescreen != NULL)
-		SDL_FreeSurface(virtualmousescreen);
-	if (mousemasktiny != NULL)
-		SDL_FreeSurface(mousemasktiny);
-	if (mousemask != NULL)
-		SDL_FreeSurface(mousemask);
-
 	// Texture;
+	if (MouseMask != NULL)
+		SDL_DestroyTexture(MouseMask);
 	for (int i = 0; i < 42; ++i)
 	{
 		if (dominos[i] != NULL)
@@ -42,6 +34,8 @@ GraphicBoard::~GraphicBoard()
 		if (faces[i] != NULL)
 			SDL_DestroyTexture(faces[i]);
 	}
+	if (textureMouseMap != NULL)
+		SDL_DestroyTexture(textureMouseMap);
 	if (FaceMask != NULL)
 		SDL_DestroyTexture(FaceMask);
 	if (Inverted != NULL)
@@ -123,10 +117,10 @@ void GraphicBoard::Init()
 	Height = 2160;
 	SDL_RenderSetLogicalSize(renderer, Width, Height);
 
-	virtualmousescreen = SDL_CreateRGBSurface(0, Width, Height, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-	if (virtualmousescreen == NULL)
+	textureMouseMap = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
+	if (textureMouseMap == NULL)
 	{
-		std::cout << stderr << "could not create virtual mouse screen: " << SDL_GetError() << std::endl;
+		std::cout << stderr << "could not create mouse map texture: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 
@@ -157,6 +151,30 @@ void GraphicBoard::LoadFaceMask()
 	{
 		FaceMask = SDL_CreateTextureFromSurface(renderer, facedown);
 		if (FaceMask == NULL)
+		{
+			SDL_FreeSurface(facedown);
+			SDL_FreeSurface(temp);
+			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
+		SDL_FreeSurface(facedown);
+		SDL_FreeSurface(temp);
+	}
+}
+
+void GraphicBoard::LoadMouseMask()
+{
+	auto temp = IMG_Load("./tiles/Blank/blank.svg");
+	auto facedown = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (facedown == NULL) {
+		SDL_FreeSurface(temp);
+		std::cout << stderr << "could not create background: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	else
+	{
+		MouseMask = SDL_CreateTextureFromSurface(renderer, facedown);
+		if (MouseMask == NULL)
 		{
 			SDL_FreeSurface(facedown);
 			SDL_FreeSurface(temp);
@@ -292,25 +310,8 @@ void GraphicBoard::LoadTiles()
 
 void GraphicBoard::LoadResources()
 {
-	auto temp = IMG_Load("./tiles/Blank/blank.svg");
-	mousemask = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-	if (mousemask == NULL)
-	{
-		SDL_FreeSurface(temp);
-		std::cout << stderr << "could not create mouse mask: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	mousemasktiny = SDL_CreateRGBSurface(0, mousemask->w >> 1, mousemask->h >> 1, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-	if (mousemasktiny == NULL)
-	{
-		SDL_FreeSurface(temp);
-		std::cout << stderr << "could not create mouse mask: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	SDL_UpperBlitScaled(mousemask, NULL, mousemasktiny, NULL);
-	SDL_FreeSurface(temp);
-
 	LoadFaceMask();
+	LoadMouseMask();
 
 	LoadTiles();
 	//LoadBackground("./background/10013168.jpg");
@@ -504,8 +505,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 
 void GraphicBoard::setLeftClicked(const int x, const int y)
 {
-	Uint32* pixel = (Uint32*)virtualmousescreen->pixels + (x + y * virtualmousescreen->w );
-	Uint32 index = (*pixel) & 0xFF;
+	auto index = SDL_TextureReadPixel(renderer, textureMouseMap, SDL_Point{ x, y }, Width);
+	index &= 0xFF;
 	if (index != 255) // Not background.
 	{
 		if (index < 144)
@@ -589,15 +590,15 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 
 bool GraphicBoard::isButtonClicked(const int x, const int y)
 {
-	Uint32* pixel = (Uint32*)virtualmousescreen->pixels + (x + y * virtualmousescreen->w);
-	Uint32 index = (*pixel) & 0xFF;
+	auto index = SDL_TextureReadPixel(renderer, textureMouseMap, SDL_Point{ x, y }, Width);
+	index &= 0xFF;
 	return index != 255; // Background.
 }
 
 void GraphicBoard::setRightClicked(const int x, const int y)
 {
-	Uint32* pixel = (Uint32*)virtualmousescreen->pixels + (x + y * virtualmousescreen->w);
-	Uint32 index = (*pixel) & 0xFF;
+	auto index = SDL_TextureReadPixel(renderer, textureMouseMap, SDL_Point{ x, y }, Width);
+	index &= 0xFF;
 	if (143 < index && index < 255) // Background / Tiles
 	{
 		// Interface clicked :
@@ -606,17 +607,54 @@ void GraphicBoard::setRightClicked(const int x, const int y)
 	}
 }
 
+inline void GraphicBoard::RenderCopyMouseMap(SDL_Texture * Mask, SDL_Rect coordonnees, Uint32 colour, const double angle, const SDL_RendererFlip flip)
+{
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+	auto SDLRenderer = renderer;
+	int w, h;
+	SDL_QueryTexture(Mask, NULL, NULL, &w, &h);
+	auto tgt = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
+	{
+		SDL_BlendMode textureBlendMode;
+		SDL_GetTextureBlendMode(Mask, &textureBlendMode);
+		if (SDL_SetTextureBlendMode(Mask, SDL_ComposeCustomBlendMode(
+			SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD,
+			SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ZERO, SDL_BLENDOPERATION_MINIMUM)) == 0)
+		{
+			//if (tgt != NULL) SDL_DestroyTexture(tgt);
+			//SDL_QueryTexture(Mask, NULL, NULL, &w, &h);
+			//auto tgt = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
+			SDL_SetRenderTarget(SDLRenderer, tgt);
+			SDL_SetRenderDrawColor(SDLRenderer, 0, 0, colour, 0xFF);
+			SDL_RenderClear(SDLRenderer);
+
+			SDL_RenderCopy(SDLRenderer, Mask, NULL, NULL);
+			SDL_SetTextureBlendMode(tgt, textureBlendMode);
+		}
+		SDL_SetTextureBlendMode(Mask, textureBlendMode);
+	}
+	SDL_SetRenderTarget(renderer, renderTarget);
+	SDL_RenderCopyEx(renderer, tgt, NULL, &coordonnees, angle, NULL, flip);
+	SDL_DestroyTexture(tgt);
+}
+
 void GraphicBoard::RefreshMouseMap()
 {
-	// Copie du fond :
-	SDL_FillRect(virtualmousescreen, NULL, SDL_MapRGB(virtualmousescreen->format, 0xFF, 0xFF, 0xFF));
+	// Save the current rendering target (will be NULL if it is the current window)
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+	SDL_SetRenderTarget(renderer, textureMouseMap);
+	SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+	SDL_RenderClear(renderer);
 
 	/**/
 	// Placement des dominos :
 	SDL_Rect coordonnees;
 
-	auto tWidth = (Width - (mousemask->w - 40) * 12) >> 1;
-	auto tHeight = (Height - (mousemask->h - 40) >> 3) >> 1;
+	SDL_Point size;
+	SDL_QueryTexture(MouseMask, NULL, NULL, &size.x, &size.y);
+
+	auto tWidth = (Width - (size.x - 40) * 12) >> 1;
+	auto tHeight = (Height - (size.y - 40) >> 3) >> 1;
 
 	for (auto& tile : plateau.getLogicalBoard())
 	{
@@ -627,114 +665,87 @@ void GraphicBoard::RefreshMouseMap()
 		auto index = std::get<4>(tile);
 		if (direction == 3)
 		{
-			coordonnees.x = x * (mousemask->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (mousemask->h - 40) + z * 40 + tHeight;
-			coordonnees.w = mousemask->w;
-			coordonnees.h = mousemask->h;
-			SDL_SetColourOnOpaque(mousemask, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, index));
+			// Down - Left
+			coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
+			coordonnees.w = size.x;
+			coordonnees.h = size.y;
+
+			RenderCopyMouseMap(MouseMask, coordonnees, index, 0, SDL_FLIP_NONE);
 		}
 		else if (direction == 0)
 		{
-			coordonnees.x = x * (mousemask->w - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (mousemask->h - 40) - z * 40 + tHeight;
-			coordonnees.w = mousemask->w;
-			coordonnees.h = mousemask->h;
-			auto temp = SDL_CreateRGBSurface(0, mousemask->w, mousemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
+			// Up - Left
+			coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
+			coordonnees.y = y * (size.y - 40) - z * 40 + tHeight;
+			coordonnees.w = size.x;
+			coordonnees.h = size.y;
 
-			// Récupération du domino :
-			SDL_UpperBlit(mousemask, NULL, temp, NULL);
-			SDL_VerticalFlip(temp);
-
-			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, index));
-
-			SDL_FreeSurface(temp);
+			RenderCopyMouseMap(MouseMask, coordonnees, index, 0, SDL_FLIP_VERTICAL);
 		}
 		else if (direction == 1)
 		{
-			coordonnees.x = x * (mousemask->w - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (mousemask->h - 40) - z * 40 + tHeight;
-			coordonnees.w = mousemask->w;
-			coordonnees.h = mousemask->h;
 			// Up - Right
-			auto temp = SDL_CreateRGBSurface(0, mousemask->w, mousemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(mousemask, NULL, temp, NULL);
-			SDL_HorizontalFlip(temp);
+			coordonnees.x = x * (size.x - 40) + z * 40 + tWidth;
+			coordonnees.y = y * (size.y - 40) - z * 40 + tHeight;
+			coordonnees.w = size.x;
+			coordonnees.h = size.y;
 
-			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, index));
-
-			SDL_FreeSurface(temp);
+			RenderCopyMouseMap(MouseMask, coordonnees, index, 180, SDL_FLIP_NONE);
 		}
 		else
 		{
 			// Down - Right
-			coordonnees.x = x * (mousemask->w - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (mousemask->h - 40) + z * 40 + tHeight;
-			coordonnees.w = mousemask->w;
-			coordonnees.h = mousemask->h;
-			auto temp = SDL_CreateRGBSurface(0, mousemask->w, mousemask->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			SDL_UpperBlit(mousemask, NULL, temp, NULL);
-			SDL_HorizontalFlip(temp);
-			SDL_VerticalFlip(temp);
+			coordonnees.x = x * (size.x - 40) + z * 40 + tWidth;
+			coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
+			coordonnees.w = size.x;
+			coordonnees.h = size.y;
 
-			SDL_SetColourOnOpaque(temp, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, index));
-
-			SDL_FreeSurface(temp);
+			RenderCopyMouseMap(MouseMask, coordonnees, index, 0, SDL_FLIP_HORIZONTAL);
 		}
 	}
 	/**/
-	SDL_Point size{ mousemasktiny->w, mousemasktiny->h };
-	
+	// Interface :
+	// Ouest :
+	SDL_QueryTexture(RestartBtn, NULL, NULL, &size.x, &size.y);
+
 	coordonnees.w = size.x;
 	coordonnees.h = size.y;
-	// Ouest :
 	coordonnees.x = 0;
 	coordonnees.y = (size.y - 20) * 4;
-	coordonnees.w = mousemasktiny->w;
-	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, WEST));
+	RenderCopyMouseMap(OuestBtn, coordonnees, WEST, 0, SDL_FLIP_NONE);
 	// Sud :
-	coordonnees.x = mousemasktiny->w - 20;
+	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 5;
-	coordonnees.w = mousemasktiny->w;
-	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, SOUTH));
+	RenderCopyMouseMap(SudBtn, coordonnees, SOUTH, 0, SDL_FLIP_NONE);
 	// Turn :
-	coordonnees.x = mousemasktiny->w - 20;
+	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 4;
-	coordonnees.w = mousemasktiny->w;
-	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, TURN));
+	RenderCopyMouseMap(TurnBtn, coordonnees, TURN, 0, SDL_FLIP_NONE);
 	// Nord :
-	coordonnees.x = mousemasktiny->w - 20;
+	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 3;
-	coordonnees.w = mousemasktiny->w;
-	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, NORTH));
+	RenderCopyMouseMap(NordBtn, coordonnees, NORTH, 0, SDL_FLIP_NONE);
 	// Est :
-	coordonnees.x = (mousemasktiny->w << 1) - 40;
+	coordonnees.x = (size.x << 1) - 40;
 	coordonnees.y = (size.y - 20) * 4;
-	coordonnees.w = mousemasktiny->w;
-	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, EAST));
+	RenderCopyMouseMap(EstBtn, coordonnees, EAST, 0, SDL_FLIP_NONE);
 	// Hint :
-	coordonnees.x = mousemasktiny->w - 20;
+	coordonnees.x = size.x - 20;
 	coordonnees.y = size.y - 20;
-	coordonnees.w = mousemasktiny->w;
-	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, HINT));
+	RenderCopyMouseMap(HintBtn, coordonnees, HINT, 0, SDL_FLIP_NONE);
 	// Restart :
-	coordonnees.x = mousemasktiny->w - 20;
+	coordonnees.x = size.x - 20;
 	coordonnees.y = 0;
-	coordonnees.w = mousemasktiny->w;
-	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, RESTART));
+	RenderCopyMouseMap(RestartBtn, coordonnees, RESTART, 0, SDL_FLIP_NONE);
 	// Exit
-	coordonnees.x = virtualmousescreen->w - mousemasktiny->w;
+	coordonnees.x = Width - size.x;
 	coordonnees.y = 0;
-	coordonnees.w = mousemasktiny->w;
-	coordonnees.h = size.y;
-	SDL_SetColourOnOpaque(mousemasktiny, virtualmousescreen, coordonnees, SDL_MapRGB(virtualmousescreen->format, 0x00, 0x00, EXIT));
+	RenderCopyMouseMap(ExitBtn, coordonnees, EXIT, 0, SDL_FLIP_NONE);
 	/**/
+
+	// Restore the render target
+	SDL_SetRenderTarget(renderer, renderTarget);
 }
 
 #ifdef _DEBUG
@@ -956,27 +967,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 	SDL_RenderCopy(renderer, ExitBtn, NULL, &coordonnees);
 	/**/
 
-
-//#define _SEEMOUSEMAP
-#ifdef _SEEMOUSEMAP
-	//SDL_BlitScaled(virtualmousescreen, NULL, tampon, NULL);
-	//SDL_BlitScaled(mousescreen, NULL, tampon, NULL);
-
-	auto texture = SDL_CreateTextureFromSurface(renderer, virtualmousescreen);
-	if (texture == NULL)
-	{
-		std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	if (SDL_RenderCopy(renderer, texture, NULL, NULL) < 0)
-	{
-		std::cout << stderr << "could not copy renderer: " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-
-	SDL_DestroyTexture(texture);
-#endif
-
+	//SDL_RenderCopy(renderer, textureMouseMap, NULL, NULL);
 
 	SDL_RenderPresent(renderer);
 }
