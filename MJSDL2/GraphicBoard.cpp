@@ -172,78 +172,25 @@ void GraphicBoard::LoadTile(SDL_Texture*& tileTexture, const char* szPath)
 		std::cout << stderr << "could not create tile " << szPath << " : " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
-	SDL_FreeSurface(tileSurface);
-	SDL_FreeSurface(temp);
-}
-
-void GraphicBoard::LoadTile(SDL_Texture*& tileTexture, SDL_Texture*& faceTexture, const char* szPath, SDL_Surface * facedown)
-{
-	if (tileTexture != NULL)
-		SDL_DestroyTexture(tileTexture);
-	if (faceTexture != NULL)
-		SDL_DestroyTexture(faceTexture);
-	auto temp = IMG_Load(szPath);
-	auto tileSurface = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-	tileTexture = SDL_CreateTextureFromSurface(renderer, tileSurface);
-	if (tileTexture == NULL)
-	{
-		SDL_FreeSurface(temp);
-		SDL_FreeSurface(tileSurface);
-		std::cout << stderr << "could not create tile " << szPath << " : " << SDL_GetError() << std::endl;
-		ThrowException(1);
-	}
-	else
-	{
-		SDL_FreeSurface(temp);
-		auto faceSurface = SDL_CreateRGBSurface(0, tileSurface->w, tileSurface->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-		if (tileSurface == NULL)
-		{
-			SDL_FreeSurface(tileSurface);
-			std::cout << stderr << "could not create face " << szPath << " : " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
-		else
-		{
-			// Récupération du domino :
-			SDL_UpperBlit(tileSurface, NULL, faceSurface, NULL);
-			// Découpage de tout sauf de la face :
-			SDL_UpperBlitCut(facedown, faceSurface);
-			faceTexture = SDL_CreateTextureFromSurface(renderer, faceSurface);
-			SDL_FreeSurface(faceSurface);
-			SDL_FreeSurface(tileSurface);
-		}
-	}
 }
 
 void GraphicBoard::LoadTile(const int istart, const int iend, const std::string& path)
 {
-	auto temp = IMG_Load("./tiles/Blank/facedown.svg");
-	auto facedown = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-	if (facedown == NULL)
+	std::vector<std::string> vPaths;
+	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
-		std::cout << stderr << "could not create tile mask: " << SDL_GetError() << std::endl;
+		if (!entry.is_directory())
+			vPaths.emplace_back(entry.path().string());
+	}
+	if (vPaths.size() != (iend - istart))
 		ThrowException(1);
-	}
-	else
+	std::sort(vPaths.begin(), vPaths.end());
+	auto it = vPaths.begin();
+	for (int i = istart; i < iend; ++i)
 	{
-		std::vector<std::string> vPaths;
-		for (const auto& entry : std::filesystem::directory_iterator(path))
-		{
-			if (!entry.is_directory())
-				vPaths.emplace_back(entry.path().string());
-		}
-		if (vPaths.size() != (iend - istart))
-			ThrowException(1);
-		std::sort(vPaths.begin(), vPaths.end());
-		auto it = vPaths.begin();
-		for (int i = istart; i < iend; ++i)
-		{
-			LoadTile(dominos[i], faces[i], it->c_str(), facedown);
-			++it;
-		}
+		LoadTile(dominos[i], it->c_str());
+		++it;
 	}
-	SDL_FreeSurface(facedown);
-	SDL_FreeSurface(temp);
 }
 
 void GraphicBoard::LoadRamdomTileSet(const int istart, const int iend, const std::string& path)
@@ -805,12 +752,7 @@ inline SDL_Texture* SDL_CutTextureOnAlpha(SDL_Renderer* renderer, SDL_Texture* s
 			SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ZERO, SDL_BLENDOPERATION_ADD,
 			SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ZERO, SDL_BLENDOPERATION_MINIMUM)) == 0)
 		{
-			/*if (tgt != NULL) SDL_DestroyTexture(tgt);
-			SDL_QueryTexture(src, NULL, NULL, &w, &h);
-			tgt = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);*/
 			SDL_SetRenderTarget(SDLRenderer, tgt);
-			//SDL_SetRenderDrawColor(SDLRenderer, 255, 255, 255, 0);
-			//SDL_RenderClear(SDLRenderer);
 			SDL_RenderCopy(SDLRenderer, src, NULL, NULL);
 			SDL_SetTextureBlendMode(tgt, textureBlendMode);
 		}
@@ -820,7 +762,7 @@ inline SDL_Texture* SDL_CutTextureOnAlpha(SDL_Renderer* renderer, SDL_Texture* s
 	return tgt;
 }
 
-inline SDL_Texture* GetFace(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* rectsrc, SDL_Rect coordonnees, SDL_Texture*& Face, SDL_Texture* FaceMask)
+inline SDL_Texture* SetFace(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* rectsrc, SDL_Rect coordonnees, SDL_Texture*& Face, SDL_Texture* FaceMask)
 {
 	SDL_Texture* faceMaskCopy = NULL;
 	SDL_DuplicateTexture(renderer, FaceMask, faceMaskCopy);
@@ -830,8 +772,6 @@ inline SDL_Texture* GetFace(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Re
 	SDL_DuplicateTexture(renderer, faceMaskCopy, Face);
 
 	SDL_DestroyTexture(faceMaskCopy);
-
-	SDL_RenderCopy(renderer, Face, NULL, &coordonnees);
 
 	return Face;
 }
@@ -873,11 +813,7 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			coordonnees.w = size.x;
 			coordonnees.h = size.y;
 
-			/*if (clicked[index]) // GIMP : Gray = (Red * 0.3 + Green * 0.59 + Blue * 0.11)
-				SDL_SetTextureColorMod(texture, 0.3*255, 0.59*255, 0.11*255);*/
 			Translate(renderer, dominos[domino], NULL, coordonnees, Inverted, 0, NULL, SDL_FLIP_NONE, clicked[index]);
-
-			//GetFace(renderer, dominos[domino], NULL, coordonnees, faces[domino], FaceMask);
 		}
 		else if (direction == 0)
 		{
@@ -894,6 +830,8 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			SDL_Rect coord;
 			coord.x = 0;
 			coord.y = -38;
+			if(faces[domino] == NULL)
+				SetFace(renderer, dominos[domino], NULL, coordonnees, faces[domino], FaceMask);
 			SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
 			coordonnees.x = x * (sizeMask.x - 40) - z * 40 + tWidth;
 			coordonnees.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
@@ -922,6 +860,8 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			SDL_Rect coord;
 			coord.x = 33;
 			coord.y = -38;
+			if (faces[domino] == NULL)
+				SetFace(renderer, dominos[domino], NULL, coordonnees, faces[domino], FaceMask);
 			SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
 			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
 			coordonnees.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
@@ -949,6 +889,8 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 			SDL_Rect coord;
 			coord.x = 33;
 			coord.y = 0;
+			if (faces[domino] == NULL)
+				SetFace(renderer, dominos[domino], NULL, coordonnees, faces[domino], FaceMask);
 			SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
 			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
 			coordonnees.y = y * (sizeMask.y - 40) + z * 40 + tHeight;

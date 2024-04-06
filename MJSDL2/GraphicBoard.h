@@ -33,7 +33,6 @@ public:
 private:
 	void Init();
 	void LoadFaceMask();
-	void LoadTile(SDL_Texture*& tileSurface, SDL_Texture*& faceSurface, const char* szPath, SDL_Surface* facedown);
 	void LoadTile(SDL_Texture*& tileSurface, const char* szPath);
 	void LoadTile(const int istart, const int iend, const std::string& path);
 	void LoadRamdomTileSet(const int istart, const int iend, const std::string& path);
