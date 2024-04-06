@@ -148,6 +148,7 @@ void GraphicBoard::LoadFaceMask()
 	auto temp = IMG_Load("./tiles/Blank/facedown.svg");
 	auto facedown = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (facedown == NULL) {
+		SDL_FreeSurface(temp);
 		std::cout << stderr << "could not create background: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
@@ -676,19 +677,7 @@ void GraphicBoard::RefreshExample()
 }
 #endif
 
-inline void GraphicBoard::Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect coordonnees, double angle, SDL_Point* point, SDL_RendererFlip flip, bool clicked)
-{
-	if (clicked)
-	{
-		SDL_RenderCopyEx(renderer, SDL_InvertTexture(renderer, texture, Inverted), NULL, &coordonnees, angle, NULL, flip);
-	}
-	else
-	{
-		SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
-	}
-}
-
-inline SDL_Texture* GraphicBoard::SetFace(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect coordonnees, SDL_Texture*& Face)
+inline SDL_Texture* GraphicBoard::SetFace(SDL_Texture* texture, SDL_Rect coordonnees, SDL_Texture*& Face)
 {
 	SDL_Texture* faceMaskCopy = NULL;
 	SDL_DuplicateTexture(renderer, FaceMask, faceMaskCopy);
@@ -700,6 +689,58 @@ inline SDL_Texture* GraphicBoard::SetFace(SDL_Renderer* renderer, SDL_Texture* t
 	SDL_DestroyTexture(faceMaskCopy);
 
 	return Face;
+}
+
+inline void GraphicBoard::RenderCopy(const double x, const double y, const double z, const int domino, const int index, const SDL_Point& org, const SDL_Point& shift, const double angle, const SDL_RendererFlip flip)
+{
+	Uint32 format;
+	int w, h;
+	SDL_BlendMode blendmode;
+
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+
+	SDL_QueryTexture(dominos[domino], &format, NULL, &w, &h);
+	SDL_GetTextureBlendMode(dominos[domino], &blendmode);
+
+	auto tgt = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, w, h);
+	SDL_SetTextureBlendMode(tgt, SDL_BLENDMODE_NONE);
+	SDL_SetRenderTarget(renderer, tgt);
+
+	SDL_Point size;
+	SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+	SDL_Rect coordonnees;
+	coordonnees.x = 0;
+	coordonnees.y = 0;
+	coordonnees.w = size.x;
+	coordonnees.h = size.y;
+
+	SDL_RenderCopyEx(renderer, dominos[domino], NULL, &coordonnees, angle, NULL, flip);
+
+	SDL_Rect coord;
+	if (faces[domino] == NULL)
+		SetFace(dominos[domino], coordonnees, faces[domino]);
+	SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
+	coordonnees.x = 0;
+	coordonnees.y = 0;
+	coordonnees.x += shift.x;
+	coordonnees.y += shift.y;
+	coordonnees.w = size.x;
+	coordonnees.h = size.y;
+
+	SDL_RenderCopy(renderer, faces[domino], NULL, &coordonnees);
+
+	SDL_SetTextureBlendMode(tgt, blendmode);
+	SDL_SetRenderTarget(renderer, renderTarget);
+
+	coordonnees.x = org.x;
+	coordonnees.y = org.y;
+
+	if (clicked[index])
+		SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, tgt, Inverted), NULL, &coordonnees);
+	else
+		SDL_RenderCopy(renderer, tgt, NULL, &coordonnees);
+
+	SDL_DestroyTexture(tgt);
 }
 
 void GraphicBoard::Refresh(bool refreshMouseMap)
@@ -747,85 +788,26 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 		else if (direction == 0)
 		{
 			// Up - Left
-			SDL_Point size;
-			SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
-			coordonnees.x = x * (sizeMask.x - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
-			coordonnees.w = size.x;
-			coordonnees.h = size.y;
-
-			Translate(renderer, dominos[domino], coordonnees, 0, NULL, SDL_FLIP_VERTICAL, clicked[index]);
-
-			SDL_Rect coord;
-			if(faces[domino] == NULL)
-				SetFace(renderer, dominos[domino], coordonnees, faces[domino]);
-			SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
-			coordonnees.x = x * (sizeMask.x - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
-			coordonnees.x += 0;
-			coordonnees.y += -38;
-			coordonnees.w = size.x;
-			coordonnees.h = size.y;
-
-			if (clicked[index])
-				SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, faces[domino], Inverted), NULL, &coordonnees);
-			else
-				SDL_RenderCopy(renderer, faces[domino], NULL, &coordonnees);
+			SDL_Point org;
+			org.x = x * (sizeMask.x - 40) - z * 40 + tWidth;
+			org.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
+			RenderCopy(x, y, z, domino, index, org, SDL_Point{0, -38}, 0, SDL_FLIP_VERTICAL);
 		}
 		else if (direction == 1)
 		{
 			// Up - Right
-			auto texture = dominos[domino];
-			SDL_Point size;
-			SDL_QueryTexture(texture, NULL, NULL, &size.x, &size.y);
-			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
-			coordonnees.w = size.x;
-			coordonnees.h = size.y;
-
-			Translate(renderer, dominos[domino], coordonnees, 180, NULL, SDL_FLIP_NONE, clicked[index]);
-
-			if (faces[domino] == NULL)
-				SetFace(renderer, dominos[domino], coordonnees, faces[domino]);
-			SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
-			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
-			coordonnees.x += 33;
-			coordonnees.y += -38;
-			coordonnees.w = size.x;
-			coordonnees.h = size.y;
-
-			if (clicked[index])
-				SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, faces[domino], Inverted), NULL, &coordonnees);
-			else
-				SDL_RenderCopy(renderer, faces[domino], NULL, &coordonnees);
+			SDL_Point org;
+			org.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
+			org.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
+			RenderCopy(x, y, z, domino, index, org, SDL_Point{ 33, -38 }, 180, SDL_FLIP_NONE);
 		}
 		else
 		{
 			// Down - Right
-			SDL_Point size;
-			SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
-			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (sizeMask.y - 40) + z * 40 + tHeight;
-			coordonnees.w = size.x;
-			coordonnees.h = size.y;
-
-			Translate(renderer, dominos[domino], coordonnees, 0, NULL, SDL_FLIP_HORIZONTAL, clicked[index]);
-
-			if (faces[domino] == NULL)
-				SetFace(renderer, dominos[domino], coordonnees, faces[domino]);
-			SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
-			coordonnees.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (sizeMask.y - 40) + z * 40 + tHeight;
-			coordonnees.x += 33;
-			coordonnees.y += 0;
-			coordonnees.w = size.x;
-			coordonnees.h = size.y;
-
-			if (clicked[index])
-				SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, faces[domino], Inverted), NULL, &coordonnees);
-			else
-				SDL_RenderCopy(renderer, faces[domino], NULL, &coordonnees);
+			SDL_Point org;
+			org.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
+			org.y = y * (sizeMask.y - 40) + z * 40 + tHeight;
+			RenderCopy(x, y, z, domino, index, org, SDL_Point{ 33, 0 }, 0, SDL_FLIP_HORIZONTAL);
 		}
 	}
 
