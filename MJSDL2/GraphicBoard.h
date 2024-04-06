@@ -46,8 +46,10 @@ private:
 #endif
 	void RefreshMouseMap();
 	void WhatsLeft();
-	void InterfaceClicked(int index);
-	void setClicked(const int x, const int y);
+	void InterfaceClicked(const int index, const bool right = false);
+	void setLeftClicked(const int x, const int y);
+	bool isButtonClicked(const int x, const int y);
+	void setRightClicked(const int x, const int y);
 	void ThrowException(const int);
 	void LoadUI();
 
@@ -102,6 +104,7 @@ private:
 	SDL_Rect ScreenRect;
 	int selected;
 	std::vector<std::pair<int, int>>::const_iterator itNextMove;
+	std::vector<std::pair<int, int>>::const_iterator itPrevMove;
 	uint8_t direction;
 	SDL_Event exitEvent;
 };
