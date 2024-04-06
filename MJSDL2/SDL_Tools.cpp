@@ -145,6 +145,7 @@ void SDL_SetColourOnOpaque(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordo
 }
 
 // https://tannerhelland.com/2011/10/01/grayscale-image-algorithm-vb6.html
+// https://gigi.nullneuron.net/gigilabs/converting-an-image-to-grayscale-using-sdl2/
 void SDL_SetGreyScale(SDL_Surface* src)
 {
 	// GIMP : Gray = (Red * 0.3 + Green * 0.59 + Blue * 0.11)
