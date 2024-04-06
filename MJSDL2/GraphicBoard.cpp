@@ -686,47 +686,34 @@ inline void Translate(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect* re
 {
 	if (clicked)
 	{
-		if(false)
+		// https://discourse.libsdl.org/t/sdl-composecustomblendmode-error-in-windows/35241/1
+		// https://stackoverflow.com/questions/75873908/how-to-copy-a-texture-to-another-texture-without-pointing-to-the-same-texture
+		auto renderTarget = SDL_GetRenderTarget(renderer);
+		SDL_BlendMode textureBlendMode;
+		SDL_GetTextureBlendMode(texture, &textureBlendMode);
+		auto S = texture;
+		auto T = Inverted;
+		auto SDLRenderer = renderer;
 		{
-			Uint8 r, g, b;
-			SDL_GetTextureColorMod(texture, &r, &g, &b);
-			SDL_SetTextureColorMod(texture, 255 >> 1, 255 >> 1, 255 >> 1);
-			SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
-			SDL_SetTextureColorMod(texture, r, g, b);
-		}
-		else
-		{
-			// https://discourse.libsdl.org/t/sdl-composecustomblendmode-error-in-windows/35241/1
-			// https://stackoverflow.com/questions/75873908/how-to-copy-a-texture-to-another-texture-without-pointing-to-the-same-texture
-			auto renderTarget = SDL_GetRenderTarget(renderer);
-			SDL_BlendMode textureBlendMode;
-			SDL_GetTextureBlendMode(texture, &textureBlendMode);
-			auto S = texture;
-			auto T = Inverted;
-			auto SDLRenderer = renderer;
-			//SDL_GetTextureBlendMode(texture, &textureBlendMode);
+			int w, h;
+			if (SDL_SetTextureBlendMode(S, SDL_ComposeCustomBlendMode(
+				SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_REV_SUBTRACT,
+				SDL_BLENDFACTOR_ONE, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD)) == 0)
 			{
-				int w, h;
-				SDL_SetTextureBlendMode(S, SDL_ComposeCustomBlendMode(
-					SDL_BLENDFACTOR_ONE,
-					SDL_BLENDFACTOR_ONE,
-					SDL_BLENDOPERATION_REV_SUBTRACT,
-					SDL_BLENDFACTOR_ONE,
-					SDL_BLENDFACTOR_ONE,
-					SDL_BLENDOPERATION_REV_SUBTRACT));
-				if (T) SDL_DestroyTexture(T);
+				if (T != NULL) SDL_DestroyTexture(T);
 				SDL_QueryTexture(S, NULL, NULL, &w, &h);
 				T = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
 				SDL_SetRenderTarget(SDLRenderer, T);
-				SDL_SetRenderDrawColor(SDLRenderer, 255, 255, 255, 255);
+				SDL_SetRenderDrawColor(SDLRenderer, 255, 255, 255, 0);
 				SDL_RenderClear(SDLRenderer);
 				SDL_RenderCopy(SDLRenderer, S, NULL, NULL);
-				//SDL_RenderCopyEx(SDLRenderer, S, NULL, &coordonnees, angle, NULL, flip);
 			}
-			SDL_SetRenderTarget(renderer, renderTarget);
-			SDL_SetTextureBlendMode(texture, textureBlendMode);
-			SDL_RenderCopyEx(SDLRenderer, T, NULL, &coordonnees, angle, NULL, flip);
 		}
+		SDL_SetRenderTarget(renderer, renderTarget);
+		SDL_SetTextureBlendMode(texture, textureBlendMode);
+		SDL_SetTextureBlendMode(T, textureBlendMode);
+		SDL_RenderCopyEx(renderer, T, NULL, &coordonnees, angle, NULL, flip);
+
 	}
 	else
 	{
@@ -860,7 +847,17 @@ void GraphicBoard::Refresh(bool refreshMouseMap)
 
 	// Défaite :
 	//SDL_SetTextureColorMod
-	/**/
+	/*
+		if(false)
+		{
+			Uint8 r, g, b;
+			SDL_GetTextureColorMod(texture, &r, &g, &b);
+			SDL_SetTextureColorMod(texture, 255 >> 1, 255 >> 1, 255 >> 1);
+			SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
+			SDL_SetTextureColorMod(texture, r, g, b);
+		}
+		else
+	*/
 	// Interface :
 	// Ouest :
 	SDL_Point size;
