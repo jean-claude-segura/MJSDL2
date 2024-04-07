@@ -35,6 +35,13 @@ GraphicBoard::~GraphicBoard()
 		if (faces[i] != NULL)
 			SDL_DestroyTexture(faces[i]);
 	}
+	for (int i = 0; i < 3; ++i)
+		for (int j = 0; j < 42; ++j)
+		{
+			if (dominoscache[i] != NULL)
+				SDL_DestroyTexture(dominoscache[i][j]);
+		}
+
 	if (textureMouseMap != NULL)
 		SDL_DestroyTexture(textureMouseMap);
 	if (FaceMask != NULL)
@@ -817,54 +824,64 @@ inline SDL_Texture* GraphicBoard::SetFace(SDL_Texture* texture, SDL_Rect coordon
 
 inline void GraphicBoard::RenderCopy(const double x, const double y, const double z, const int domino, const int index, const SDL_Point& org, const SDL_Point& shift, const double angle, const SDL_RendererFlip flip)
 {
-	Uint32 format;
-	int w, h;
-	SDL_BlendMode blendmode;
+	if (dominoscache[flip][domino] == NULL)
+	{
+		Uint32 format;
+		int w, h;
+		SDL_BlendMode blendmode;
 
-	auto renderTarget = SDL_GetRenderTarget(renderer);
+		auto renderTarget = SDL_GetRenderTarget(renderer);
 
-	SDL_QueryTexture(dominos[domino], &format, NULL, &w, &h);
-	SDL_GetTextureBlendMode(dominos[domino], &blendmode);
+		SDL_QueryTexture(dominos[domino], &format, NULL, &w, &h);
+		SDL_GetTextureBlendMode(dominos[domino], &blendmode);
 
-	auto tgt = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, w, h);
-	SDL_SetTextureBlendMode(tgt, SDL_BLENDMODE_NONE);
-	SDL_SetRenderTarget(renderer, tgt);
+		dominoscache[flip][domino] = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, w, h);
+		SDL_SetTextureBlendMode(dominoscache[flip][domino], SDL_BLENDMODE_NONE);
+		SDL_SetRenderTarget(renderer, dominoscache[flip][domino]);
+
+		SDL_Point size;
+		SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+		SDL_Rect coordonnees;
+		coordonnees.x = 0;
+		coordonnees.y = 0;
+		coordonnees.w = size.x;
+		coordonnees.h = size.y;
+
+		SDL_RenderCopyEx(renderer, dominos[domino], NULL, &coordonnees, angle, NULL, flip);
+
+		SDL_Rect coord;
+		if (faces[domino] == NULL)
+			SetFace(dominos[domino], coordonnees, faces[domino]);
+		SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
+		coordonnees.x = 0;
+		coordonnees.y = 0;
+		coordonnees.x += shift.x;
+		coordonnees.y += shift.y;
+		coordonnees.w = size.x;
+		coordonnees.h = size.y;
+
+		SDL_RenderCopy(renderer, faces[domino], NULL, &coordonnees);
+
+		SDL_SetTextureBlendMode(dominoscache[flip][domino], blendmode);
+		SDL_SetRenderTarget(renderer, renderTarget);
+
+		coordonnees.x = org.x;
+		coordonnees.y = org.y;
+
+	}
 
 	SDL_Point size;
-	SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+	SDL_QueryTexture(dominoscache[flip][domino], NULL, NULL, &size.x, &size.y);
 	SDL_Rect coordonnees;
-	coordonnees.x = 0;
-	coordonnees.y = 0;
 	coordonnees.w = size.x;
 	coordonnees.h = size.y;
-
-	SDL_RenderCopyEx(renderer, dominos[domino], NULL, &coordonnees, angle, NULL, flip);
-
-	SDL_Rect coord;
-	if (faces[domino] == NULL)
-		SetFace(dominos[domino], coordonnees, faces[domino]);
-	SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
-	coordonnees.x = 0;
-	coordonnees.y = 0;
-	coordonnees.x += shift.x;
-	coordonnees.y += shift.y;
-	coordonnees.w = size.x;
-	coordonnees.h = size.y;
-
-	SDL_RenderCopy(renderer, faces[domino], NULL, &coordonnees);
-
-	SDL_SetTextureBlendMode(tgt, blendmode);
-	SDL_SetRenderTarget(renderer, renderTarget);
-
 	coordonnees.x = org.x;
 	coordonnees.y = org.y;
 
 	if (clicked[index])
-		SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, tgt, Inverted), NULL, &coordonnees);
+		SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, dominoscache[flip][domino], Inverted), NULL, &coordonnees);
 	else
-		SDL_RenderCopy(renderer, tgt, NULL, &coordonnees);
-
-	SDL_DestroyTexture(tgt);
+		SDL_RenderCopy(renderer, dominoscache[flip][domino], NULL, &coordonnees);
 }
 
 void GraphicBoard::Refresh(const bool refreshMouseMap)
