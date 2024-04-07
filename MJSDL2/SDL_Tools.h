@@ -15,12 +15,13 @@ void SDL_VerticalFlip(SDL_Surface* surface);
 void SDL_HorizontalFlip(SDL_Surface* surface);
 void SDL_UpperBlitCut(SDL_Surface* src, SDL_Surface* dest);
 
-/* *************************************************** /
-/*                       INLINE                       */
-/* *************************************************** /
-/*
-* https://discourse.libsdl.org/t/sdl-composecustomblendmode-error-in-windows/35241/1
-*/
+/* *********************************************************************************** /
+/*                                       INLINE                                       */
+/* *********************************************************************************** /
+
+/* ************************************************************************************************************************** /
+* https://discourse.libsdl.org/t/sdl-composecustomblendmode-error-in-windows/35241/1                                          /
+* ************************************************************************************************************************** */
 inline SDL_Texture* SDL_InvertTexture(SDL_Renderer* renderer, SDL_Texture* src, SDL_Texture*& tgt)
 {
 	auto renderTarget = SDL_GetRenderTarget(renderer);
@@ -48,9 +49,9 @@ inline SDL_Texture* SDL_InvertTexture(SDL_Renderer* renderer, SDL_Texture* src, 
 	return tgt;
 }
 
-/*
-* https://stackoverflow.com/questions/75873908/how-to-copy-a-texture-to-another-texture-without-pointing-to-the-same-texture
-*/
+/* ************************************************************************************************************************** /
+* https://stackoverflow.com/questions/75873908/how-to-copy-a-texture-to-another-texture-without-pointing-to-the-same-texture  /
+* ************************************************************************************************************************** */
 inline SDL_Texture* SDL_DuplicateTexture(SDL_Renderer* renderer, SDL_Texture* src, SDL_Texture*& tgt)
 {
 	Uint32 format;
@@ -120,4 +121,40 @@ inline Uint32 SDL_TextureReadPixel(SDL_Renderer * renderer, SDL_Texture * textur
 	SDL_RenderReadPixels(renderer, &textRec, SDL_PIXELFORMAT_ARGB8888, &value, 32 * WIDTH);
 	SDL_SetRenderTarget(renderer, renderTarget);
 	return value;
+}
+
+/* ***************************************************************************************************************************************************************************************** /
+* https://cpp.hotexamples.com/examples/-/-/SDL_RenderReadPixels/cpp-sdl_renderreadpixels-function-examples.html#0xa84d0ea8abf09c741fc17c5a0ebb53d9368f9ad77c3ed927824fea5338e7bb5c-152,,162, /
+* ***************************************************************************************************************************************************************************************** */
+inline SDL_Texture* SDL_GreyscaleTexture(SDL_Renderer* renderer, SDL_Texture* src, SDL_Texture*& tgt)
+{
+	SDL_DuplicateTexture(renderer, src, tgt);
+
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+	SDL_SetRenderTarget(renderer, src);
+
+	Uint32 format;
+		int w, h;
+		SDL_QueryTexture(src, &format, NULL, &w, &h);
+		SDL_Surface* screenshot = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+		SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_ARGB8888, screenshot->pixels, screenshot->pitch);
+
+		Uint32* buffer = (Uint32*)screenshot->pixels;
+		auto Amask = screenshot->format->Amask;
+		auto RGBmask = 0xFFFFFFFF & ~Amask;
+
+		for (int pixel = 0; pixel < screenshot->h * screenshot->w; ++pixel, ++buffer)
+		{
+			auto colour = *buffer;
+			auto r = (screenshot->format->Rmask & *buffer) >> 16;
+			auto g = (screenshot->format->Gmask & *buffer) >> 8;
+			auto b = screenshot->format->Bmask & *buffer;
+			Uint8 avg = (55 * r + 183 * g + 18 * b) >> 8; // BT.709
+			*buffer = avg << 16 | avg << 8 | avg | Amask;
+		}
+
+	tgt = SDL_CreateTextureFromSurface(renderer, screenshot);
+	SDL_FreeSurface(screenshot);
+	SDL_SetRenderTarget(renderer, renderTarget);
+	return tgt;
 }

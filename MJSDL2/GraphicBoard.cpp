@@ -372,14 +372,41 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 	{
 	case RESTART:
 		if (right)
-			break;
-		plateau.InitBoard();
-		plateau.SortBoard(direction);
-		itNextMove = plateau.GetMovesLeft().begin();
-		itPrevMove = plateau.GetMovesLeft().end();
-		LoadTiles();
-		Refresh(true);
-		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+		{
+			while (!plateau.GetMovesLeft().empty())
+			{
+				itNextMove = plateau.GetMovesLeft().begin();
+				if( 0 <= selected && selected < 143)
+					clicked[selected] = false;
+				selected = -1;
+				Refresh(false);
+
+				clicked[itNextMove->first] = true;
+				clicked[itNextMove->second] = true;
+
+				Refresh(false);
+
+				clicked[itNextMove->first] = false;
+				clicked[itNextMove->second] = false;
+
+				plateau.RemovePairOfTiles(itNextMove->first, itNextMove->second);
+
+				Refresh(true);
+
+				itNextMove = plateau.GetMovesLeft().begin();
+				itPrevMove = plateau.GetMovesLeft().end();
+			}
+		}
+		else
+		{
+			plateau.InitBoard();
+			plateau.SortBoard(direction);
+			itNextMove = plateau.GetMovesLeft().begin();
+			itPrevMove = plateau.GetMovesLeft().end();
+			LoadTiles();
+			Refresh(true);
+			SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+		}
 		break;
 	case HINT:
 		if (right)
@@ -413,7 +440,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 				itNextMove = plateau.GetMovesLeft().begin();
 			if (itNextMove != plateau.GetMovesLeft().end())
 			{
-				clicked[selected] = false;
+				if (0 <= selected && selected < 143)
+					clicked[selected] = false;
 				selected = -1;
 				Refresh(false);
 				clicked[itNextMove->first] = true;
@@ -846,12 +874,20 @@ inline void GraphicBoard::RenderCopy(const double x, const double y, const doubl
 void GraphicBoard::Refresh(const bool refreshMouseMap)
 {
 	if (refreshMouseMap) RefreshMouseMap();
+
+	SDL_Texture * screen = NULL;
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+	if (plateau.IsBlocked())
+	{
+		screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
+		SDL_SetRenderTarget(renderer, screen);
+	}
 	SDL_RenderClear(renderer);
 
 	// Copie du fond :
 	if (SDL_RenderCopy(renderer, textureBackground, NULL, NULL) < 0)
 	{
-		std::cout << stderr << "could not copy renderer: " << SDL_GetError() << std::endl;
+		std::cout << stderr << "could not copy background: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 
@@ -911,45 +947,41 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 		}
 	}
 
-	// Défaite :
-	//SDL_SetTextureColorMod
-	/*
-		if(false)
-		{
-			Uint8 r, g, b;
-			SDL_GetTextureColorMod(texture, &r, &g, &b);
-			SDL_SetTextureColorMod(texture, 255 >> 1, 255 >> 1, 255 >> 1);
-			SDL_RenderCopyEx(renderer, texture, NULL, &coordonnees, angle, NULL, flip);
-			SDL_SetTextureColorMod(texture, r, g, b);
-		}
-	*/
+	// Fin de partie :
 	if (plateau.IsBlocked())
 	{
 		if (plateau.IsEmpty())
 		{
-			/*
-			auto success = SDL_CreateRGBSurface(0, virtualscreen->w, virtualscreen->h, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
-			if (success == NULL)
-			{
-				std::cout << stderr << "could not create virtual screen: " << SDL_GetError() << std::endl;
-				ThrowException(1);
-			}
-			else
-			{
-				SDL_FillRect(success, NULL, SDL_MapRGBA(success->format, 0x00, 0xFF, 0x00, 0xA0));
-				SDL_UpperBlit(success, NULL, virtualscreen, NULL);
-				SDL_FreeSurface(success);
-			}
-			/**/
+			// Succès :
+			auto prevRenderTarget = SDL_GetRenderTarget(renderer);
+			SDL_Texture* greenScreen = NULL;
+			greenScreen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
+			SDL_SetRenderTarget(renderer, greenScreen);
+			SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xA0);
+			SDL_RenderClear(renderer);
+
+			SDL_SetRenderTarget(renderer, prevRenderTarget);
+			SDL_SetTextureBlendMode(greenScreen, SDL_BLENDMODE_BLEND);
+			SDL_RenderCopy(renderer, greenScreen, NULL, NULL);
+			SDL_DestroyTexture(greenScreen);
+
+			SDL_SetRenderTarget(renderer, renderTarget);
+			SDL_RenderCopy(renderer, screen, NULL, NULL);
+			SDL_DestroyTexture(screen);
 		}
 		else
 		{
-			/*
-			SDL_SetGreyScale(virtualscreen);
-			/**/
+			// Défaite :
+			SDL_Texture* greyScreen = NULL;
+			greyScreen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
+			SDL_GreyscaleTexture(renderer, screen, greyScreen);
+			SDL_SetRenderTarget(renderer, renderTarget);
+			SDL_RenderCopy(renderer, greyScreen, NULL, NULL);
+			SDL_DestroyTexture(greyScreen);
+			SDL_DestroyTexture(screen);
 		}
 	}
-	
+
 	// Interface :
 	// Ouest :
 	SDL_Point size;
