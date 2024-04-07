@@ -166,23 +166,23 @@ void GraphicBoard::LoadFaceMask()
 void GraphicBoard::LoadMouseMask()
 {
 	auto temp = IMG_Load("./tiles/Blank/blank.svg");
-	auto facedown = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
-	if (facedown == NULL) {
+	auto blank = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (blank == NULL) {
 		SDL_FreeSurface(temp);
 		std::cout << stderr << "could not create background: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
 	else
 	{
-		MouseMask = SDL_CreateTextureFromSurface(renderer, facedown);
+		MouseMask = SDL_CreateTextureFromSurface(renderer, blank);
 		if (MouseMask == NULL)
 		{
-			SDL_FreeSurface(facedown);
+			SDL_FreeSurface(blank);
 			SDL_FreeSurface(temp);
 			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 			ThrowException(1);
 		}
-		SDL_FreeSurface(facedown);
+		SDL_FreeSurface(blank);
 		SDL_FreeSurface(temp);
 	}
 }
@@ -448,10 +448,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 				clicked[itNextMove->first] = true;
 				clicked[itNextMove->second] = true;
 				Refresh(false);
-				/*SDL_Delay(400);*/
 				clicked[itNextMove->first] = false;
 				clicked[itNextMove->second] = false;
-				/*Refresh(false); */
 				itPrevMove = itNextMove;
 				++itNextMove;
 			}
@@ -673,9 +671,6 @@ inline void GraphicBoard::RenderCopyMouseMap(SDL_Texture * Mask, SDL_Rect coordo
 			SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ONE, SDL_BLENDOPERATION_ADD,
 			SDL_BLENDFACTOR_ZERO, SDL_BLENDFACTOR_ZERO, SDL_BLENDOPERATION_MINIMUM)) == 0)
 		{
-			//if (tgt != NULL) SDL_DestroyTexture(tgt);
-			//SDL_QueryTexture(Mask, NULL, NULL, &w, &h);
-			//auto tgt = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
 			SDL_SetRenderTarget(SDLRenderer, tgt);
 			SDL_SetRenderDrawColor(SDLRenderer, 0, 0, colour, 0xFF);
 			SDL_RenderClear(SDLRenderer);
@@ -1023,7 +1018,9 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 	SDL_RenderCopy(renderer, ExitBtn, NULL, &coordonnees);
 	/**/
 
+#ifdef _DEBUG
 	//SDL_RenderCopy(renderer, textureMouseMap, NULL, NULL);
+#endif
 
 	SDL_RenderPresent(renderer);
 }
@@ -1126,18 +1123,10 @@ void GraphicBoard::Loop()
 			case SDL_BUTTON_LEFT:
 				while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
 				{
-					//setClicked(event.motion.x, event.motion.y);
+#ifdef _DEBUG
 					std::cout << "(" << event.button.x << ";" << event.button.y << ") left clicked." << std::endl;
+#endif
 					setLeftClicked(event.button.x, event.button.y);
-					//plateau.InitBoard();
-					//Refresh();
-					/*switch (event.type)
-					{
-					case SDL_MOUSEMOTION:
-						break;
-					default:
-						break;
-					}*/
 				}
 				break;
 			case SDL_BUTTON_RIGHT:
@@ -1145,7 +1134,9 @@ void GraphicBoard::Loop()
 				{
 					itNextMove = plateau.GetMovesLeft().begin();
 					itPrevMove = plateau.GetMovesLeft().end();
+#ifdef _DEBUG
 					std::cout << "(" << event.button.x << ";" << event.button.y << ") right clicked." << std::endl;
+#endif
 					WhatsLeft();
 					while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
 					Refresh(false);
@@ -1153,7 +1144,9 @@ void GraphicBoard::Loop()
 				else
 				{
 					while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
+#ifdef _DEBUG
 					std::cout << "(" << event.button.x << ";" << event.button.y << ") right clicked." << std::endl;
+#endif
 					setRightClicked(event.button.x, event.button.y);
 				}
 				break;
