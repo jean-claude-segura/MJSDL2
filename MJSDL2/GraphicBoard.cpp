@@ -391,11 +391,12 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 
 				plateau.RemovePairOfTiles(itNextMove->first, itNextMove->second);
 
-				Refresh(true);
+				Refresh(false);
 
 				itNextMove = plateau.GetMovesLeft().begin();
 				itPrevMove = plateau.GetMovesLeft().end();
 			}
+			RefreshMouseMap();
 		}
 		else
 		{
@@ -405,8 +406,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			itPrevMove = plateau.GetMovesLeft().end();
 			LoadTiles();
 			Refresh(true);
-			SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		}
+		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case HINT:
 		if (right)
