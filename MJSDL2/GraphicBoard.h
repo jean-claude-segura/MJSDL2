@@ -10,7 +10,6 @@
 #include <filesystem>
 #include "SDL_Tools.h"
 
-// https://fr.vecteezy.com/photo/2680573-texture-bois-fond-texture-bois
 // https://github.com/libsdl-org/SDL_ttf/tree/main/external
 
 #define	DONTUSE		0xFF
@@ -29,6 +28,7 @@ private:
 	inline SDL_Texture* SetFace(SDL_Texture* texture, const SDL_Rect coordonnees, SDL_Texture*& Face);
 	inline void RenderCopy(const double x, const double y, const double z, const int domino, const int index, const SDL_Point& org, const SDL_Point& shift, const double angle, const SDL_RendererFlip flip);
 	inline void RenderCopyMouseMap(SDL_Texture* Mask, SDL_Rect coordonnees, Uint32 colour, const double angle, const SDL_RendererFlip flip);
+
 public:
 	GraphicBoard();
 	~GraphicBoard();
@@ -59,6 +59,7 @@ private:
 	void LoadUI();
 	void LoadButton(SDL_Texture*& button, const std::string& strPath, const std::string& strName);
 
+private:
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 	SDL_Texture

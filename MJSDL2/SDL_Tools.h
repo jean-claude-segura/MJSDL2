@@ -141,7 +141,6 @@ inline SDL_Texture* SDL_GreyscaleTexture(SDL_Renderer* renderer, SDL_Texture* sr
 
 		Uint32* buffer = (Uint32*)screenshot->pixels;
 		auto Amask = screenshot->format->Amask;
-		auto RGBmask = 0xFFFFFFFF & ~Amask;
 
 		for (int pixel = 0; pixel < screenshot->h * screenshot->w; ++pixel, ++buffer)
 		{

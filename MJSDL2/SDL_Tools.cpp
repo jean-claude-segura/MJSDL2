@@ -162,7 +162,6 @@ void SDL_SetGreyScale(SDL_Surface* src)
 
 	Uint32* bufferZ = (Uint32*)src->pixels;
 	auto Amask = src->format->Amask;
-	auto RGBmask = 0xFFFFFFFF & ~Amask;
 
 	if (src->format->BitsPerPixel == 32)
 	{
