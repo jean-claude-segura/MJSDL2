@@ -700,66 +700,73 @@ void GraphicBoard::RefreshMouseMap()
 	SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 	SDL_RenderClear(renderer);
 
-	/**/
-	// Placement des dominos :
-	SDL_Rect coordonnees;
-
-	SDL_Point size;
-	SDL_QueryTexture(MouseMask, NULL, NULL, &size.x, &size.y);
-
-	auto tWidth = (Width - (size.x - 40) * 12) >> 1;
-	auto tHeight = (Height - (size.y - 40) >> 3) >> 1;
-
-	for (auto& tile : plateau.getLogicalBoard())
+	if (!plateau.IsEmpty())
 	{
-		auto x = std::get<0>(tile);
-		auto y = std::get<1>(tile);
-		auto z = std::get<2>(tile);
-		auto domino = std::get<3>(tile);
-		auto index = std::get<4>(tile);
-		if (direction == 3)
-		{
-			// Down - Left
-			coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
-			coordonnees.w = size.x;
-			coordonnees.h = size.y;
+		/**/
+		// Placement des dominos :
+		SDL_Rect coordonnees;
 
-			RenderCopyMouseMap(MouseMask, coordonnees, index, 0, SDL_FLIP_NONE);
-		}
-		else if (direction == 0)
-		{
-			// Up - Left
-			coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (size.y - 40) - z * 40 + tHeight;
-			coordonnees.w = size.x;
-			coordonnees.h = size.y;
+		SDL_Point size;
+		SDL_QueryTexture(MouseMask, NULL, NULL, &size.x, &size.y);
 
-			RenderCopyMouseMap(MouseMask, coordonnees, index, 0, SDL_FLIP_VERTICAL);
-		}
-		else if (direction == 1)
-		{
-			// Up - Right
-			coordonnees.x = x * (size.x - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (size.y - 40) - z * 40 + tHeight;
-			coordonnees.w = size.x;
-			coordonnees.h = size.y;
+		auto tWidth = (Width - (size.x - 40) * 12) >> 1;
+		auto tHeight = (Height - (size.y - 40) >> 3) >> 1;
 
-			RenderCopyMouseMap(MouseMask, coordonnees, index, 180, SDL_FLIP_NONE);
-		}
-		else
+		for (auto& tile : plateau.getLogicalBoard())
 		{
-			// Down - Right
-			coordonnees.x = x * (size.x - 40) + z * 40 + tWidth;
-			coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
-			coordonnees.w = size.x;
-			coordonnees.h = size.y;
+			auto x = std::get<0>(tile);
+			auto y = std::get<1>(tile);
+			auto z = std::get<2>(tile);
+			auto domino = std::get<3>(tile);
+			auto index = std::get<4>(tile);
+			if (direction == 3)
+			{
+				// Down - Left
+				coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
+				coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
+				coordonnees.w = size.x;
+				coordonnees.h = size.y;
 
-			RenderCopyMouseMap(MouseMask, coordonnees, index, 0, SDL_FLIP_HORIZONTAL);
+				RenderCopyMouseMap(MouseMask, coordonnees, index, 0, SDL_FLIP_NONE);
+			}
+			else if (direction == 0)
+			{
+				// Up - Left
+				coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
+				coordonnees.y = y * (size.y - 40) - z * 40 + tHeight;
+				coordonnees.w = size.x;
+				coordonnees.h = size.y;
+
+				RenderCopyMouseMap(MouseMask, coordonnees, index, 0, SDL_FLIP_VERTICAL);
+			}
+			else if (direction == 1)
+			{
+				// Up - Right
+				coordonnees.x = x * (size.x - 40) + z * 40 + tWidth;
+				coordonnees.y = y * (size.y - 40) - z * 40 + tHeight;
+				coordonnees.w = size.x;
+				coordonnees.h = size.y;
+
+				RenderCopyMouseMap(MouseMask, coordonnees, index, 180, SDL_FLIP_NONE);
+			}
+			else
+			{
+				// Down - Right
+				coordonnees.x = x * (size.x - 40) + z * 40 + tWidth;
+				coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
+				coordonnees.w = size.x;
+				coordonnees.h = size.y;
+
+				RenderCopyMouseMap(MouseMask, coordonnees, index, 0, SDL_FLIP_HORIZONTAL);
+			}
 		}
 	}
+
 	/**/
 	// Interface :
+	SDL_Rect coordonnees;
+	SDL_Point size;
+
 	// Ouest :
 	SDL_QueryTexture(RestartBtn, NULL, NULL, &size.x, &size.y);
 
@@ -890,7 +897,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 
 	SDL_Texture * screen = NULL;
 	auto renderTarget = SDL_GetRenderTarget(renderer);
-	if (plateau.IsBlocked())
+	if (plateau.IsBlocked() && !plateau.IsEmpty())
 	{
 		screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
 		SDL_SetRenderTarget(renderer, screen);
@@ -904,59 +911,62 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 		ThrowException(1);
 	}
 
-	// Placement des dominos :
-	SDL_Rect coordonnees;
-
-	SDL_Point sizeMask;
-	SDL_QueryTexture(dominos[0], NULL, NULL, &sizeMask.x, &sizeMask.y);
-	auto tWidth = (Width - (sizeMask.x - 40) * 12) >> 1;
-	auto tHeight = (Height - (sizeMask.y - 40) >> 3) >> 1;
-
-	for (const auto& tile : plateau.getLogicalBoard())
+	if (!plateau.IsEmpty())
 	{
-		auto x = std::get<0>(tile);
-		auto y = std::get<1>(tile);
-		auto z = std::get<2>(tile);
-		auto domino = std::get<3>(tile);
-		auto index = std::get<4>(tile);
-		if (direction == 3)
-		{
-			// Down - Left
-			SDL_Point size;
-			SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
-			coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
-			coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
-			coordonnees.w = size.x;
-			coordonnees.h = size.y;
+		// Placement des dominos :
+		SDL_Rect coordonnees;
 
-			if (clicked[index])
-				SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, dominos[domino], Inverted), NULL, &coordonnees);
+		SDL_Point sizeMask;
+		SDL_QueryTexture(dominos[0], NULL, NULL, &sizeMask.x, &sizeMask.y);
+		auto tWidth = (Width - (sizeMask.x - 40) * 12) >> 1;
+		auto tHeight = (Height - (sizeMask.y - 40) >> 3) >> 1;
+
+		for (const auto& tile : plateau.getLogicalBoard())
+		{
+			auto x = std::get<0>(tile);
+			auto y = std::get<1>(tile);
+			auto z = std::get<2>(tile);
+			auto domino = std::get<3>(tile);
+			auto index = std::get<4>(tile);
+			if (direction == 3)
+			{
+				// Down - Left
+				SDL_Point size;
+				SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+				coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
+				coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
+				coordonnees.w = size.x;
+				coordonnees.h = size.y;
+
+				if (clicked[index])
+					SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, dominos[domino], Inverted), NULL, &coordonnees);
+				else
+					SDL_RenderCopy(renderer, dominos[domino], NULL, &coordonnees);
+			}
+			else if (direction == 0)
+			{
+				// Up - Left
+				SDL_Point org;
+				org.x = x * (sizeMask.x - 40) - z * 40 + tWidth;
+				org.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
+				RenderCopy(x, y, z, domino, index, org, SDL_Point{ 0, -38 }, 0, SDL_FLIP_VERTICAL);
+			}
+			else if (direction == 1)
+			{
+				// Up - Right
+				SDL_Point org;
+				org.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
+				org.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
+				RenderCopy(x, y, z, domino, index, org, SDL_Point{ 33, -38 }, 180, SDL_FLIP_NONE);
+			}
 			else
-				SDL_RenderCopy(renderer, dominos[domino], NULL, &coordonnees);
-		}
-		else if (direction == 0)
-		{
-			// Up - Left
-			SDL_Point org;
-			org.x = x * (sizeMask.x - 40) - z * 40 + tWidth;
-			org.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
-			RenderCopy(x, y, z, domino, index, org, SDL_Point{0, -38}, 0, SDL_FLIP_VERTICAL);
-		}
-		else if (direction == 1)
-		{
-			// Up - Right
-			SDL_Point org;
-			org.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
-			org.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
-			RenderCopy(x, y, z, domino, index, org, SDL_Point{ 33, -38 }, 180, SDL_FLIP_NONE);
-		}
-		else
-		{
-			// Down - Right
-			SDL_Point org;
-			org.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
-			org.y = y * (sizeMask.y - 40) + z * 40 + tHeight;
-			RenderCopy(x, y, z, domino, index, org, SDL_Point{ 33, 0 }, 0, SDL_FLIP_HORIZONTAL);
+			{
+				// Down - Right
+				SDL_Point org;
+				org.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
+				org.y = y * (sizeMask.y - 40) + z * 40 + tHeight;
+				RenderCopy(x, y, z, domino, index, org, SDL_Point{ 33, 0 }, 0, SDL_FLIP_HORIZONTAL);
+			}
 		}
 	}
 
@@ -978,9 +988,9 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 			SDL_RenderCopy(renderer, greenScreen, NULL, NULL);
 			SDL_DestroyTexture(greenScreen);
 
-			SDL_SetRenderTarget(renderer, renderTarget);
+			/*SDL_SetRenderTarget(renderer, renderTarget);
 			SDL_RenderCopy(renderer, screen, NULL, NULL);
-			SDL_DestroyTexture(screen);
+			SDL_DestroyTexture(screen);*/
 		}
 		else
 		{
@@ -1000,6 +1010,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 	SDL_Point size;
 	SDL_QueryTexture(RestartBtn, NULL, NULL, &size.x, &size.y);
 
+	SDL_Rect coordonnees;
 	coordonnees.w = size.x;
 	coordonnees.h = size.y;
 	coordonnees.x = 0;
