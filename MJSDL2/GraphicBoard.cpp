@@ -375,6 +375,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		plateau.InitBoard();
 		plateau.SortBoard(direction);
 		itNextMove = plateau.GetMovesLeft().begin();
+		itPrevMove = plateau.GetMovesLeft().end();
 		LoadTiles();
 		Refresh(true);
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
@@ -428,6 +429,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case TURN:
+		itNextMove = plateau.GetMovesLeft().begin();
+		itPrevMove = plateau.GetMovesLeft().end();
 		if (right)
 			--direction;
 		else
@@ -438,6 +441,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case NORTH:
+		itNextMove = plateau.GetMovesLeft().begin();
+		itPrevMove = plateau.GetMovesLeft().end();
 		if (right)
 			break;
 		if (direction == 3)
@@ -449,6 +454,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case EAST:
+		itNextMove = plateau.GetMovesLeft().begin();
+		itPrevMove = plateau.GetMovesLeft().end();
 		if (right)
 			break;
 		if (direction == 0)
@@ -460,6 +467,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case SOUTH:
+		itNextMove = plateau.GetMovesLeft().begin();
+		itPrevMove = plateau.GetMovesLeft().end();
 		if (right)
 			break;
 		if (direction == 0)
@@ -471,6 +480,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case WEST:
+		itNextMove = plateau.GetMovesLeft().begin();
+		itPrevMove = plateau.GetMovesLeft().end();
 		if (right)
 			break;
 		if (direction == 1)
@@ -511,6 +522,8 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 	{
 		if (index < 144)
 		{
+			itNextMove = plateau.GetMovesLeft().begin();
+			itPrevMove = plateau.GetMovesLeft().end();
 			// Tile clicked :
 			if (!plateau.IsBlocked() && plateau.getRemovableFromIndex(index))
 			{
@@ -584,6 +597,15 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 			// Interface clicked :
 			// UI buttons needed...
 			InterfaceClicked(index);
+		}
+	}
+	else
+	{
+		if (!plateau.GetMovesLeft().empty() && itPrevMove != plateau.GetMovesLeft().end())
+		{
+			itNextMove = plateau.GetMovesLeft().begin();
+			itPrevMove = plateau.GetMovesLeft().end();
+			Refresh(true);
 		}
 	}
 }
@@ -1087,6 +1109,8 @@ void GraphicBoard::Loop()
 			case SDL_BUTTON_RIGHT:
 				if (!isButtonClicked(event.button.x, event.button.y))
 				{
+					itNextMove = plateau.GetMovesLeft().begin();
+					itPrevMove = plateau.GetMovesLeft().end();
 					std::cout << "(" << event.button.x << ";" << event.button.y << ") right clicked." << std::endl;
 					WhatsLeft();
 					while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));

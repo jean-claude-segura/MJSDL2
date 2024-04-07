@@ -35,9 +35,9 @@ inline SDL_Texture* SDL_InvertTexture(SDL_Renderer* renderer, SDL_Texture* src, 
 		{
 			if (tgt != NULL) SDL_DestroyTexture(tgt);
 			SDL_QueryTexture(src, NULL, NULL, &w, &h);
-			tgt = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, w, h);
+			tgt = SDL_CreateTexture(SDLRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, w, h);
 			SDL_SetRenderTarget(SDLRenderer, tgt);
-			SDL_SetRenderDrawColor(SDLRenderer, 255, 255, 255, 0);
+			SDL_SetRenderDrawColor(SDLRenderer, 0xFF, 0xFF, 0xFF, 0);
 			SDL_RenderClear(SDLRenderer);
 			SDL_RenderCopy(SDLRenderer, src, NULL, NULL);
 			SDL_SetTextureBlendMode(tgt, textureBlendMode);

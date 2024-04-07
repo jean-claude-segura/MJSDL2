@@ -149,7 +149,7 @@ void SDL_SetColourOnOpaque(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordo
 void SDL_SetGreyScale(SDL_Surface* src)
 {
 	// GIMP : Gray = (Red * 0.3 + Green * 0.59 + Blue * 0.11)
-	// 0.3 * 255 + 0.59 * 255 + 0.11 * 255
+	// 0.3 * 256 + 0.59 * 256 + 0.11 * 256
 	// (Red * 76.5 + Green * 150.45 + Blue * 28.05)
 	// BT.709 : Gray = (Red * 0.2126 + Green * 0.7152 + Blue * 0.0722)
 	// (Red * 54.213 + Green * 182.38875 + Blue * 18.411)
