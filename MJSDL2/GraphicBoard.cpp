@@ -1188,7 +1188,14 @@ void GraphicBoard::Loop()
 								auto z = std::get<2>(tile);
 								auto domino = std::get<3>(tile);
 								auto index = std::get<4>(tile);
-								if (domino == selected && plateau.getRemovableFromIndex(index))
+
+								if (
+									(
+										domino == selected ||
+										(34 <= domino && domino < 38 && 34 <= selected && selected < 38) || // Saisons
+										(38 <= domino && domino < 42 && 38 <= selected && selected < 42) // Fleurs.
+										) &&
+									plateau.getRemovableFromIndex(index))
 								{
 									clicked[index] = true;
 									relevantTiles.emplace_back(index);
@@ -1196,9 +1203,39 @@ void GraphicBoard::Loop()
 							}
 							Refresh(false);
 							while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
-							for (const auto& index : relevantTiles)
-								clicked[index] = false;
-							Refresh(false);
+							if (event.button.button == SDL_BUTTON_LEFT && (relevantTiles.size() == 2 || relevantTiles.size() == 4))
+							{
+								for (const auto& index : relevantTiles)
+									clicked[index] = false;
+								bool result = plateau.RemovePairOfTiles(relevantTiles[0], relevantTiles[1]);
+								if (relevantTiles.size() == 4)
+									result |= plateau.RemovePairOfTiles(relevantTiles[2], relevantTiles[3]);
+								if (result)
+								{
+									Refresh(true);
+									itNextMove = plateau.GetMovesLeft().begin();
+									itPrevMove = plateau.GetMovesLeft().end();
+#ifdef _DEBUG
+									std::cout << std::dec << plateau.getNumberOfTilesLeft() << " tile" << (plateau.getNumberOfTilesLeft() > 1 ? "s" : "") << " left." << std::endl;
+									std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
+									std::cout << std::dec << plateau.HowManyMovesLeft() << " move" << (plateau.HowManyMovesLeft() > 1 ? "s" : "") << " left." << std::endl;
+									auto it = plateau.GetMovesLeft().begin();
+									if (it != plateau.GetMovesLeft().end())
+									{
+										std::cout << "(" << it->first << ";" << it->second << ")";
+										for (++it; it != plateau.GetMovesLeft().end(); ++it)
+											std::cout << ", (" << it->first << ";" << it->second << ")";
+										std::cout << "." << std::endl;
+									}
+#endif
+								}
+							}
+							else
+							{
+								for (const auto& index : relevantTiles)
+									clicked[index] = false;
+								Refresh(false);
+							}
 						}
 					}
 					else
