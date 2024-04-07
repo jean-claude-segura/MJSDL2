@@ -1171,11 +1171,44 @@ void GraphicBoard::Loop()
 				}
 				else
 				{
-					while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
+					auto index = (SDL_TextureReadPixel(renderer, textureMouseMap, SDL_Point{ event.button.x, event.button.y }, Width) & 0xFF);
+					if (index < 144)
+					{
+						itNextMove = plateau.GetMovesLeft().begin();
+						itPrevMove = plateau.GetMovesLeft().end();
+
+						if (!plateau.IsBlocked() && plateau.getRemovableFromIndex(index))
+						{
+							int selected = plateau.getDominoFromIndex(index);
+							std::vector<int> relevantTiles;
+							for (const auto& tile : plateau.getLogicalBoard())
+							{
+								auto x = std::get<0>(tile);
+								auto y = std::get<1>(tile);
+								auto z = std::get<2>(tile);
+								auto domino = std::get<3>(tile);
+								auto index = std::get<4>(tile);
+								if (domino == selected && plateau.getRemovableFromIndex(index))
+								{
+									clicked[index] = true;
+									relevantTiles.emplace_back(index);
+								}
+							}
+							Refresh(false);
+							while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
+							for (const auto& index : relevantTiles)
+								clicked[index] = false;
+							Refresh(false);
+						}
+					}
+					else
+					{
+						while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
 #ifdef _DEBUG
-					std::cout << "(" << event.button.x << ";" << event.button.y << ") right clicked." << std::endl;
+						std::cout << "(" << event.button.x << ";" << event.button.y << ") right clicked." << std::endl;
 #endif
-					setRightClicked(event.button.x, event.button.y);
+						setRightClicked(event.button.x, event.button.y);
+					}
 				}
 				break;
 			default:
