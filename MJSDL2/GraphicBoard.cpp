@@ -17,6 +17,7 @@ GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height (0), Width(0)
 	MouseMask = NULL;
 	FaceMask = NULL;
 	Inverted = NULL;
+	textureMouseMap = NULL;
 }
 
 GraphicBoard::~GraphicBoard()
