@@ -9,6 +9,7 @@
 #include <random>
 #include <filesystem>
 #include "SDL_Tools.h"
+#include "Tools.h"
 
 // https://github.com/libsdl-org/SDL_ttf/tree/main/external
 // https://stackoverflow.com/questions/4998974/visual-studio-2008-moving-files-at-build-to-bin
