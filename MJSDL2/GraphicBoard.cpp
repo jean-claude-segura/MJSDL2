@@ -975,6 +975,31 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 	{
 		if (plateau.IsEmpty())
 		{
+			/**/
+			SDL_Rect coordonnees;
+			for (int z = 0; z < 5; ++z)
+			{
+				int domino = 0;
+				for (int y = 5; y >= 0; --y)
+				{
+					for (int x = 0; x < 7; ++x)
+					{
+						SDL_Point size;
+						SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+
+						auto tHeight = (Height - (size.y - 40) * 6) / 2;
+						auto tWidth = (Width - (size.x - 40) * 7) / 2;
+
+						coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
+						coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
+						coordonnees.w = size.x;
+						coordonnees.h = size.y;
+
+						SDL_RenderCopy(renderer, dominos[domino++], NULL, &coordonnees);
+					}
+				}
+			}
+			/**/
 			SDL_FireOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 0xA0);
 		}
 		else
