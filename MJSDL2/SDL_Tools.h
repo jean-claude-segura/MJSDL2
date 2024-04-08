@@ -4,6 +4,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <iostream>
+#include "Tools.h"
 
 
 void SDL_UpperBlitInverted(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);
@@ -14,6 +15,7 @@ void SDL_SetGreyScale(SDL_Surface* src);
 void SDL_VerticalFlip(SDL_Surface* surface);
 void SDL_HorizontalFlip(SDL_Surface* surface);
 void SDL_UpperBlitCut(SDL_Surface* src, SDL_Surface* dest);
+void SDL_Fire(SDL_Renderer* renderer, int Width, int Height);
 
 /* *********************************************************************************** /
 /*                                       INLINE                                       */
