@@ -15,7 +15,8 @@ void SDL_SetGreyScale(SDL_Surface* src);
 void SDL_VerticalFlip(SDL_Surface* surface);
 void SDL_HorizontalFlip(SDL_Surface* surface);
 void SDL_UpperBlitCut(SDL_Surface* src, SDL_Surface* dest);
-void SDL_Fire(SDL_Renderer* renderer, int Width, int Height);
+void SDL_FireOnRenderer(SDL_Renderer* renderer, int Width, int Height);
+void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, int Width, int Height, Uint32 Alpha = 0x00);
 
 /* *********************************************************************************** /
 /*                                       INLINE                                       */
