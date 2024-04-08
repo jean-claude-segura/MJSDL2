@@ -1,44 +1,51 @@
 #include "Tools.h"
 
-/**
- * Converts an HSL color value to RGB. Conversion formula
- * adapted from https://en.wikipedia.org/wiki/HSL_color_space.
- * Assumes h, s, and l are contained in the set [0, 1] and
- * returns r, g, and b in the set [0, 255].
- *
- * @param   {number}  h       The hue
- * @param   {number}  s       The saturation
- * @param   {number}  l       The lightness
- * @return  {Array}           The RGB representation
- */
-std::tuple<int, int, int> hslToRgb(double h, double s, double l)
+/* ************************************************** /
+*  https://www.baeldung.com/cs/convert-color-hsl-rgb  /
+* ************************************************** */
+uint32_t HSLtoRGB(double H, double S, double L)
 {
-    double r, g, b;
-
-    if (s == 0)
+    auto C = (1. - abs(2. * L - 1.)) * S;
+    auto Hp = H / 60.;
+    auto X = C * (1 - abs(std::fmod(Hp, 2) - 1));
+    double Rp = 0., Gp = 0., Bp = 0.;
+    if (Hp <= 1.)
     {
-        r = g = b = l; // achromatic
+        Rp = C;
+        Gp = X;
+        Bp = 0.;
     }
-    else
+    else if (Hp <= 2.)
     {
-        const int q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        const int p = 2 * l - q;
-        r = hueToRgb(p, q, h + 1. / 3.);
-        g = hueToRgb(p, q, h);
-        b = hueToRgb(p, q, h - 1. / 3.);
+        Rp = X;
+        Gp = C;
+        Bp = 0.;
     }
+    else if (Hp <= 3.)
+    {
+        Rp = 0.;
+        Gp = C;
+        Bp = X;
+    }
+    else if (Hp <= 4.)
+    {
+        Rp = 0.;
+        Gp = X;
+        Bp = C;
+    }
+    else if (Hp <= 5.)
+    {
+        Rp = X;
+        Gp = 0.;
+        Bp = C;
+    }
+    else if (Hp <= 6.)
+    {
+        Rp = C;
+        Gp = 0.;
+        Bp = X;
+    }
+    auto m = L - C / 2.;
 
-    //return std::make_tuple<int, int, int>(round(r * 255.), round(g * 255.), round(b * 255.));
-    return std::make_tuple<int, int, int>(round(r), round(g), round(b));
-}
-
-
-double hueToRgb(double p, double q, double t)
-{
-    if (t < 0.) t += 1.;
-    if (t > 1.) t -= 1.;
-    if (t < 1. / 6.) return p + (q - p) * 6. * t;
-    if (t < 1. / 2.) return q;
-    if (t < 2. / 3.) return p + (q - p) * (2. / 3. - t) * 6.;
-    return p;
+    return (uint32_t(0xFF) << 24) | (uint32_t((Rp+m) * 255.) << 16) | (uint32_t((Gp + m) * 255.) << 8) | uint32_t((Bp + m) * 255.);
 }

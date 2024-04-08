@@ -897,7 +897,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 
 	SDL_Texture * screen = NULL;
 	auto renderTarget = SDL_GetRenderTarget(renderer);
-	if (plateau.IsBlocked() && !plateau.IsEmpty())
+	if (plateau.IsBlocked())
 	{
 		screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
 		SDL_SetRenderTarget(renderer, screen);
@@ -975,29 +975,94 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 	{
 		if (plateau.IsEmpty())
 		{
-			//https://lodev.org/cgtutor/fire.html
-			// Succès :
-			auto prevRenderTarget = SDL_GetRenderTarget(renderer);
-			SDL_Texture* greenScreen = NULL;
-			greenScreen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
-			SDL_SetRenderTarget(renderer, greenScreen);
-			SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x00, 0xA0);
-			SDL_RenderClear(renderer);
+			// Adapted from :
+			// https://lodev.org/cgtutor/fire.html
+			//auto test = HSLtoRGB(210, 0.79, 0.3);
+			int h = Height >> 2;
+			int w = Width >> 2;
+			auto fireScreen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
+			SDL_SetTextureBlendMode(fireScreen, SDL_BLENDMODE_BLEND);
+			SDL_SetRenderTarget(renderer, fireScreen);
 
-			SDL_SetRenderTarget(renderer, prevRenderTarget);
-			SDL_SetTextureBlendMode(greenScreen, SDL_BLENDMODE_BLEND);
-			SDL_RenderCopy(renderer, greenScreen, NULL, NULL);
-			SDL_DestroyTexture(greenScreen);
+			SDL_Surface* firesurface = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
-			/*SDL_SetRenderTarget(renderer, renderTarget);
+			auto fire = std::make_unique <std::unique_ptr<int[]>[]>(h);
+			for (int i = 0; i < h; ++i) {
+				fire[i] = std::make_unique<int[]>(w);
+			}
+			Uint32 palette[256]; //this will contain the color palette
+
+			//set up the screen
+
+			//declarations
+			//used during palette generation
+
+			//make sure the fire buffer is zero in the beginning
+			for (int y = 0; y < h; y++)
+				for (int x = 0; x < w; x++)
+					fire[y][x] = 0;
+
+			//generate the palette
+			for (int x = 0; x < 256; x++)
+			{
+				//HSLtoRGB is used to generate colors:
+				//Hue goes from 0 to 85: red to yellow
+				//Saturation is always the maximum: 1
+				//Lightness is 0..1 for x=0..128, and 1 for x=128..255
+				auto H = (double)x / 3.; // Ok.
+				auto S = 255. / 255.; // [0..1] -> [0..255]
+				auto t = ((double)x * 2.) / 255.;
+				auto L = std::min(1., t); // [0..1] -> [0..255]
+				auto color = HSLtoRGB(H, S, L);
+
+				//set the palette to the calculated RGB value
+				palette[x] = color == 0xFF000000 ? (color & 0xFFFFFF) : color;
+			}
+
+			SDL_Event event;
+			//start the loop (one frame per loop)
+			SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+			while (true)
+			{
+				SDL_SetRenderTarget(renderer, fireScreen);
+				if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
+					break;
+
+				//randomize the bottom row of the fire buffer
+				for (int x = 0; x < w; x++) fire[h - 1][x] = abs(32768 + rand()) % 256;
+				//do the fire calculations for every pixel, from top to bottom
+				for (int y = 0; y < h - 1; y++)
+					for (int x = 0; x < w; x++)
+					{
+						fire[y][x] =
+							((fire[(y + 1) % h][(x - 1 + w) % w]
+								+ fire[(y + 1) % h][(x) % w]
+								+ fire[(y + 1) % h][(x + 1) % w]
+								+ fire[(y + 2) % h][(x) % w])
+								* 32) / 129;
+					}
+
+				//set the drawing buffer to the fire buffer, using the palette colors
+				for (int y = 0; y < h; y++)
+					for (int x = 0; x < w; x++)
+					{
+						//buffer[y*x] = palette[fire[y][x]];
+						auto p = (Uint32*)firesurface->pixels + (x + y * firesurface->w);
+						*p = palette[fire[y][x]];
+					}
+
+				//draw the buffer and redraw the screen
+				SDL_SetRenderTarget(renderer, renderTarget);
+				SDL_RenderCopy(renderer, screen, NULL, NULL);
+				auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
+				SDL_RenderCopy(renderer, texture, NULL, NULL);
+				SDL_DestroyTexture(texture);
+				SDL_RenderPresent(renderer);
+			}
+			SDL_DestroyTexture(fireScreen);
+			SDL_FreeSurface(firesurface);
 			SDL_RenderCopy(renderer, screen, NULL, NULL);
-			SDL_DestroyTexture(screen);*/
-
-
-			/* *********************************  /
-			* https://lodev.org/cgtutor/fire.html
-			* https://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion
-			 * ********************************* */
+			SDL_SetRenderTarget(renderer, renderTarget);
 		}
 		else
 		{
@@ -1011,104 +1076,6 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 			SDL_DestroyTexture(screen);
 		}
 	}
-
-	if (true)
-	{
-		SDL_RenderPresent(renderer);
-		int h = Height >> 2;
-		int w = Width >> 2;
-
-		SDL_Surface* firesurface = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
-
-		auto fire = std::make_unique <std::unique_ptr<int[]>[]>(h);
-		for (int i = 0; i < h; ++i) {
-			fire[i] = std::make_unique<int[]>(w);
-		}
-		Uint32 palette[256]; //this will contain the color palette
-
-		//set up the screen
-
-		//declarations
-		//used during palette generation
-		//float time = getTime(), oldTime; //the time of this and the previous frame, for timing
-
-		//make sure the fire buffer is zero in the beginning
-		for (int y = 0; y < h; y++)
-			for (int x = 0; x < w; x++)
-				fire[y][x] = 0;
-
-		//generate the palette
-		for (int x = 0; x < 256; x++)
-		{
-			//HSLtoRGB is used to generate colors:
-			//Hue goes from 0 to 85: red to yellow
-			//Saturation is always the maximum: 255
-			//Lightness is 0..255 for x=0..128, and 255 for x=128..255
-			//color = HSLtoRGB(ColorHSL(x / 3, 255, std::min(255, x * 2)));
-			auto H = (double)x / 3.; // Ok.
-			auto S = 255.; // [0..1] -> [0..255]
-			S = 1.;
-			auto L = std::min(255., (double)x * 2.); // [0..1] -> [0..255]
-			L /= 255.;
-			auto color = hslToRgb(H, S, L);
-
-			//set the palette to the calculated RGB value
-			//palette[x] = RGBtoINT(color);
-			palette[x] = std::get<0>(color) << 16 | std::get<1>(color) << 8 | std::get<2>(color);
-		}
-
-		Uint32 base = 0;
-		SDL_Event event;
-		//start the loop (one frame per loop)
-		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
-		while (true)
-		{
-			if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
-				break;
-			//timing: set to maximum 50 milliseconds per frame = 20 frames per second
-			/*
-			oldTime = time;
-			waitFrame(oldTime, 0.05);
-			time = getTime();
-			*/
-
-			//randomize the bottom row of the fire buffer
-			for (int x = 0; x < w; x++) fire[h - 1][x] = abs(32768 + rand()) % 256;
-			//do the fire calculations for every pixel, from top to bottom
-			for (int y = 0; y < h - 1; y++)
-				for (int x = 0; x < w; x++)
-				{
-					fire[y][x] =
-						((fire[(y + 1) % h][(x - 1 + w) % w]
-							+ fire[(y + 1) % h][(x) % w]
-							+ fire[(y + 1) % h][(x + 1) % w]
-							+ fire[(y + 2) % h][(x) % w])
-							* 32) / 129;
-				}
-
-			//set the drawing buffer to the fire buffer, using the palette colors
-			for (int y = 0; y < h; y++)
-				for (int x = 0; x < w; x++)
-				{
-					//buffer[y*x] = palette[fire[y][x]];
-					auto p = (Uint32*)firesurface->pixels + (x + y * firesurface->w);
-					*p = palette[fire[y][x]];
-				}
-
-			//draw the buffer and redraw the screen
-			//drawBuffer(buffer[0]);
-			//redraw();
-			//base = (base + 1) % 0xFF;
-			SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
-			SDL_RenderClear(renderer);
-			auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
-			SDL_RenderCopy(renderer, texture, NULL, NULL);
-			SDL_DestroyTexture(texture);
-
-			SDL_RenderPresent(renderer);
-		}
-	}
-
 
 	// Interface :
 	// Ouest :
