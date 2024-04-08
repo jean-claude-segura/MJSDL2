@@ -991,7 +991,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 	}
 
 #ifdef _DEBUG
-	SDL_FireOnRenderer(renderer, Width >> 2, Height >> 2);
+	//SDL_FireOnRenderer(renderer, Width >> 2, Height >> 2);
 #endif
 
 	// Interface :
