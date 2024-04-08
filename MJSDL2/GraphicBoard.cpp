@@ -1077,6 +1077,10 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 		}
 	}
 
+#ifdef _DEBUG
+	//SDL_Fire(renderer, Width, Height);
+#endif
+
 	// Interface :
 	// Ouest :
 	SDL_Point size;
