@@ -1029,7 +1029,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 		//set up the screen
 
 		//declarations
-		SDL_Colour color; //used during palette generation
+		//used during palette generation
 		//float time = getTime(), oldTime; //the time of this and the previous frame, for timing
 
 		//make sure the fire buffer is zero in the beginning
@@ -1045,7 +1045,12 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 			//Saturation is always the maximum: 255
 			//Lightness is 0..255 for x=0..128, and 255 for x=128..255
 			//color = HSLtoRGB(ColorHSL(x / 3, 255, std::min(255, x * 2)));
-			auto color = hslToRgb(x / 3, 255, std::min(255, x * 2));
+			auto H = (double)x / 3.; // Ok.
+			auto S = 255.; // [0..1] -> [0..255]
+			S = 1.;
+			auto L = std::min(255., (double)x * 2.); // [0..1] -> [0..255]
+			L /= 255.;
+			auto color = hslToRgb(H, S, L);
 
 			//set the palette to the calculated RGB value
 			//palette[x] = RGBtoINT(color);
