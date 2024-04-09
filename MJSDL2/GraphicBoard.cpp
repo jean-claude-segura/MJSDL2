@@ -1,6 +1,6 @@
 #include "GraphicBoard.h"
 
-GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height (0), Width(0)
+GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height(0), Width(0)
 {
 	window = NULL;
 	renderer = NULL;
@@ -327,7 +327,7 @@ void GraphicBoard::LoadResources()
 	LoadRandomBackground("./background/");
 }
 
-void GraphicBoard::LoadButton(SDL_Texture* &button, const std::string &strPath, const std::string& strName)
+void GraphicBoard::LoadButton(SDL_Texture*& button, const std::string& strPath, const std::string& strName)
 {
 	if (button != NULL)
 		SDL_DestroyTexture(button);
@@ -383,7 +383,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			while (!plateau.GetMovesLeft().empty())
 			{
 				itNextMove = plateau.GetMovesLeft().begin();
-				if( 0 <= selected && selected < 143)
+				if (0 <= selected && selected < 143)
 					clicked[selected] = false;
 				selected = -1;
 				Refresh(false);
@@ -529,7 +529,12 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		break;
 	case EXIT:
 		if (right)
+		{
+#ifdef _DEBUG
+			RefreshExample();
+#endif
 			break;
+		}
 		SDL_PushEvent(&exitEvent);
 		break;
 	default:
@@ -664,7 +669,7 @@ void GraphicBoard::setRightClicked(const int x, const int y)
 	}
 }
 
-inline void GraphicBoard::RenderCopyMouseMap(SDL_Texture * Mask, SDL_Rect coordonnees, Uint32 colour, const double angle, const SDL_RendererFlip flip)
+inline void GraphicBoard::RenderCopyMouseMap(SDL_Texture* Mask, SDL_Rect coordonnees, Uint32 colour, const double angle, const SDL_RendererFlip flip)
 {
 	auto renderTarget = SDL_GetRenderTarget(renderer);
 	auto SDLRenderer = renderer;
@@ -812,6 +817,106 @@ void GraphicBoard::RefreshMouseMap()
 #ifdef _DEBUG
 void GraphicBoard::RefreshExample()
 {
+	SDL_Texture* screen = NULL;
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+
+	screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
+
+	SDL_SetRenderTarget(renderer, screen);
+
+	SDL_RenderClear(renderer);
+
+	// Copie du fond :
+	SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
+
+	// Fin de partie :
+			/**/
+	SDL_Rect coordonnees;
+	//for (int z = 0; z < 5; ++z)
+	{
+		int z = 0;
+		int domino = 0;
+		for (int y = 5; y >= 0; --y)
+		{
+			for (int x = 0; x < 7; ++x)
+			{
+				SDL_Point size;
+				SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+
+				auto tHeight = (Height - (size.y - 40) * 6) / 2;
+				auto tWidth = (Width - (size.x - 40) * 7) / 2;
+
+				coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
+				coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
+				coordonnees.w = size.x;
+				coordonnees.h = size.y;
+
+				SDL_RenderCopy(renderer, dominos[domino++], NULL, &coordonnees);
+			}
+		}
+	}
+	/**/
+	//SDL_FireOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 1, 0xA0);
+	SDL_Point sizeShift;
+	SDL_QueryTexture(MouseMask, NULL, NULL, &sizeShift.x, &sizeShift.y);
+	auto tHeight = (Height - (sizeShift.y - 40) * 6) / 2;
+	auto tWidth = (Width - (sizeShift.x - 40) * 7) / 2;
+
+	SDL_Rect tgtRect;
+	tgtRect.x = tWidth;
+	tgtRect.y = tHeight;
+	tgtRect.w = 6 * sizeShift.x - 30;
+	tgtRect.h = 5 * sizeShift.y + 54;
+	SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xA0);
+	SDL_SetRenderTarget(renderer, renderTarget);
+	SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
+
+	/*SDL_FireOnRenderer(renderer, Width >> 2, Height >> 2, 1);
+	SDL_FireOnRenderer(renderer, Width >> 2, Height >> 2, 0);*/
+
+	// Interface :
+	// Ouest :
+	SDL_Point size;
+	SDL_QueryTexture(RestartBtn, NULL, NULL, &size.x, &size.y);
+
+	coordonnees.w = size.x;
+	coordonnees.h = size.y;
+	coordonnees.x = 0;
+	coordonnees.y = (size.y - 20) * 4;
+	SDL_RenderCopy(renderer, OuestBtn, NULL, &coordonnees);
+	// Sud :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 5;
+	SDL_RenderCopy(renderer, SudBtn, NULL, &coordonnees);
+	// Turn :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 4;
+	SDL_RenderCopy(renderer, TurnBtn, NULL, &coordonnees);
+	// Nord :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 3;
+	SDL_RenderCopy(renderer, NordBtn, NULL, &coordonnees);
+	// Est :
+	coordonnees.x = (size.x << 1) - 40;
+	coordonnees.y = (size.y - 20) * 4;
+	SDL_RenderCopy(renderer, EstBtn, NULL, &coordonnees);
+	// Hint :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = size.y - 20;
+	SDL_RenderCopy(renderer, HintBtn, NULL, &coordonnees);
+	// Restart :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = 0;
+	SDL_RenderCopy(renderer, RestartBtn, NULL, &coordonnees);
+	// Exit
+	coordonnees.x = Width - size.x;
+	coordonnees.y = 0;
+	SDL_RenderCopy(renderer, ExitBtn, NULL, &coordonnees);
+	/**/
+
+	//SDL_RenderCopy(renderer, textureMouseMap, NULL, NULL);
+
+	SDL_RenderPresent(renderer);
 }
 #endif
 
@@ -895,7 +1000,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 {
 	if (refreshMouseMap) RefreshMouseMap();
 
-	SDL_Texture * screen = NULL;
+	SDL_Texture* screen = NULL;
 	auto renderTarget = SDL_GetRenderTarget(renderer);
 	if (plateau.IsBlocked())
 	{
@@ -1013,6 +1118,8 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 			tgtRect.w = 6 * sizeShift.x - 30;
 			tgtRect.h = 5 * sizeShift.y + 54;
 			SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 1, 0xA0);
+			SDL_SetRenderTarget(renderer, renderTarget);
+			SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 		}
 		else
 		{
@@ -1192,9 +1299,12 @@ void GraphicBoard::Loop()
 #ifdef _DEBUG
 					std::cout << "(" << event.button.x << ";" << event.button.y << ") right clicked." << std::endl;
 #endif
-					WhatsLeft();
-					while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
-					Refresh(false);
+					if (!plateau.IsEmpty())
+					{
+						WhatsLeft();
+						while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
+						Refresh(false);
+					}
 				}
 				else
 				{

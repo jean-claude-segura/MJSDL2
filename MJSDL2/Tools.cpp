@@ -82,3 +82,31 @@ void GenerateFirePalette(uint32_t* palette, uint32_t size, uint32_t Alpha)
         }
     }
 }
+
+// https://colortutorial.design/grey.html
+void GenerateGreyPalette(uint32_t* palette, uint32_t size, uint32_t Alpha)
+{
+    for (int x = 0; x < size; x++)
+    {
+        //HSLtoRGB is used to generate colors:
+        //Hue therefore meaningless with...
+        //...Saturation held to zero
+        //Lightness is 0..1 for 0 < x < (size / 2), and 1 for (size/2) < x < size
+        auto H = 0.; // Ok.
+        auto S = 0.; // [0..1] -> [0..255]
+        auto L = (double)x / (double)size;
+        if (Alpha > 0)
+        {
+            auto color = HSLtoARGB8888(H, S, L, Alpha);
+            //set the palette to the calculated RGB value + Alpha
+            palette[x] = color;
+        }
+        else
+        {
+            auto color = HSLtoRGB(H, S, L);
+            //set the palette to the calculated RGB value
+            // Alpha is set at 0xFF except for black made transparent.
+            palette[x] = color != 0 ? (color | 0xFF000000) : color;
+        }
+    }
+}
