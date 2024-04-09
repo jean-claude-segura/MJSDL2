@@ -1316,7 +1316,10 @@ void GraphicBoard::Loop()
 
 						if (!plateau.IsBlocked() && plateau.getRemovableFromIndex(index))
 						{
-							int selected = plateau.getDominoFromIndex(index);
+							if (0 <= selected && selected < 143)
+								clicked[selected] = false;
+							selected = -1;
+							int autoselected = plateau.getDominoFromIndex(index);
 							std::vector<int> relevantTiles;
 							for (const auto& tile : plateau.getLogicalBoard())
 							{
@@ -1328,9 +1331,9 @@ void GraphicBoard::Loop()
 
 								if (
 									(
-										domino == selected ||
-										(34 <= domino && domino < 38 && 34 <= selected && selected < 38) || // Saisons
-										(38 <= domino && domino < 42 && 38 <= selected && selected < 42) // Fleurs.
+										domino == autoselected ||
+										(34 <= domino && domino < 38 && 34 <= autoselected && autoselected < 38) || // Saisons
+										(38 <= domino && domino < 42 && 38 <= autoselected && autoselected < 42) // Fleurs.
 										) &&
 									plateau.getRemovableFromIndex(index))
 								{
