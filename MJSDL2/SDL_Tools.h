@@ -15,8 +15,10 @@ void SDL_SetGreyScale(SDL_Surface* src);
 void SDL_VerticalFlip(SDL_Surface* surface);
 void SDL_HorizontalFlip(SDL_Surface* surface);
 void SDL_UpperBlitCut(SDL_Surface* src, SDL_Surface* dest);
-void SDL_FireOnRenderer(SDL_Renderer* renderer, int Width, int Height);
-void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, int Width, int Height, Uint32 Alpha = 0x00);
+void SDL_FireOnRenderer(SDL_Renderer* renderer, int Width, int Height, int FireType = 0);
+void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, int Width, int Height, int FireType = 0, Uint32 Alpha = 0x00);
+void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, int Width, int Height, int FireType = 0, Uint32 Alpha = 0x00);
+void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int Width, int Height, int FireType, Uint32 Alpha);
 
 /* *********************************************************************************** /
 /*                                       INLINE                                       */
