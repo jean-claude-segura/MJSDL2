@@ -5,9 +5,6 @@
 #include <SDL_image.h>
 #include <iostream>
 #include "Tools.h"
-#include <array>
-#include <vector>
-
 
 void SDL_UpperBlitInverted(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);
 void SDL_UpperBlitXored(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);

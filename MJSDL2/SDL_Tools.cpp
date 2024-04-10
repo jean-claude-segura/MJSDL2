@@ -476,8 +476,10 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 	int size = 256;
 	size = (size >> 1) << 1;
 	//auto palette = std::make_unique<Uint32[]>(size);
-	std::array<Uint32, 256> palette;
-	for (int i = 0; i < size; ++i) palette [ i ] = 0;
+	//for (int i = 0; i < size; ++i) palette [ i ] = 0;
+	Uint32 * palette = new Uint32[size];
+	memset(palette, 0, size * sizeof(Uint32));
+	
 	for (int i = 0; i < 32; ++i)
 	{
 		/* black to blue, 32 values*/
@@ -512,10 +514,8 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 		palette[i] |= 0xFF000000;
 
 	//make sure the fire buffer is zero in the beginning
-	//auto fire = std::make_unique<Uint8[]>(SCREEN_WIDTH * SCREEN_HEIGHT);
-	std::vector<Uint8> fire;
-	fire.resize((SCREEN_WIDTH * SCREEN_HEIGHT));
-
+	Uint8* fire = new Uint8[SCREEN_WIDTH * SCREEN_HEIGHT];
+	memset(fire, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
 
 	SDL_Event event;
 	//start the loop (one frame per loop)
@@ -531,7 +531,7 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 		{
 			int random = 1 + (int)(16.0 * (rand() / (RAND_MAX + 1.0)));
 			if (random > 9) /* the lower the value, the intenser the fire, compensate a lower value with a higher decay value*/
-				((Uint32*)firesurface->pixels)[j + i] = 255; /*maximum heat*/
+				fire[j + i] = 255; /*maximum heat*/
 			else
 				fire[j + i] = 0;
 		}
@@ -598,6 +598,8 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 		SDL_DestroyTexture(texture);
 		SDL_RenderPresent(renderer);
 	}
+	delete [] fire;
+	delete [] palette;
 	SDL_DestroyTexture(fireScreen);
 	SDL_FreeSurface(firesurface);
 	if (screen != NULL)
