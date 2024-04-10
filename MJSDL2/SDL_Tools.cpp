@@ -375,8 +375,7 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 	int size = 256;
 	size = (size >> 1) << 1;
 	auto palette = std::make_unique<Uint32[]>(size);
-	GenerateFirePalette(palette.get() + size / 2, size / 2, 0xC0);
-	GenerateGreyPalette(palette.get(), size / 2, 0xC0);
+	GenerateFirePalette(palette.get(), size, Alpha);
 	for (int i = 0; i < size; ++i)
 		if (palette[i] == Alpha << 24) palette[i] = 0;
 
