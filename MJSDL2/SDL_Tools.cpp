@@ -371,10 +371,21 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 	for (int i = 0; i < h; ++i) {
 		fire[i] = std::make_unique<int[]>(w);
 	}
-	Uint32 palette[256]; //this will contain the color palette
-	GenerateFirePalette(palette, 256, 0xC0);
-	for (int i = 0; i < 256; ++i)
+	//Uint32 palette[256]; //this will contain the color palette
+	int size = 512;
+	size = (size >> 1) << 1;
+	auto palette = std::make_unique<Uint32[]>(size);
+	GenerateFirePalette(palette.get() + size / 2, size / 2, 0xC0);
+	GenerateGreyPalette(palette.get(), size / 2, 0xC0);
+	for (int i = 0; i < size; ++i)
 		if (palette[i] == 0xC0000000) palette[i] = 0;
+
+
+#ifdef _DEBUG
+	Uint32 temp[512];
+	for (int i = 0; i < size; ++i)
+		temp[i] = palette[i];
+#endif
 
 	//set up the screen
 
@@ -396,7 +407,7 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 			break;
 
 		//randomize the bottom row of the fire buffer
-		for (int x = 0; x < w; x++) fire[h - 1][x] = abs(32768 + rand()) % 256;
+		for (int x = 0; x < w; x++) fire[h - 1][x] = abs(32768 + rand()) % size;
 		//do the fire calculations for every pixel, from top to bottom
 		if (FireType == 0)
 		{
@@ -409,7 +420,7 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 							+ fire[(y + 1) % h][(x) % w]
 							+ fire[(y + 1) % h][(x + 1) % w]
 							+ fire[(y + 2) % h][(x) % w])
-							* 32) / 129;
+							* (size >> 3)) / (1 + size >> 1);
 				}
 			}
 		}
@@ -424,7 +435,7 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 							+ fire[(y + 2) % h][(x) % w]
 							+ fire[(y + 1) % h][(x + 1) % w]
 							+ fire[(y + 3) % h][(x) % w])
-							* 64) / 257;
+							* (size >> 2)) / (1 + size);
 				}
 			}
 		}
