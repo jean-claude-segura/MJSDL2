@@ -107,6 +107,7 @@ void GraphicBoard::Init()
 		DM.w, DM.h,
 		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_VULKAN
 		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_OPENGL
+		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_VULKAN
 		SDL_WINDOW_SHOWN | SDL_WINDOW_VULKAN
 	);
 	if (window == NULL) {
@@ -867,7 +868,8 @@ void GraphicBoard::RefreshExample()
 	tgtRect.y = tHeight;
 	tgtRect.w = 6 * sizeShift.x - 30;
 	tgtRect.h = 5 * sizeShift.y + 54;
-	SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xA0);
+	SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xC0);
+	//SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 1, 0xC0);
 	SDL_SetRenderTarget(renderer, renderTarget);
 	SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 

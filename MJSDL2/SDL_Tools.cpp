@@ -378,7 +378,7 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 	GenerateFirePalette(palette.get() + size / 2, size / 2, 0xC0);
 	GenerateGreyPalette(palette.get(), size / 2, 0xC0);
 	for (int i = 0; i < size; ++i)
-		if (palette[i] == 0xC0000000) palette[i] = 0;
+		if (palette[i] == Alpha << 24) palette[i] = 0;
 
 
 #ifdef _DEBUG
@@ -420,7 +420,7 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 							+ fire[(y + 1) % h][(x) % w]
 							+ fire[(y + 1) % h][(x + 1) % w]
 							+ fire[(y + 2) % h][(x) % w])
-							* (size >> 3)) / (1 + size >> 1);
+							* (size >> 3)) / (1 + ( size >> 1) );
 				}
 			}
 		}
