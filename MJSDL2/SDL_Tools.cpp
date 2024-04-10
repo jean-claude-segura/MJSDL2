@@ -461,3 +461,146 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 		SDL_RenderCopy(renderer, screen, NULL, NULL);
 	SDL_SetRenderTarget(renderer, renderTarget);
 }
+
+/* https://demo-effects.sourceforge.net/ */
+void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int SCREEN_WIDTH, int SCREEN_HEIGHT, int FireType, Uint32 Alpha)
+{
+	auto fireScreen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH, SCREEN_HEIGHT);
+	SDL_SetTextureBlendMode(fireScreen, SDL_BLENDMODE_BLEND);
+	SDL_SetRenderTarget(renderer, fireScreen);
+
+	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+
+
+	//Uint32 palette[256]; //this will contain the color palette
+	int size = 256;
+	size = (size >> 1) << 1;
+	//auto palette = std::make_unique<Uint32[]>(size);
+	std::array<Uint32, 256> palette;
+	for (int i = 0; i < size; ++i) palette [ i ] = 0;
+	for (int i = 0; i < 32; ++i)
+	{
+		/* black to blue, 32 values*/
+		palette[i] |= i << 1;
+
+		/* blue to red, 32 values*/
+		palette[i + 32] |= (i << 3) << 16;
+		palette[i + 32] |= (64 - (i << 1));
+
+		/*red to yellow, 32 values*/
+		palette[i + 64] |= 255 << 16;
+		palette[i + 64] |= (i << 3) << 8;
+
+		/* yellow to white, 162 */
+		palette[i + 96] |= 255 << 16;
+		palette[i + 96] |= 255 << 8;
+		palette[i + 96] |= (i << 2);
+		palette[i + 128] |= 255 << 16;
+		palette[i + 128] |= 255 << 8;
+		palette[i + 128] |= 64 + (i << 2);
+		palette[i + 160] |= 255 << 16;
+		palette[i + 160] |= 255 << 8;
+		palette[i + 160] |= 128 + (i << 2);
+		palette[i + 192] |= 255 << 16;
+		palette[i + 192] |= 255 << 8;
+		palette[i + 192] |= 192 + i;
+		palette[i + 224] |= 255 << 16;
+		palette[i + 224] |= 255 << 8;
+		palette[i + 224] |= 224 + i;
+	}
+	for (int i = 0; i < size; ++i)
+		palette[i] |= 0xFF000000;
+
+	//make sure the fire buffer is zero in the beginning
+	//auto fire = std::make_unique<Uint8[]>(SCREEN_WIDTH * SCREEN_HEIGHT);
+	std::vector<Uint8> fire;
+	fire.resize((SCREEN_WIDTH * SCREEN_HEIGHT));
+
+
+	SDL_Event event;
+	//start the loop (one frame per loop)
+	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+	while (true)
+	{
+		SDL_SetRenderTarget(renderer, fireScreen);
+		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
+			break;
+
+		int j = SCREEN_WIDTH * (SCREEN_HEIGHT - 1);
+		for (int i = 0; i < SCREEN_WIDTH - 1; i++)
+		{
+			int random = 1 + (int)(16.0 * (rand() / (RAND_MAX + 1.0)));
+			if (random > 9) /* the lower the value, the intenser the fire, compensate a lower value with a higher decay value*/
+				((Uint32*)firesurface->pixels)[j + i] = 255; /*maximum heat*/
+			else
+				fire[j + i] = 0;
+		}
+
+		/* move fire upwards, start at bottom*/
+		Uint8 temp;
+
+		for (int index = 0; index < 60; ++index)
+		{
+			for (int i = 0; i < SCREEN_WIDTH - 1; ++i)
+			{
+				if (i == 0) /* at the left border*/
+				{
+					temp = fire[j];
+					temp += fire[j + 1];
+					temp += fire[j - SCREEN_WIDTH];
+					temp /= 3;
+				}
+				else if (i == SCREEN_WIDTH - 1) /* at the right border*/
+				{
+					temp = fire[j + i];
+					temp += fire[j - SCREEN_WIDTH + i];
+					temp += fire[j + i - 1];
+					temp /= 3;
+				}
+				else
+				{
+					temp = fire[j + i];
+					temp += fire[j + i + 1];
+					temp += fire[j + i - 1];
+					temp += fire[j - SCREEN_WIDTH + i];
+					temp >>= 2;
+				}
+				if (temp > 1)
+					temp -= 1; /* decay */
+
+				fire[j - SCREEN_WIDTH + i] = temp;
+			}
+			j -= SCREEN_WIDTH;
+		}
+
+		//set the drawing buffer to the fire buffer, using the palette colors
+		//auto p = (Uint32*)firesurface->pixels;
+		//auto p = (Uint8*)firesurface->pixels + (firesurface->pitch * SCREEN_HEIGHT);  /*start in the right bottom corner*/
+		auto p = (Uint32*)firesurface->pixels + (SCREEN_WIDTH * SCREEN_HEIGHT) - 1;  /*start in the right bottom corner*/
+
+		for (int i = SCREEN_HEIGHT - 3; i >= 300; --i)
+		{
+			for (int j = SCREEN_WIDTH - 1; j >= 0; --j)
+			{
+				auto index = i * SCREEN_WIDTH + j;
+				auto pindex = fire[index];
+				*p = palette[pindex];
+				--p;
+			}
+		}
+		
+		//draw the buffer and redraw the screen
+		SDL_SetRenderTarget(renderer, renderTarget);
+		if (screen != NULL)
+			SDL_RenderCopy(renderer, screen, NULL, NULL);
+		auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
+		SDL_RenderCopy(renderer, texture, NULL, tgtRect);
+		SDL_DestroyTexture(texture);
+		SDL_RenderPresent(renderer);
+	}
+	SDL_DestroyTexture(fireScreen);
+	SDL_FreeSurface(firesurface);
+	if (screen != NULL)
+		SDL_RenderCopy(renderer, screen, NULL, NULL);
+	SDL_SetRenderTarget(renderer, renderTarget);
+}

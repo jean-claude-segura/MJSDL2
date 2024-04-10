@@ -5,6 +5,8 @@
 #include <SDL_image.h>
 #include <iostream>
 #include "Tools.h"
+#include <array>
+#include <vector>
 
 
 void SDL_UpperBlitInverted(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);
@@ -19,6 +21,7 @@ void SDL_FireOnRenderer(SDL_Renderer* renderer, int Width, int Height, int FireT
 void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, int Width, int Height, int FireType = 0, Uint32 Alpha = 0x00);
 void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, int Width, int Height, int FireType = 0, Uint32 Alpha = 0x00);
 void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int Width, int Height, int FireType, Uint32 Alpha);
+void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int Width, int Height, int FireType, Uint32 Alpha);
 
 /* *********************************************************************************** /
 /*                                       INLINE                                       */

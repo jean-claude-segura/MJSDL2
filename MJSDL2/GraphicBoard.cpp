@@ -868,8 +868,11 @@ void GraphicBoard::RefreshExample()
 	tgtRect.y = tHeight;
 	tgtRect.w = 6 * sizeShift.x - 30;
 	tgtRect.h = 5 * sizeShift.y + 54;
-	SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xC0);
+	//SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xC0);
 	//SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 1, 0xC0);
+	
+	SDL_FireOnTextureBisRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xC0);
+	
 	SDL_SetRenderTarget(renderer, renderTarget);
 	SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 
