@@ -372,7 +372,7 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 		fire[i] = std::make_unique<int[]>(w);
 	}
 	//Uint32 palette[256]; //this will contain the color palette
-	int size = 512;
+	int size = 256;
 	size = (size >> 1) << 1;
 	auto palette = std::make_unique<Uint32[]>(size);
 	GenerateFirePalette(palette.get() + size / 2, size / 2, 0xC0);
@@ -382,9 +382,9 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 
 
 #ifdef _DEBUG
-	Uint32 temp[512];
+	/*Uint32 temp[256];
 	for (int i = 0; i < size; ++i)
-		temp[i] = palette[i];
+		temp[i] = palette[i];*/
 #endif
 
 	//set up the screen
