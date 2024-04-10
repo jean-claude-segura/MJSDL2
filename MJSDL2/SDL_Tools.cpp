@@ -329,10 +329,10 @@ void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Te
 			}
 		}
 		//set the drawing buffer to the fire buffer, using the palette colors
+		auto p = (Uint32*)firesurface->pixels;
 		for (int y = 0; y < h; y++)
-			for (int x = 0; x < w; x++)
+			for (int x = 0; x < w; x++, ++p)
 			{
-				auto p = (Uint32*)firesurface->pixels + (x + y * firesurface->w);
 				*p = palette[fire[y][x]];
 			}
 
@@ -440,10 +440,10 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 			}
 		}
 		//set the drawing buffer to the fire buffer, using the palette colors
+		auto p = (Uint32*)firesurface->pixels;
 		for (int y = 0; y < h; y++)
-			for (int x = 0; x < w; x++)
+			for (int x = 0; x < w; x++, ++p)
 			{
-				auto p = (Uint32*)firesurface->pixels + (x + y * firesurface->w);
 				*p = palette[fire[y][x]];
 			}
 
