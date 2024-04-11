@@ -57,7 +57,7 @@ uint32_t HSLtoARGB8888(double H, double S, double L, uint8_t Alpha)
 
 void GenerateFirePalette(uint32_t* palette, uint32_t size, uint32_t Alpha)
 {
-    for (int x = 0; x < size; x++)
+    for (int x = 0; x < size; ++x)
     {
         //HSLtoRGB is used to generate colors:
         //Hue goes from 0 to 85: red to yellow
@@ -131,7 +131,7 @@ void GenerateFireWithBluePalette(uint32_t* palette, uint32_t size, uint32_t Alph
 // https://colortutorial.design/grey.html
 void GenerateGreyPalette(uint32_t* palette, uint32_t size, uint32_t Alpha)
 {
-    for (int x = 0; x < size; x++)
+    for (int x = 0; x < size; ++x)
     {
         //HSLtoRGB is used to generate colors:
         //Hue therefore meaningless with...

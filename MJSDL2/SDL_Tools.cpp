@@ -279,7 +279,7 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 	}
 
 	//make sure the fire buffer is zero in the beginning
-	for (int y = 0; y < h; y++)
+	for (int y = 0; y < h; ++y)
 	{
 		Uint8* f = fire[y];
 		memset(f, 0, w * sizeof(Uint8));
@@ -302,13 +302,13 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 			break;
 
 		//randomize the bottom row of the fire buffer
-		for (int x = 0; x < w; x++) fire[h - 1][x] = abs(32768 + rand()) % size;
+		for (int x = 0; x < w; ++x) fire[h - 1][x] = abs(32768 + rand()) % size;
 		//do the fire calculations for every pixel, from top to bottom
 		if (FireType == 0)
 		{
-			for (int y = 0; y < h - 1; y++)
+			for (int y = 0; y < h - 1; ++y)
 			{
-				for (int x = 0; x < w; x++)
+				for (int x = 0; x < w; ++x)
 				{
 					fire[y][x] =
 						((fire[(y + 1) % h][(x - 1 + w) % w]
@@ -321,9 +321,9 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 		}
 		else
 		{
-			for (int y = 0; y < h - 1; y++)
+			for (int y = 0; y < h - 1; ++y)
 			{
-				for (int x = 0; x < w; x++)
+				for (int x = 0; x < w; ++x)
 				{
 					fire[y][x] =
 						((fire[(y + 1) % h][(x - 1 + w) % w]
@@ -338,10 +338,10 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 		auto p = (Uint32*)firesurface->pixels;
 		Uint8* f = (Uint8*)fire;
 		/**/
-		for (int y = 0; y < h; y++)
+		for (int y = 0; y < h; ++y)
 		{
 			Uint8* f = fire[y];
-			for (int x = 0; x < w; x++, ++p, ++f)
+			for (int x = 0; x < w; ++x, ++p, ++f)
 			{
 				*p = palette[*f];
 			}
@@ -502,7 +502,7 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 
 	//make sure the fire buffer is zero in the beginning
 	for (int i = 0; i < 6; ++i)
-		for (int y = 0; y < h; y++)
+		for (int y = 0; y < h; ++y)
 		{
 			Uint8* f = fire[i][y];
 			memset(f, 0, w * sizeof(Uint8));
@@ -527,13 +527,13 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 		//randomize the bottom row of the fire buffer
 		for (int t = 0; t < 6; ++t)
 		{
-			for (int x = 0; x < w; x++) fire[t][h - 1][x] = abs(32768 + rand()) % size;
+			for (int x = 0; x < w; ++x) fire[t][h - 1][x] = abs(32768 + rand()) % size;
 			//do the fire[t] calculations for every pixel, from top to bottom
 			if (FireType == 0)
 			{
-				for (int y = 0; y < h - 1; y++)
+				for (int y = 0; y < h - 1; ++y)
 				{
-					for (int x = 0; x < w; x++)
+					for (int x = 0; x < w; ++x)
 					{
 						fire[t][y][x] =
 							((fire[t][(y + 1) % h][(x - 1 + w) % w]
@@ -546,9 +546,9 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 			}
 			else
 			{
-				for (int y = 0; y < h - 1; y++)
+				for (int y = 0; y < h - 1; ++y)
 				{
-					for (int x = 0; x < w; x++)
+					for (int x = 0; x < w; ++x)
 					{
 						fire[t][y][x] =
 							((fire[t][(y + 1) % h][(x - 1 + w) % w]
@@ -567,8 +567,8 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 		{
 			//set the drawing buffer to the fire buffer, using the palette colors
 			auto p = (Uint32*)firesurfacet[t]->pixels;
-			for (int y = 0; y < h; y++)
-				for (int x = 0; x < w; x++, ++p)
+			for (int y = 0; y < h; ++y)
+				for (int x = 0; x < w; ++x, ++p)
 				{
 					*p = palette[fire[t][y][x]];
 				}
