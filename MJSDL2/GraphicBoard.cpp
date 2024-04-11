@@ -856,28 +856,59 @@ void GraphicBoard::RefreshExample()
 			}
 		}
 	}
-	/**/
-	//SDL_FireOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 1, 0xA0);
-	SDL_Point sizeShift;
-	SDL_QueryTexture(MouseMask, NULL, NULL, &sizeShift.x, &sizeShift.y);
-	auto tHeight = (Height - (sizeShift.y - 40) * 6) / 2;
-	auto tWidth = (Width - (sizeShift.x - 40) * 7) / 2;
+	if (true)
+	{
+		if (true)
+		{
+			// Rect parameter
+			SDL_Point sizeShift;
+			SDL_QueryTexture(MouseMask, NULL, NULL, &sizeShift.x, &sizeShift.y);
+			auto tHeight = (Height - (sizeShift.y - 40) * 6) / 2;
+			auto tWidth = (Width - (sizeShift.x - 40) * 7) / 2;
 
-	SDL_Rect tgtRect;
-	tgtRect.x = tWidth;
-	tgtRect.y = tHeight;
-	tgtRect.w = 6 * sizeShift.x - 30;
-	tgtRect.h = 5 * sizeShift.y + 54;
-	//SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xC0);
-	//SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 1, 0xC0);
-	
-	SDL_FireOnTextureBisRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xC0);
-	
-	SDL_SetRenderTarget(renderer, renderTarget);
-	SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
+			SDL_Rect tgtRect;
+			tgtRect.x = tWidth;
+			tgtRect.y = tHeight;
+			tgtRect.w = 6 * sizeShift.x - 30;
+			if (false)
+			{
+				tgtRect.h = 5 * sizeShift.y + 54;
 
-	/*SDL_FireOnRenderer(renderer, Width >> 2, Height >> 2, 1);
-	SDL_FireOnRenderer(renderer, Width >> 2, Height >> 2, 0);*/
+				if (true)
+				{
+					// pointer algo :
+					SDL_FireOnTextureBisRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xC0);
+				}
+				else if (true)
+				{
+					// x, y algo :
+					SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xC0);
+				}
+			}
+			else
+			{
+				// x, y algo, 6 ranks :
+				tgtRect.h = sizeShift.y;
+
+				SDL_FireOnTilesRect(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 0, 0xC0);
+
+			}
+		}
+		else
+		{
+			// x, y algo, full screen with texture target parameter
+			SDL_FireOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 0, 0xC0);
+		}
+		SDL_SetRenderTarget(renderer, renderTarget);
+		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
+
+	}
+	else
+	{
+		// x, y algo, full screen
+		SDL_SetRenderTarget(renderer, renderTarget);
+		SDL_FireOnRenderer(renderer, Width >> 2, Height >> 2, 0);
+	}
 
 	// Interface :
 	// Ouest :

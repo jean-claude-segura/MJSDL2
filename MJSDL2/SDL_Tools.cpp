@@ -258,14 +258,13 @@ void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, int Wi
 // Current renderer must be set to the texture target and renderTarget to the main renderer texture
 void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, int Width, int Height, int FireType, Uint32 Alpha)
 {
+	SDL_SetRenderTarget(renderer, renderTarget);
+
 	// Adapted from :
 	// https://lodev.org/cgtutor/fire.html
 	//auto test = HSLtoRGB(210, 0.79, 0.3);
 	int h = Height;
 	int w = Width;
-	auto fireScreen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
-	SDL_SetTextureBlendMode(fireScreen, SDL_BLENDMODE_BLEND);
-	SDL_SetRenderTarget(renderer, fireScreen);
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
@@ -291,7 +290,6 @@ void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Te
 	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 	while (true)
 	{
-		SDL_SetRenderTarget(renderer, fireScreen);
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
@@ -337,7 +335,6 @@ void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Te
 			}
 
 		//draw the buffer and redraw the screen
-		SDL_SetRenderTarget(renderer, renderTarget);
 		if(screen != NULL)
 			SDL_RenderCopy(renderer, screen, NULL, NULL);
 		auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
@@ -345,8 +342,7 @@ void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Te
 		SDL_DestroyTexture(texture);
 		SDL_RenderPresent(renderer);
 	}
-	SDL_DestroyTexture(fireScreen);
-	SDL_FreeSurface(firesurface);
+
 	if (screen != NULL)
 		SDL_RenderCopy(renderer, screen, NULL, NULL);
 	SDL_SetRenderTarget(renderer, renderTarget);
@@ -354,16 +350,13 @@ void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Te
 
 void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect * tgtRect, int Width, int Height, int FireType, Uint32 Alpha)
 {
-	//auto screen = SDL_GetRenderTarget(renderer);
+	SDL_SetRenderTarget(renderer, renderTarget);
 
 	// Adapted from :
 	// https://lodev.org/cgtutor/fire.html
 	//auto test = HSLtoRGB(210, 0.79, 0.3);
 	int h = Height;
 	int w = Width;
-	auto fireScreen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
-	SDL_SetTextureBlendMode(fireScreen, SDL_BLENDMODE_BLEND);
-	SDL_SetRenderTarget(renderer, fireScreen);
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
@@ -401,7 +394,6 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 	while (true)
 	{
-		SDL_SetRenderTarget(renderer, fireScreen);
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
@@ -447,7 +439,6 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 			}
 
 		//draw the buffer and redraw the screen
-		SDL_SetRenderTarget(renderer, renderTarget);
 		if (screen != NULL)
 			SDL_RenderCopy(renderer, screen, NULL, NULL);
 		auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
@@ -455,7 +446,6 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 		SDL_DestroyTexture(texture);
 		SDL_RenderPresent(renderer);
 	}
-	SDL_DestroyTexture(fireScreen);
 	SDL_FreeSurface(firesurface);
 	if (screen != NULL)
 		SDL_RenderCopy(renderer, screen, NULL, NULL);
@@ -465,12 +455,9 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 /* https://demo-effects.sourceforge.net/ */
 void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int SCREEN_WIDTH, int SCREEN_HEIGHT, int FireType, Uint32 Alpha)
 {
-	auto fireScreen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH, SCREEN_HEIGHT);
-	SDL_SetTextureBlendMode(fireScreen, SDL_BLENDMODE_BLEND);
-	SDL_SetRenderTarget(renderer, fireScreen);
+	SDL_SetRenderTarget(renderer, renderTarget);
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
-
 
 	//Uint32 palette[256]; //this will contain the color palette
 	int size = 256;
@@ -491,9 +478,10 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 	SDL_Event event;
 	//start the loop (one frame per loop)
 	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+
 	while (true)
 	{
-		SDL_SetRenderTarget(renderer, fireScreen);
+		//SDL_SetRenderTarget(renderer, fireScreen);
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
@@ -556,7 +544,7 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 		}
 		
 		//draw the buffer and redraw the screen
-		SDL_SetRenderTarget(renderer, renderTarget);
+		//SDL_SetRenderTarget(renderer, renderTarget);
 		if (screen != NULL)
 			SDL_RenderCopy(renderer, screen, NULL, NULL);
 		auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
@@ -566,8 +554,133 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 	}
 	delete [] fire;
 	delete [] palette;
-	SDL_DestroyTexture(fireScreen);
 	SDL_FreeSurface(firesurface);
+	if (screen != NULL)
+		SDL_RenderCopy(renderer, screen, NULL, NULL);
+	SDL_SetRenderTarget(renderer, renderTarget);
+}
+
+void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int Width, int Height, int FireType, Uint32 Alpha)
+{
+	//auto screen = SDL_GetRenderTarget(renderer);
+	SDL_SetRenderTarget(renderer, renderTarget);
+
+	// Adapted from :
+	// https://lodev.org/cgtutor/fire.html
+	//auto test = HSLtoRGB(210, 0.79, 0.3);
+	int h = Height;
+	int w = Width;
+
+	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+	SDL_Surface** firesurfacet = new SDL_Surface * [6];
+	for (int i = 0; i < 6; ++i)
+		firesurfacet[i] = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+
+	/*
+	auto fire = std::make_unique <std::unique_ptr<int[]>[]>(h);
+	for (int i = 0; i < h; ++i) {
+		fire[i] = std::make_unique<int[]>(w);
+	}
+	*/
+
+	auto fire = std::make_unique < std::unique_ptr<std::unique_ptr<Uint8[]>[]>[]>(6);
+	for (int i = 0; i < 6; ++i)
+	{
+		fire[i] = std::make_unique<std::unique_ptr<Uint8[]>[]>(h);
+		for (int y = 0; y < h; ++y)
+		{
+			fire[i][y] = std::make_unique<Uint8[]>(w);
+		}
+	}
+
+	//make sure the fire buffer is zero in the beginning
+	for (int t = 0; t < 6; ++t)
+		for (int y = 0; y < h; y++)
+			for (int x = 0; x < w; x++)
+				fire[t][y][x] = 0;
+
+	int size = 256;
+	size = (size >> 1) << 1;
+	auto palette = std::make_unique<Uint32[]>(size);
+	GenerateFirePalette(palette.get(), size, Alpha);
+	for (int i = 0; i < size; ++i)
+		if (palette[i] == Alpha << 24) palette[i] = 0;
+
+	SDL_Event event;
+	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+
+	//start the loop (one frame per loop)
+	while (true)
+	{
+		//SDL_SetRenderTarget(renderer, fireScreen);
+		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
+			break;
+
+		//randomize the bottom row of the fire buffer
+		for (int t = 0; t < 6; ++t)
+		{
+			for (int x = 0; x < w; x++) fire[t][h - 1][x] = abs(32768 + rand()) % size;
+			//do the fire[t] calculations for every pixel, from top to bottom
+			if (FireType == 0)
+			{
+				for (int y = 0; y < h - 1; y++)
+				{
+					for (int x = 0; x < w; x++)
+					{
+						fire[t][y][x] =
+							((fire[t][(y + 1) % h][(x - 1 + w) % w]
+								+ fire[t][(y + 1) % h][(x) % w]
+								+ fire[t][(y + 1) % h][(x + 1) % w]
+								+ fire[t][(y + 2) % h][(x) % w])
+								* (size >> 3)) / (1 + (size >> 1));
+					}
+				}
+			}
+			else
+			{
+				for (int y = 0; y < h - 1; y++)
+				{
+					for (int x = 0; x < w; x++)
+					{
+						fire[t][y][x] =
+							((fire[t][(y + 1) % h][(x - 1 + w) % w]
+								+ fire[t][(y + 2) % h][(x) % w]
+								+ fire[t][(y + 1) % h][(x + 1) % w]
+								+ fire[t][(y + 3) % h][(x) % w])
+								* (size >> 2)) / (1 + size);
+					}
+				}
+			}
+		}
+		//draw the buffer and redraw the screen
+		if (screen != NULL)
+			SDL_RenderCopy(renderer, screen, NULL, NULL);
+		for (int t = 0; t < 6; ++t)
+		{
+			//set the drawing buffer to the fire buffer, using the palette colors
+			auto p = (Uint32*)firesurfacet[t]->pixels;
+			for (int y = 0; y < h; y++)
+				for (int x = 0; x < w; x++, ++p)
+				{
+					*p = palette[fire[t][y][x]];
+				}
+			auto texture = SDL_CreateTextureFromSurface(renderer, firesurfacet[t]);
+			SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+			SDL_Rect r;
+			r.x = tgtRect->x;
+			r.y = tgtRect->y + t * (tgtRect->h - 40);
+			r.w = tgtRect->w;
+			r.h = tgtRect->h;
+			SDL_RenderCopy(renderer, texture, NULL, &r);
+			SDL_DestroyTexture(texture);
+		}
+
+		SDL_RenderPresent(renderer);
+	}
+
+	SDL_FreeSurface(firesurface);
+	for (int i = 0; i < 6; ++i)
+		SDL_FreeSurface(firesurfacet[i]);
 	if (screen != NULL)
 		SDL_RenderCopy(renderer, screen, NULL, NULL);
 	SDL_SetRenderTarget(renderer, renderTarget);
