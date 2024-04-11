@@ -891,8 +891,15 @@ void GraphicBoard::RefreshExample()
 				// x, y algo, 6 ranks :
 				tgtRect.h = sizeShift.y;
 
-				SDL_FireOnTilesRect(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 0, 0xC0);
-
+				if (false)
+				{
+					SDL_FireOnTilesRect(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 0, 0xC0);
+				}
+				else
+				{
+					// pointer algo :
+					SDL_FireOnTextureBisRect(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 0, 0xC0);
+				}
 			}
 		}
 		else
@@ -902,7 +909,6 @@ void GraphicBoard::RefreshExample()
 		}
 		SDL_SetRenderTarget(renderer, renderTarget);
 		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
-
 	}
 	else
 	{
