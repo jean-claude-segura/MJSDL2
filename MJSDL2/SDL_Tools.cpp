@@ -478,39 +478,10 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 	//auto palette = std::make_unique<Uint32[]>(size);
 	//for (int i = 0; i < size; ++i) palette [ i ] = 0;
 	Uint32 * palette = new Uint32[size];
-	memset(palette, 0, size * sizeof(Uint32));
-	
-	for (int i = 0; i < 32; ++i)
-	{
-		/* black to blue, 32 values*/
-		palette[i] |= i << 1;
 
-		/* blue to red, 32 values*/
-		palette[i + 32] |= (i << 3) << 16;
-		palette[i + 32] |= (64 - (i << 1));
+	GenerateFireWithBluePalette(palette, size);
 
-		/*red to yellow, 32 values*/
-		palette[i + 64] |= 255 << 16;
-		palette[i + 64] |= (i << 3) << 8;
-
-		/* yellow to white, 162 */
-		palette[i + 96] |= 255 << 16;
-		palette[i + 96] |= 255 << 8;
-		palette[i + 96] |= (i << 2);
-		palette[i + 128] |= 255 << 16;
-		palette[i + 128] |= 255 << 8;
-		palette[i + 128] |= 64 + (i << 2);
-		palette[i + 160] |= 255 << 16;
-		palette[i + 160] |= 255 << 8;
-		palette[i + 160] |= 128 + (i << 2);
-		palette[i + 192] |= 255 << 16;
-		palette[i + 192] |= 255 << 8;
-		palette[i + 192] |= 192 + i;
-		palette[i + 224] |= 255 << 16;
-		palette[i + 224] |= 255 << 8;
-		palette[i + 224] |= 224 + i;
-	}
-	for (int i = 0; i < size; ++i) if(palette[i] != 0 ) palette[i] |= 0xFF000000;
+	//for (int i = 0; i < size; ++i) if(palette[i] != 0 ) palette[i] |= 0xFF000000;
 	//for (int i = 0; i < size; ++i) palette[i] |= 0xFF000000;
 
 	//make sure the fire buffer is zero in the beginning
@@ -527,11 +498,14 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 			break;
 
 		int j = SCREEN_WIDTH * (SCREEN_HEIGHT - 1);
-		for (int i = 0; i < SCREEN_WIDTH - 1; i++)
+		for (int i = 0; i < SCREEN_WIDTH - 1; ++i)
 		{
+			// 0 <= rand() <= RAND_MAX
+			// 0  / (RAND_MAX + 1.0) >= rand()  / (RAND_MAX + 1.0) >= RAND_MAX  / (RAND_MAX + 1.0)
+			// 0 >= rand()  / (RAND_MAX + 1.0) >= RAND_MAX  / (RAND_MAX + 1.0)
 			int random = 1 + (int)(16.0 * (rand() / (RAND_MAX + 1.0)));
-			if (random > 9) /* the lower the value, the intenser the fire, compensate a lower value with a higher decay value*/
-				fire[j + i] = 255; /*maximum heat*/
+			if (random > 9) // the lower the value, the intenser the fire, compensate a lower value with a higher decay value
+				fire[j + i] = 255; // maximum heat
 			else
 				fire[j + i] = 0;
 		}
@@ -539,18 +513,18 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 		/* move fire upwards, start at bottom*/
 		Uint8 temp;
 
-		for (int index = 0; index < 60; ++index)
+		for (int index = 0; index < 60; ++index) // Nombre de passes.
 		{
 			for (int i = 0; i < SCREEN_WIDTH - 1; ++i)
 			{
-				if (i == 0) /* at the left border*/
+				if (i == 0) // at the left border
 				{
 					temp = fire[j];
 					temp += fire[j + 1];
 					temp += fire[j - SCREEN_WIDTH];
 					temp /= 3;
 				}
-				else if (i == SCREEN_WIDTH - 1) /* at the right border*/
+				else if (i == SCREEN_WIDTH - 1) // at the right border
 				{
 					temp = fire[j + i];
 					temp += fire[j - SCREEN_WIDTH + i];
@@ -574,27 +548,11 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 		}
 
 		//set the drawing buffer to the fire buffer, using the palette colors
-		//auto p = (Uint32*)firesurface->pixels;
-		//auto p = (Uint8*)firesurface->pixels + (firesurface->pitch * SCREEN_HEIGHT);  /*start in the right bottom corner*/
-		/*auto p = (Uint32*)firesurface->pixels + (SCREEN_WIDTH * SCREEN_HEIGHT);  /*start in the right bottom corner*/
-		/*
-		for (int i = SCREEN_HEIGHT - 3; i >= 300; --i)
-		{
-			for (int j = SCREEN_WIDTH - 1; j >= 0; --j)
-			{
-				auto index = i * SCREEN_WIDTH + j;
-				auto pindex = fire[index];
-				*p = palette[pindex];
-				--p;
-			}
-		}*/
-
 		auto fireprime = fire;
 		auto p = (Uint32*)firesurface->pixels;
 		for ( ; p <= (Uint32*)firesurface->pixels + (SCREEN_WIDTH * SCREEN_HEIGHT); ++p, ++fireprime)
 		{
-			auto pindex = *fireprime;
-			*p = palette[pindex];
+			*p = palette[*fireprime];
 		}
 		
 		//draw the buffer and redraw the screen

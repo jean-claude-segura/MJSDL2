@@ -83,6 +83,51 @@ void GenerateFirePalette(uint32_t* palette, uint32_t size, uint32_t Alpha)
     }
 }
 
+void GenerateFireWithBluePalette(uint32_t* palette, uint32_t size, uint32_t Alpha)
+{
+    memset(palette, 0, size * sizeof(uint32_t));
+
+    for (int i = 0; i < 32; ++i)
+    {
+        /* black to blue, 32 values*/
+        palette[i] |= i << 1;
+
+        /* blue to red, 32 values*/
+        palette[i + 32] |= (i << 3) << 16;
+        palette[i + 32] |= (64 - (i << 1));
+
+        /*red to yellow, 32 values*/
+        palette[i + 64] |= 255 << 16;
+        palette[i + 64] |= (i << 3) << 8;
+
+        /* yellow to white, 162 */
+        palette[i + 96] |= 255 << 16;
+        palette[i + 96] |= 255 << 8;
+        palette[i + 96] |= (i << 2);
+        palette[i + 128] |= 255 << 16;
+        palette[i + 128] |= 255 << 8;
+        palette[i + 128] |= 64 + (i << 2);
+        palette[i + 160] |= 255 << 16;
+        palette[i + 160] |= 255 << 8;
+        palette[i + 160] |= 128 + (i << 2);
+        palette[i + 192] |= 255 << 16;
+        palette[i + 192] |= 255 << 8;
+        palette[i + 192] |= 192 + i;
+        palette[i + 224] |= 255 << 16;
+        palette[i + 224] |= 255 << 8;
+        palette[i + 224] |= 224 + i;
+    }
+
+    if (Alpha > 0)
+    {
+        for (int i = 0; i < size; ++i) palette[i] |= Alpha << 24;
+    }
+    else
+    {
+        for (int i = 0; i < size; ++i) if (palette[i] != 0) palette[i] |= 0xFF000000;
+    }
+}
+
 // https://colortutorial.design/grey.html
 void GenerateGreyPalette(uint32_t* palette, uint32_t size, uint32_t Alpha)
 {
