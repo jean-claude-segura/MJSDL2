@@ -114,7 +114,7 @@ inline SDL_Texture* SDL_CutTextureOnAlpha(SDL_Renderer* renderer, SDL_Texture* s
 	return tgt;
 }
 
-inline Uint32 SDL_TextureReadPixel(SDL_Renderer * renderer, SDL_Texture * texture, const SDL_Point p, int WIDTH)
+inline Uint32 SDL_TextureReadPixel(SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Point p, int WIDTH)
 {
 	auto renderTarget = SDL_GetRenderTarget(renderer);
 	SDL_Rect textRec;
@@ -140,23 +140,23 @@ inline SDL_Texture* SDL_GreyscaleTexture(SDL_Renderer* renderer, SDL_Texture* sr
 	SDL_SetRenderTarget(renderer, src);
 
 	Uint32 format;
-		int w, h;
-		SDL_QueryTexture(src, &format, NULL, &w, &h);
-		SDL_Surface* screenshot = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
-		SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_ARGB8888, screenshot->pixels, screenshot->pitch);
+	int w, h;
+	SDL_QueryTexture(src, &format, NULL, &w, &h);
+	SDL_Surface* screenshot = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+	SDL_RenderReadPixels(renderer, NULL, SDL_PIXELFORMAT_ARGB8888, screenshot->pixels, screenshot->pitch);
 
-		Uint32* buffer = (Uint32*)screenshot->pixels;
-		auto Amask = screenshot->format->Amask;
+	Uint32* buffer = (Uint32*)screenshot->pixels;
+	auto Amask = screenshot->format->Amask;
 
-		for (int pixel = 0; pixel < screenshot->h * screenshot->w; ++pixel, ++buffer)
-		{
-			auto colour = *buffer;
-			auto r = (screenshot->format->Rmask & *buffer) >> 16;
-			auto g = (screenshot->format->Gmask & *buffer) >> 8;
-			auto b = screenshot->format->Bmask & *buffer;
-			Uint8 avg = (55 * r + 183 * g + 18 * b) >> 8; // BT.709
-			*buffer = avg << 16 | avg << 8 | avg | Amask;
-		}
+	for (int pixel = 0; pixel < screenshot->h * screenshot->w; ++pixel, ++buffer)
+	{
+		auto colour = *buffer;
+		auto r = (screenshot->format->Rmask & *buffer) >> 16;
+		auto g = (screenshot->format->Gmask & *buffer) >> 8;
+		auto b = screenshot->format->Bmask & *buffer;
+		Uint8 avg = (55 * r + 183 * g + 18 * b) >> 8; // BT.709
+		*buffer = avg << 16 | avg << 8 | avg | Amask;
+	}
 
 	tgt = SDL_CreateTextureFromSurface(renderer, screenshot);
 	SDL_FreeSurface(screenshot);

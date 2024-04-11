@@ -258,94 +258,7 @@ void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, int Wi
 // Current renderer must be set to the texture target and renderTarget to the main renderer texture
 void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, int Width, int Height, int FireType, Uint32 Alpha)
 {
-	SDL_SetRenderTarget(renderer, renderTarget);
-
-	// Adapted from :
-	// https://lodev.org/cgtutor/fire.html
-	//auto test = HSLtoRGB(210, 0.79, 0.3);
-	int h = Height;
-	int w = Width;
-
-	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
-
-	auto fire = std::make_unique <std::unique_ptr<int[]>[]>(h);
-	for (int i = 0; i < h; ++i) {
-		fire[i] = std::make_unique<int[]>(w);
-	}
-	Uint32 palette[256]; //this will contain the color palette
-	GenerateFirePalette(palette, 256, Alpha);
-
-	//set up the screen
-
-	//declarations
-	//used during palette generation
-
-	//make sure the fire buffer is zero in the beginning
-	for (int y = 0; y < h; y++)
-		for (int x = 0; x < w; x++)
-			fire[y][x] = 0;
-
-	SDL_Event event;
-	//start the loop (one frame per loop)
-	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
-	while (true)
-	{
-		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
-			break;
-
-		//randomize the bottom row of the fire buffer
-		for (int x = 0; x < w; x++) fire[h - 1][x] = abs(32768 + rand()) % 256;
-		//do the fire calculations for every pixel, from top to bottom
-		if (FireType == 0)
-		{
-			for (int y = 0; y < h - 1; y++)
-			{
-				for (int x = 0; x < w; x++)
-				{
-					fire[y][x] =
-						((fire[(y + 1) % h][(x - 1 + w) % w]
-							+ fire[(y + 1) % h][(x) % w]
-							+ fire[(y + 1) % h][(x + 1) % w]
-							+ fire[(y + 2) % h][(x) % w])
-							* 32) / 129;
-				}
-			}
-		}
-		else
-		{
-			for (int y = 0; y < h - 1; y++)
-			{
-				for (int x = 0; x < w; x++)
-				{
-					fire[y][x] =
-						((fire[(y + 1) % h][(x - 1 + w) % w]
-							+ fire[(y + 2) % h][(x) % w]
-							+ fire[(y + 1) % h][(x + 1) % w]
-							+ fire[(y + 3) % h][(x) % w])
-							* 64) / 257;
-				}
-			}
-		}
-		//set the drawing buffer to the fire buffer, using the palette colors
-		auto p = (Uint32*)firesurface->pixels;
-		for (int y = 0; y < h; y++)
-			for (int x = 0; x < w; x++, ++p)
-			{
-				*p = palette[fire[y][x]];
-			}
-
-		//draw the buffer and redraw the screen
-		if(screen != NULL)
-			SDL_RenderCopy(renderer, screen, NULL, NULL);
-		auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
-		SDL_RenderCopy(renderer, texture, NULL, NULL);
-		SDL_DestroyTexture(texture);
-		SDL_RenderPresent(renderer);
-	}
-
-	if (screen != NULL)
-		SDL_RenderCopy(renderer, screen, NULL, NULL);
-	SDL_SetRenderTarget(renderer, renderTarget);
+	SDL_FireOnTextureRect(renderer, renderTarget, screen, NULL, Width, Height, FireType, Alpha);
 }
 
 void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect * tgtRect, int Width, int Height, int FireType, Uint32 Alpha)
@@ -360,38 +273,29 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
-	auto fire = std::make_unique <std::unique_ptr<int[]>[]>(h);
+	auto fire = new Uint8 *[h];
 	for (int i = 0; i < h; ++i) {
-		fire[i] = std::make_unique<int[]>(w);
+		fire[i] = new Uint8 [w];
 	}
-	//Uint32 palette[256]; //this will contain the color palette
-	int size = 256;
-	size = (size >> 1) << 1;
-	auto palette = std::make_unique<Uint32[]>(size);
-	GenerateFirePalette(palette.get(), size, Alpha);
-	for (int i = 0; i < size; ++i)
-		if (palette[i] == Alpha << 24) palette[i] = 0;
-
-
-#ifdef _DEBUG
-	/*Uint32 temp[256];
-	for (int i = 0; i < size; ++i)
-		temp[i] = palette[i];*/
-#endif
-
-	//set up the screen
-
-	//declarations
-	//used during palette generation
 
 	//make sure the fire buffer is zero in the beginning
 	for (int y = 0; y < h; y++)
-		for (int x = 0; x < w; x++)
-			fire[y][x] = 0;
+	{
+		Uint8* f = fire[y];
+		memset(f, 0, w * sizeof(Uint8));
+	}
+
+	int size = 256;
+	size = (size >> 1) << 1;
+	Uint32* palette = new Uint32[size];
+	GenerateFirePalette(palette, size, Alpha);
+	for (int i = 0; i < size; ++i)
+		if (palette[i] == Alpha << 24) palette[i] = 0;
 
 	SDL_Event event;
-	//start the loop (one frame per loop)
 	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+
+	//start the loop (one frame per loop)
 	while (true)
 	{
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
@@ -432,11 +336,17 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 		}
 		//set the drawing buffer to the fire buffer, using the palette colors
 		auto p = (Uint32*)firesurface->pixels;
+		Uint8* f = (Uint8*)fire;
+		/**/
 		for (int y = 0; y < h; y++)
-			for (int x = 0; x < w; x++, ++p)
+		{
+			Uint8* f = fire[y];
+			for (int x = 0; x < w; x++, ++p, ++f)
 			{
-				*p = palette[fire[y][x]];
+				*p = palette[*f];
 			}
+		}
+		/**/
 
 		//draw the buffer and redraw the screen
 		if (screen != NULL)
@@ -450,6 +360,12 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 	if (screen != NULL)
 		SDL_RenderCopy(renderer, screen, NULL, NULL);
 	SDL_SetRenderTarget(renderer, renderTarget);
+
+	for (int i = 0; i < h; ++i) {
+		delete [] fire[i];
+	}
+	delete [] fire;
+	delete[] palette;
 }
 
 /* https://demo-effects.sourceforge.net/ */
@@ -459,11 +375,9 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
-	//Uint32 palette[256]; //this will contain the color palette
 	int size = 256;
 	size = (size >> 1) << 1;
-	//auto palette = std::make_unique<Uint32[]>(size);
-	//for (int i = 0; i < size; ++i) palette [ i ] = 0;
+
 	Uint32 * palette = new Uint32[size];
 
 	GenerateFireWithBluePalette(palette, size);
@@ -481,7 +395,6 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 
 	while (true)
 	{
-		//SDL_SetRenderTarget(renderer, fireScreen);
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
@@ -544,7 +457,6 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 		}
 		
 		//draw the buffer and redraw the screen
-		//SDL_SetRenderTarget(renderer, renderTarget);
 		if (screen != NULL)
 			SDL_RenderCopy(renderer, screen, NULL, NULL);
 		auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
@@ -562,7 +474,6 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 
 void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int Width, int Height, int FireType, Uint32 Alpha)
 {
-	//auto screen = SDL_GetRenderTarget(renderer);
 	SDL_SetRenderTarget(renderer, renderTarget);
 
 	// Adapted from :
@@ -576,33 +487,28 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 	for (int i = 0; i < 6; ++i)
 		firesurfacet[i] = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
-	/*
-	auto fire = std::make_unique <std::unique_ptr<int[]>[]>(h);
-	for (int i = 0; i < h; ++i) {
-		fire[i] = std::make_unique<int[]>(w);
-	}
-	*/
-
-	auto fire = std::make_unique < std::unique_ptr<std::unique_ptr<Uint8[]>[]>[]>(6);
+	auto fire = new Uint8**[6];
 	for (int i = 0; i < 6; ++i)
 	{
-		fire[i] = std::make_unique<std::unique_ptr<Uint8[]>[]>(h);
+		fire[i] = new Uint8  *[h];
 		for (int y = 0; y < h; ++y)
 		{
-			fire[i][y] = std::make_unique<Uint8[]>(w);
+			fire[i][y] = new Uint8 [w];
 		}
 	}
 
 	//make sure the fire buffer is zero in the beginning
-	for (int t = 0; t < 6; ++t)
+	for (int i = 0; i < 6; ++i)
 		for (int y = 0; y < h; y++)
-			for (int x = 0; x < w; x++)
-				fire[t][y][x] = 0;
+		{
+			Uint8* f = fire[i][y];
+			memset(f, 0, w * sizeof(Uint8));
+		}
 
 	int size = 256;
 	size = (size >> 1) << 1;
-	auto palette = std::make_unique<Uint32[]>(size);
-	GenerateFirePalette(palette.get(), size, Alpha);
+	Uint32* palette = new Uint32[size];
+	GenerateFirePalette(palette, size, Alpha);
 	for (int i = 0; i < size; ++i)
 		if (palette[i] == Alpha << 24) palette[i] = 0;
 
@@ -612,7 +518,6 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 	//start the loop (one frame per loop)
 	while (true)
 	{
-		//SDL_SetRenderTarget(renderer, fireScreen);
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
@@ -684,4 +589,19 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 	if (screen != NULL)
 		SDL_RenderCopy(renderer, screen, NULL, NULL);
 	SDL_SetRenderTarget(renderer, renderTarget);
+	
+	for (int i = 0; i < 6; ++i)
+	{
+		for (int y = 0; y < h; ++y)
+		{
+			delete [] fire[i][y];
+		}
+	}
+	for (int i = 0; i < 6; ++i)
+	{
+		delete[] fire[i];
+	}
+	delete [] fire;
+
+	delete[] palette;
 }
