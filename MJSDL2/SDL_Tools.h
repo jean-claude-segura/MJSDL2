@@ -9,18 +9,18 @@
 void SDL_UpperBlitInverted(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);
 void SDL_UpperBlitXored(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);
 void SDL_UpperBlitNegate(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);
-void SDL_SetColourOnOpaque(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees, Uint32 ColourToFill);
+void SDL_SetColourOnOpaque(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees, const Uint32 ColourToFill);
 void SDL_SetGreyScale(SDL_Surface* src);
 void SDL_VerticalFlip(SDL_Surface* surface);
 void SDL_HorizontalFlip(SDL_Surface* surface);
 void SDL_UpperBlitCut(SDL_Surface* src, SDL_Surface* dest);
-void SDL_FireOnRenderer(SDL_Renderer* renderer, int Width, int Height, int FireType = 0);
-void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, int Width, int Height, int FireType = 0, Uint32 Alpha = 0x00);
-void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, int Width, int Height, int FireType = 0, Uint32 Alpha = 0x00);
-void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int Width, int Height, int FireType, Uint32 Alpha);
-void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int Width, int Height, int FireType, Uint32 Alpha);
-void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int Width, int Height, int FireType, Uint32 Alpha);
-void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int Width, int Height, int FireType, Uint32 Alpha);
+void SDL_FireOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int FireType = 0);
+void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int FireType = 0, const Uint32 Alpha = 0x00);
+void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int FireType = 0, const Uint32 Alpha = 0x00);
+void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int FireType, const Uint32 Alpha);
+void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int FireType, const Uint32 Alpha);
+void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int FireType, const Uint32 Alpha);
+void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int FireType, const Uint32 Alpha);
 
 /* *********************************************************************************** /
 /*                                       INLINE                                       */
@@ -115,7 +115,7 @@ inline SDL_Texture* SDL_CutTextureOnAlpha(SDL_Renderer* renderer, SDL_Texture* s
 	return tgt;
 }
 
-inline Uint32 SDL_TextureReadPixel(SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Point p, int WIDTH)
+inline Uint32 SDL_TextureReadPixel(SDL_Renderer* renderer, SDL_Texture* texture, const SDL_Point p, const int WIDTH)
 {
 	auto renderTarget = SDL_GetRenderTarget(renderer);
 	SDL_Rect textRec;

@@ -3,7 +3,7 @@
 /* ************************************************** /
 *  https://www.baeldung.com/cs/convert-color-hsl-rgb  /
 * ************************************************** */
-uint32_t HSLtoRGB(double H, double S, double L)
+uint32_t HSLtoRGB(const double H, const double S, const double L)
 {
     auto C = (1. - abs(2. * L - 1.)) * S;
     auto Hp = H / 60.;
@@ -50,12 +50,12 @@ uint32_t HSLtoRGB(double H, double S, double L)
     return (uint32_t((Rp+m) * 255.) << 16) | (uint32_t((Gp + m) * 255.) << 8) | uint32_t((Bp + m) * 255.);
 }
 
-uint32_t HSLtoARGB8888(double H, double S, double L, uint8_t Alpha)
+uint32_t HSLtoARGB8888(const double H, const double S, const double L, const uint8_t Alpha)
 {
     return (uint32_t(Alpha) << 24) | HSLtoRGB(H, S, L);
 }
 
-void GenerateFirePalette(uint32_t* palette, uint32_t size, uint32_t Alpha)
+void GenerateFirePalette(uint32_t* palette, const uint32_t size, const uint32_t Alpha)
 {
     for (int x = 0; x < size; ++x)
     {
@@ -83,7 +83,7 @@ void GenerateFirePalette(uint32_t* palette, uint32_t size, uint32_t Alpha)
     }
 }
 
-void GenerateFireWithBluePalette(uint32_t* palette, uint32_t size, uint32_t Alpha)
+void GenerateFireWithBluePalette(uint32_t* palette, const uint32_t size, const uint32_t Alpha)
 {
     memset(palette, 0, size * sizeof(uint32_t));
 
@@ -129,7 +129,7 @@ void GenerateFireWithBluePalette(uint32_t* palette, uint32_t size, uint32_t Alph
 }
 
 // https://colortutorial.design/grey.html
-void GenerateGreyPalette(uint32_t* palette, uint32_t size, uint32_t Alpha)
+void GenerateGreyPalette(uint32_t* palette, const uint32_t size, const uint32_t Alpha)
 {
     for (int x = 0; x < size; ++x)
     {

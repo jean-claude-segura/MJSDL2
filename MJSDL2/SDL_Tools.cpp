@@ -117,7 +117,7 @@ void SDL_UpperBlitNegate(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonn
 	SDL_FreeSurface(negate);
 }
 
-void SDL_SetColourOnOpaque(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees, Uint32 ColourToFill)
+void SDL_SetColourOnOpaque(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees, const Uint32 ColourToFill)
 {
 	SDL_Surface* coloured = SDL_CreateRGBSurface(0, src->w, src->h, src->format->BitsPerPixel, src->format->Rmask, src->format->Gmask, src->format->Bmask, src->format->Amask);
 	SDL_UpperBlit(src, 0, coloured, 0);
@@ -165,7 +165,7 @@ void SDL_SetGreyScale(SDL_Surface* src)
 
 	if (src->format->BitsPerPixel == 32)
 	{
-		for (int pixel = 0; pixel < src->h * src->w; ++pixel, ++bufferZ) //for (int pixel = 0; pixel < src->h * src->w; ++pixel, ++bufferZ)
+		for (int pixel = 0; pixel < src->h * src->w; ++pixel, ++bufferZ) //for (int pixel = 0; pixel < src->SCREEN_HEIGHT * src->SCREEN_WIDTH; ++pixel, ++bufferZ)
 		{
 			auto colour = *bufferZ;
 			auto r = (src->format->Rmask & *bufferZ) >> 16;
@@ -242,44 +242,42 @@ void SDL_UpperBlitCut(SDL_Surface* src, SDL_Surface* dest)
 	}
 }
 
-void SDL_FireOnRenderer(SDL_Renderer * renderer, int Width, int Height, int FireType)
+void SDL_FireOnRenderer(SDL_Renderer * renderer, const int Width, const int Height, const int FireType)
 {
 	auto renderTarget = SDL_GetRenderTarget(renderer);
 	SDL_FireOnTexture(renderer, renderTarget, (SDL_Texture * )NULL, Width, Height, FireType);
 }
 
 // Current renderer must be set to the texture target and renderTarget to the main renderer texture
-void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, int Width, int Height, int FireType, Uint32 Alpha)
+void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int FireType, const Uint32 Alpha)
 {
 	auto screen = SDL_GetRenderTarget(renderer);
 	SDL_FireOnTexture(renderer, renderTarget, screen, Width, Height, FireType, Alpha);
 }
 
 // Current renderer must be set to the texture target and renderTarget to the main renderer texture
-void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, int Width, int Height, int FireType, Uint32 Alpha)
+void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int FireType, const Uint32 Alpha)
 {
 	SDL_FireOnTextureRect(renderer, renderTarget, screen, NULL, Width, Height, FireType, Alpha);
 }
 
-void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect * tgtRect, int Width, int Height, int FireType, Uint32 Alpha)
+// Adapted from :
+// https://lodev.org/cgtutor/fire.html
+void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect * tgtRect, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int FireType, const Uint32 Alpha)
 {
 	SDL_SetRenderTarget(renderer, renderTarget);
 
-	// Adapted from :
-	// https://lodev.org/cgtutor/fire.html
 	//auto test = HSLtoRGB(210, 0.79, 0.3);
-	int h = Height;
-	int w = Width;
 
-	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
-	auto fire = new Uint8 * [h];
-	for (int i = 0; i < h; ++i)
+	auto fire = new Uint8 * [SCREEN_HEIGHT];
+	for (int i = 0; i < SCREEN_HEIGHT; ++i)
 	{
-		fire[i] = new Uint8[w];
+		fire[i] = new Uint8[SCREEN_WIDTH];
 		//make sure the fire buffer is zero in the beginning
 		Uint8* f = fire[i];
-		memset(f, 0, w * sizeof(Uint8));
+		memset(f, 0, SCREEN_WIDTH * sizeof(Uint8));
 	}
 
 	int size = 256;
@@ -306,20 +304,20 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 		* |________x,_y|
 		*/
 		//randomize the bottom row of the fire buffer
-		for (int x = 0; x < w; ++x) fire[h - 1][x] = abs(32768 + rand()) % size;
+		for (int x = 0; x < SCREEN_WIDTH; ++x) fire[SCREEN_HEIGHT - 1][x] = abs(32768 + rand()) % size;
 		//do the fire calculations for every pixel, from top to bottom
 		if (FireType == 0)
 		{
-			for (int y = 0; y < h - 1; ++y)
+			for (int y = 0; y < SCREEN_HEIGHT - 1; ++y)
 			{
-				for (int x = 0; x < w; ++x)
+				for (int x = 0; x < SCREEN_WIDTH; ++x)
 				{
 					fire[y][x] =
 						(
 							(
-								fire[y + 1][(x - 1 + w) % w] +
-								fire[y + 1][(x + 1) % w] +
-								fire[(y + 2) % h][x] +
+								fire[y + 1][(x - 1 + SCREEN_WIDTH) % SCREEN_WIDTH] +
+								fire[y + 1][(x + 1) % SCREEN_WIDTH] +
+								fire[(y + 2) % SCREEN_HEIGHT][x] +
 								fire[y + 1][x]
 							)
 							* (size >> 3)) / (1 + ( size >> 1)
@@ -329,17 +327,17 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 		}
 		else
 		{
-			for (int y = 0; y < h - 1; ++y)
+			for (int y = 0; y < SCREEN_HEIGHT - 1; ++y)
 			{
-				for (int x = 0; x < w; ++x)
+				for (int x = 0; x < SCREEN_WIDTH; ++x)
 				{
 					fire[y][x] =
 						(
 							(
-								fire[y + 1][(x - 1 + w) % w] +
-								fire[y + 1][(x + 1) % w] +
-								fire[(y + 2) % h][x] +
-								fire[(y + 3) % h][x]
+								fire[y + 1][(x - 1 + SCREEN_WIDTH) % SCREEN_WIDTH] +
+								fire[y + 1][(x + 1) % SCREEN_WIDTH] +
+								fire[(y + 2) % SCREEN_HEIGHT][x] +
+								fire[(y + 3) % SCREEN_HEIGHT][x]
 							)
 							* (size >> 2)
 						)
@@ -349,16 +347,14 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 		}
 		//set the drawing buffer to the fire buffer, using the palette colors
 		auto p = (Uint32*)firesurface->pixels;
-		/**/
-		for (int y = 0; y < h; ++y)
+		for (int y = 0; y < SCREEN_HEIGHT; ++y)
 		{
 			Uint8* f = fire[y];
-			for (int x = 0; x < w; ++x, ++p, ++f)
+			for (int x = 0; x < SCREEN_WIDTH; ++x, ++p, ++f)
 			{
 				*p = palette[*f];
 			}
 		}
-		/**/
 
 		//draw the buffer and redraw the screen
 		if (screen != NULL)
@@ -373,35 +369,26 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 		SDL_RenderCopy(renderer, screen, NULL, NULL);
 	SDL_SetRenderTarget(renderer, renderTarget);
 
-	for (int i = 0; i < h; ++i) {
+	for (int i = 0; i < SCREEN_HEIGHT; ++i) {
 		delete [] fire[i];
 	}
 	delete [] fire;
 	delete[] palette;
 }
 
-void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int Width, int Height, int FireType, Uint32 Alpha)
+// Adapted from :
+// https://lodev.org/cgtutor/fire.html
+/* https://demo-effects.sourceforge.net/ */
+void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int FireType, const Uint32 Alpha)
 {
 	SDL_SetRenderTarget(renderer, renderTarget);
 
-	// Adapted from :
-	// https://lodev.org/cgtutor/fire.html
 	//auto test = HSLtoRGB(210, 0.79, 0.3);
-	int h = Height;
-	int w = Width;
 
-	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
-	auto fire = new Uint8[h * w];
-	memset(fire, 0, w * h * sizeof(Uint8));
-	/*auto fire = new Uint8 * [h];
-	for (int i = 0; i < h; ++i)
-	{
-		fire[i] = new Uint8[w];
-		//make sure the fire buffer is zero in the beginning
-		Uint8* f = fire[i];
-		memset(f, 0, w * sizeof(Uint8));
-	}*/
+	auto fire = new Uint8[SCREEN_HEIGHT * SCREEN_WIDTH];
+	memset(fire, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
 
 	int size = 256;
 	size = (size >> 1) << 1;
@@ -419,7 +406,6 @@ void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarg
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
-		int FSIZE = h * w;
 		/*
 		*  ____________
 		* |0,0.........|
@@ -432,20 +418,21 @@ void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarg
 		default:
 		case 0:
 		{
+			int FSIZE = SCREEN_HEIGHT * SCREEN_WIDTH;
 			//randomize the bottom row of the fire buffer
-			for (int x = 0; x < w; ++x) fire[FSIZE - w + x] = abs(32768 + rand()) % size;
+			for (int x = 0; x < SCREEN_WIDTH; ++x) fire[FSIZE - SCREEN_WIDTH + x] = abs(32768 + rand()) % size;
 			//do the fire calculations for every pixel, from top to bottom
-			for (int y = 0; y < FSIZE - w; y += w)
+			for (int y = 0; y < FSIZE - SCREEN_WIDTH; y += SCREEN_WIDTH)
 			{
-				for (int x = 0; x < w; ++x)
+				for (int x = 0; x < SCREEN_WIDTH; ++x)
 				{
 					fire[y + x] =
 						(
 							(
-								fire[y + w + ((x - 1 + w) % w)] +	// fire[y + 1][(x - 1 + w) % w] +
-								fire[y + w + ((x + 1) % w)] +		// fire[y + 1][(x + 1) % w] +
-								fire[((y + 2 * w) % FSIZE) + x] +	// fire[(y + 2) % h][x] +
-								fire[y + w + x]						// fire[y + 1][x] +
+								fire[y + SCREEN_WIDTH + ((x - 1 + SCREEN_WIDTH) % SCREEN_WIDTH)] +	// fire[y + 1][(x - 1 + SCREEN_WIDTH) % SCREEN_WIDTH] +
+								fire[y + SCREEN_WIDTH + ((x + 1) % SCREEN_WIDTH)] +					// fire[y + 1][(x + 1) % SCREEN_WIDTH] +
+								fire[((y + 2 * SCREEN_WIDTH) % FSIZE) + x] +						// fire[(y + 2) % SCREEN_HEIGHT][x] +
+								fire[y + SCREEN_WIDTH + x]											// fire[y + 1][x] +
 								)
 							* (size >> 3)) / (1 + (size >> 1)
 								);
@@ -455,20 +442,21 @@ void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarg
 		break;
 		case 1:
 		{
+			int FSIZE = SCREEN_HEIGHT * SCREEN_WIDTH;
 			//randomize the bottom row of the fire buffer
-			for (int x = 0; x < w; ++x) fire[FSIZE - w + x] = abs(32768 + rand()) % size;
+			for (int x = 0; x < SCREEN_WIDTH; ++x) fire[FSIZE - SCREEN_WIDTH + x] = abs(32768 + rand()) % size;
 			//do the fire calculations for every pixel, from top to bottom
-			for (int y = 0; y < FSIZE - w; y += w)
+			for (int y = 0; y < FSIZE - SCREEN_WIDTH; y += SCREEN_WIDTH)
 			{
-				for (int x = 0; x < w; ++x)
+				for (int x = 0; x < SCREEN_WIDTH; ++x)
 				{
 					fire[y + x] =
 						(
 							(
-								fire[y + w + ((x - 1 + w) % w)] +	// fire[y + 1][(x - 1 + w) % w] +
-								fire[y + w + ((x + 1) % w)] +		// fire[y + 1][(x + 1) % w] +
-								fire[((y + 2 * w) % FSIZE) + x] +	// fire[(y + 2) % h][x] +
-								fire[((y + 3 * w) % FSIZE) + x]		// fire[(y + 3) % h][x]
+								fire[y + SCREEN_WIDTH + ((x - 1 + SCREEN_WIDTH) % SCREEN_WIDTH)] +	// fire[y + 1][(x - 1 + SCREEN_WIDTH) % SCREEN_WIDTH] +
+								fire[y + SCREEN_WIDTH + ((x + 1) % SCREEN_WIDTH)] +					// fire[y + 1][(x + 1) % SCREEN_WIDTH] +
+								fire[((y + 2 * SCREEN_WIDTH) % FSIZE) + x] +						// fire[(y + 2) % SCREEN_HEIGHT][x] +
+								fire[((y + 3 * SCREEN_WIDTH) % FSIZE) + x]							// fire[(y + 3) % SCREEN_HEIGHT][x]
 								)
 							* (size >> 2)
 							)
@@ -479,8 +467,8 @@ void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarg
 		break;
 		case 2:
 		{
-			int j = w * (h - 1);
-			for (int i = 0; i < w - 1; ++i)
+			int j = SCREEN_WIDTH * (SCREEN_HEIGHT - 1);
+			for (int i = 0; i < SCREEN_WIDTH - 1; ++i)
 			{
 				// 0 <= rand() <= RAND_MAX
 				// 0  / (RAND_MAX + 1.0) >= rand()  / (RAND_MAX + 1.0) >= RAND_MAX  / (RAND_MAX + 1.0)
@@ -497,7 +485,7 @@ void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarg
 
 			for (int index = 0; index < 60; ++index) // Nombre de passes. Max : SCREEN_HEIGHT - 1
 			{
-				for (int i = 0; i < w - 1; ++i)
+				for (int i = 0; i < SCREEN_WIDTH - 1; ++i)
 				{
 					/*if (i == 0) // at the left border
 					{
@@ -518,15 +506,15 @@ void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarg
 						temp = fire[j + i];
 						temp += fire[j + i + 1];
 						temp += fire[j + i - 1];
-						temp += fire[j - w + i];
+						temp += fire[j - SCREEN_WIDTH + i];
 						temp >>= 2;
 					}
 					if (temp > 1)
 						temp -= 1; /* decay */
 
-					fire[j - w + i] = temp;
+					fire[j - SCREEN_WIDTH + i] = temp;
 				}
-				j -= w;
+				j -= SCREEN_WIDTH;
 			}
 		}
 		break;
@@ -535,16 +523,13 @@ void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarg
 		//set the drawing buffer to the fire buffer, using the palette colors
 		auto p = (Uint32*)firesurface->pixels;
 		Uint8* f = (Uint8*)fire;
-		/**/
-		for (int y = 0; y < h; ++y)
+		for (int y = 0; y < SCREEN_HEIGHT; ++y)
 		{
-			//Uint8* f = fire[y];
-			for (int x = 0; x < w; ++x, ++p, ++f)
+			for (int x = 0; x < SCREEN_WIDTH; ++x, ++p, ++f)
 			{
 				*p = palette[*f];
 			}
 		}
-		/**/
 
 		//draw the buffer and redraw the screen
 		if (screen != NULL)
@@ -559,15 +544,13 @@ void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarg
 		SDL_RenderCopy(renderer, screen, NULL, NULL);
 	SDL_SetRenderTarget(renderer, renderTarget);
 
-	/*for (int i = 0; i < h; ++i) {
-		delete [] fire[i];
-	}*/
 	delete[] fire;
 	delete[] palette;
 }
 
+// Adapted from :
 /* https://demo-effects.sourceforge.net/ */
-void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int SCREEN_WIDTH, int SCREEN_HEIGHT, int FireType, Uint32 Alpha)
+void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int FireType, const Uint32 Alpha)
 {
 	SDL_SetRenderTarget(renderer, renderTarget);
 
@@ -687,38 +670,28 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 	SDL_SetRenderTarget(renderer, renderTarget);
 }
 
-void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int Width, int Height, int FireType, Uint32 Alpha)
+// Adapted from :
+// https://lodev.org/cgtutor/fire.html
+/* https://demo-effects.sourceforge.net/ */
+void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int FireType, const Uint32 Alpha)
 {
 	SDL_SetRenderTarget(renderer, renderTarget);
 
-	// Adapted from :
-	// https://lodev.org/cgtutor/fire.html
 	//auto test = HSLtoRGB(210, 0.79, 0.3);
-	int h = Height;
-	int w = Width;
 
-	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 	SDL_Surface** firesurfacet = new SDL_Surface * [6];
 	for (int i = 0; i < 6; ++i)
-		firesurfacet[i] = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+		firesurfacet[i] = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
-	auto fire = new Uint8**[6];
+	auto firefox = new Uint8 * [6];
 	for (int i = 0; i < 6; ++i)
 	{
-		fire[i] = new Uint8  *[h];
-		for (int y = 0; y < h; ++y)
-		{
-			fire[i][y] = new Uint8 [w];
-		}
+		firefox[i] = new Uint8[SCREEN_WIDTH * SCREEN_HEIGHT];
+		//make sure the fire buffer is zero in the beginning
+		Uint8* f = firefox[i];
+		memset(f, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
 	}
-
-	//make sure the fire buffer is zero in the beginning
-	for (int i = 0; i < 6; ++i)
-		for (int y = 0; y < h; ++y)
-		{
-			Uint8* f = fire[i][y];
-			memset(f, 0, w * sizeof(Uint8));
-		}
 
 	int size = 256;
 	size = (size >> 1) << 1;
@@ -736,7 +709,6 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
-
 		/*
 		*  ____________
 		* |0,0.........|
@@ -747,41 +719,119 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 		//randomize the bottom row of the fire buffer
 		for (int t = 0; t < 6; ++t)
 		{
-			for (int x = 0; x < w; ++x) fire[t][h - 1][x] = abs(32768 + rand()) % size;
-			//do the fire[t] calculations for every pixel, from top to bottom
-			if (FireType == 0)
+			auto fire = firefox[t];
+			/*
+			*  ____________
+			* |0,0.........|
+			* |............|
+			* |............|
+			* |________x,_y|
+			*/
+			switch (FireType)
 			{
-				for (int y = 0; y < h - 1; ++y)
+			default:
+			case 0:
+			{
+				int FSIZE = SCREEN_HEIGHT * SCREEN_WIDTH;
+				//randomize the bottom row of the fire buffer
+				for (int x = 0; x < SCREEN_WIDTH; ++x) fire[FSIZE - SCREEN_WIDTH + x] = abs(32768 + rand()) % size;
+				//do the fire calculations for every pixel, from top to bottom
+				for (int y = 0; y < FSIZE - SCREEN_WIDTH; y += SCREEN_WIDTH)
 				{
-					for (int x = 0; x < w; ++x)
+					for (int x = 0; x < SCREEN_WIDTH; ++x)
 					{
-						fire[t][y][x] =
-							((
-								fire[t][y + 1][(x - 1 + w) % w]
-								+ fire[t][y + 1][(x + 1) % w]
-								+ fire[t][(y + 2) % h][x]
-								+ fire[t][y + 1][x]
-								)
-								* (size >> 3)) / (1 + (size >> 1));
+						fire[y + x] =
+							(
+								(
+									fire[y + SCREEN_WIDTH + ((x - 1 + SCREEN_WIDTH) % SCREEN_WIDTH)] +	// fire[y + 1][(x - 1 + SCREEN_WIDTH) % SCREEN_WIDTH] +
+									fire[y + SCREEN_WIDTH + ((x + 1) % SCREEN_WIDTH)] +					// fire[y + 1][(x + 1) % SCREEN_WIDTH] +
+									fire[((y + 2 * SCREEN_WIDTH) % FSIZE) + x] +						// fire[(y + 2) % SCREEN_HEIGHT][x] +
+									fire[y + SCREEN_WIDTH + x]											// fire[y + 1][x] +
+									)
+								* (size >> 3)) / (1 + (size >> 1)
+									);
 					}
 				}
 			}
-			else
+			break;
+			case 1:
 			{
-				for (int y = 0; y < h - 1; ++y)
+				int FSIZE = SCREEN_HEIGHT * SCREEN_WIDTH;
+				//randomize the bottom row of the fire buffer
+				for (int x = 0; x < SCREEN_WIDTH; ++x) fire[FSIZE - SCREEN_WIDTH + x] = abs(32768 + rand()) % size;
+				//do the fire calculations for every pixel, from top to bottom
+				for (int y = 0; y < FSIZE - SCREEN_WIDTH; y += SCREEN_WIDTH)
 				{
-					for (int x = 0; x < w; ++x)
+					for (int x = 0; x < SCREEN_WIDTH; ++x)
 					{
-						fire[t][y][x] =
-							((
-								fire[t][y + 1][(x - 1 + w) % w]
-								+ fire[t][y + 1][(x + 1) % w]
-								+ fire[t][(y + 2) % h][x]
-								+ fire[t][(y + 3) % h][x]
+						fire[y + x] =
+							(
+								(
+									fire[y + SCREEN_WIDTH + ((x - 1 + SCREEN_WIDTH) % SCREEN_WIDTH)] +	// fire[y + 1][(x - 1 + SCREEN_WIDTH) % SCREEN_WIDTH] +
+									fire[y + SCREEN_WIDTH + ((x + 1) % SCREEN_WIDTH)] +					// fire[y + 1][(x + 1) % SCREEN_WIDTH] +
+									fire[((y + 2 * SCREEN_WIDTH) % FSIZE) + x] +						// fire[(y + 2) % SCREEN_HEIGHT][x] +
+									fire[((y + 3 * SCREEN_WIDTH) % FSIZE) + x]							// fire[(y + 3) % SCREEN_HEIGHT][x]
+									)
+								* (size >> 2)
 								)
-								* (size >> 2)) / (1 + size);
+							/ (1 + size);
 					}
 				}
+			}
+			break;
+			case 2:
+			{
+				int j = SCREEN_WIDTH * (SCREEN_HEIGHT - 1);
+				for (int i = 0; i < SCREEN_WIDTH - 1; ++i)
+				{
+					// 0 <= rand() <= RAND_MAX
+					// 0  / (RAND_MAX + 1.0) >= rand()  / (RAND_MAX + 1.0) >= RAND_MAX  / (RAND_MAX + 1.0)
+					// 0 >= rand()  / (RAND_MAX + 1.0) >= RAND_MAX  / (RAND_MAX + 1.0)
+					int random = 1 + (int)(16.0 * (rand() / (RAND_MAX + 1.0)));
+					if (random > 9) // the lower the value, the intenser the fire, compensate a lower value with a higher decay value
+						fire[j + i] = 255; // maximum heat
+					else
+						fire[j + i] = 0;
+				}
+
+				/* move fire upwards, start at bottom*/
+				Uint16 temp;
+
+				for (int index = 0; index < 60; ++index) // Nombre de passes. Max : SCREEN_HEIGHT - 1
+				{
+					for (int i = 0; i < SCREEN_WIDTH - 1; ++i)
+					{
+						/*if (i == 0) // at the left border
+						{
+							temp = fire[j];
+							temp += fire[j + 1];
+							temp += fire[j - SCREEN_WIDTH];
+							temp /= 3;
+						}
+						else if (i == SCREEN_WIDTH - 1) // at the right border
+						{
+							temp = fire[j + i];
+							temp += fire[j - SCREEN_WIDTH + i];
+							temp += fire[j + i - 1];
+							temp /= 3;
+						}
+						else*/
+						{
+							temp = fire[j + i];
+							temp += fire[j + i + 1];
+							temp += fire[j + i - 1];
+							temp += fire[j - SCREEN_WIDTH + i];
+							temp >>= 2;
+						}
+						if (temp > 1)
+							temp -= 1; /* decay */
+
+						fire[j - SCREEN_WIDTH + i] = temp;
+					}
+					j -= SCREEN_WIDTH;
+				}
+			}
+			break;
 			}
 		}
 		//draw the buffer and redraw the screen
@@ -791,11 +841,14 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 		{
 			//set the drawing buffer to the fire buffer, using the palette colors
 			auto p = (Uint32*)firesurfacet[t]->pixels;
-			for (int y = 0; y < h; ++y)
-				for (int x = 0; x < w; ++x, ++p)
+			auto f = firefox[t];
+			for (int y = 0; y < SCREEN_HEIGHT; ++y)
+			{
+				for (int x = 0; x < SCREEN_WIDTH; ++x, ++p, ++f)
 				{
-					*p = palette[fire[t][y][x]];
+					*p = palette[*f];
 				}
+			}
 			auto texture = SDL_CreateTextureFromSurface(renderer, firesurfacet[t]);
 			SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
 			SDL_Rect r;
@@ -819,16 +872,9 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 	
 	for (int i = 0; i < 6; ++i)
 	{
-		for (int y = 0; y < h; ++y)
-		{
-			delete [] fire[i][y];
-		}
+		delete[] firefox[i];
 	}
-	for (int i = 0; i < 6; ++i)
-	{
-		delete[] fire[i];
-	}
-	delete [] fire;
+	delete [] firefox;
 
 	delete[] palette;
 }
