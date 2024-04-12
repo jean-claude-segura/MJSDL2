@@ -566,10 +566,10 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 					for (int x = 0; x < w; ++x)
 					{
 						fire[t][y][x] =
-							((fire[t][(y + 1) % h][(x - 1 + w) % w]
-								+ fire[t][(y + 1) % h][(x) % w]
-								+ fire[t][(y + 1) % h][(x + 1) % w]
-								+ fire[t][(y + 2) % h][(x) % w])
+							((fire[t][y + 1][(x - 1 + w) % w]
+								+ fire[t][y + 1][x]
+								+ fire[t][y + 1][(x + 1) % w]
+								+ fire[t][(y + 2) % h][x])
 								* (size >> 3)) / (1 + (size >> 1));
 					}
 				}
@@ -581,10 +581,10 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 					for (int x = 0; x < w; ++x)
 					{
 						fire[t][y][x] =
-							((fire[t][(y + 1) % h][(x - 1 + w) % w]
-								+ fire[t][(y + 2) % h][(x) % w]
-								+ fire[t][(y + 1) % h][(x + 1) % w]
-								+ fire[t][(y + 3) % h][(x) % w])
+							((fire[t][y + 1][(x - 1 + w) % w]
+								+ fire[t][(y + 2) % h][x]
+								+ fire[t][y + 1][(x + 1) % w]
+								+ fire[t][(y + 3) % h][x])
 								* (size >> 2)) / (1 + size);
 					}
 				}
