@@ -317,9 +317,9 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 					fire[y][x] =
 						(
 							(
-								fire[(y + 1) % h][(x - 1 + w) % w] +
-								fire[(y + 1) % h][x] +
-								fire[(y + 1) % h][(x + 1) % w] +
+								fire[y + 1][(x - 1 + w) % w] +
+								fire[y + 1][x] +
+								fire[y + 1][(x + 1) % w] +
 								fire[(y + 2) % h][x]
 							)
 							* (size >> 3)) / (1 + ( size >> 1)
@@ -335,10 +335,10 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 				{
 					fire[y][x] =
 						(
-							(fire[(y + 1) % h][(x - 1 + w) % w]
-							+ fire[(y + 2) % h][(x) % w]
-							+ fire[(y + 1) % h][(x + 1) % w]
-							+ fire[(y + 3) % h][(x) % w])
+							(fire[y + 1][(x - 1 + w) % w]
+							+ fire[(y + 2) % h][x]
+							+ fire[y + 1][(x + 1) % w]
+							+ fire[(y + 3) % h][x])
 							* (size >> 2)) / (1 + size);
 				}
 			}
