@@ -273,15 +273,12 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
-	auto fire = new Uint8 *[h];
-	for (int i = 0; i < h; ++i) {
-		fire[i] = new Uint8 [w];
-	}
-
-	//make sure the fire buffer is zero in the beginning
-	for (int y = 0; y < h; ++y)
+	auto fire = new Uint8 * [h];
+	for (int i = 0; i < h; ++i)
 	{
-		Uint8* f = fire[y];
+		fire[i] = new Uint8[w];
+		//make sure the fire buffer is zero in the beginning
+		Uint8* f = fire[i];
 		memset(f, 0, w * sizeof(Uint8));
 	}
 
@@ -524,6 +521,14 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
+
+		/*
+		*  ____________
+		* |0,0.........|
+		* |............|
+		* |............|
+		* |________x,_y|
+		*/
 		//randomize the bottom row of the fire buffer
 		for (int t = 0; t < 6; ++t)
 		{
