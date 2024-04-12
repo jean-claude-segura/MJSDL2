@@ -298,6 +298,13 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
+		/*
+		*  ____________
+		* |0,0.........|
+		* |............|
+		* |............|
+		* |________x,_y|
+		*/
 		//randomize the bottom row of the fire buffer
 		for (int x = 0; x < w; ++x) fire[h - 1][x] = abs(32768 + rand()) % size;
 		//do the fire calculations for every pixel, from top to bottom
@@ -308,11 +315,15 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 				for (int x = 0; x < w; ++x)
 				{
 					fire[y][x] =
-						((fire[(y + 1) % h][(x - 1 + w) % w]
-							+ fire[(y + 1) % h][(x) % w]
-							+ fire[(y + 1) % h][(x + 1) % w]
-							+ fire[(y + 2) % h][(x) % w])
-							* (size >> 3)) / (1 + ( size >> 1) );
+						(
+							(
+								fire[(y + 1) % h][(x - 1 + w) % w] +
+								fire[(y + 1) % h][(x) % w] +
+								fire[(y + 1) % h][(x + 1) % w] +
+								fire[(y + 2) % h][(x) % w]
+							)
+							* (size >> 3)) / (1 + ( size >> 1)
+						);
 				}
 			}
 		}
@@ -323,7 +334,8 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 				for (int x = 0; x < w; ++x)
 				{
 					fire[y][x] =
-						((fire[(y + 1) % h][(x - 1 + w) % w]
+						(
+							(fire[(y + 1) % h][(x - 1 + w) % w]
 							+ fire[(y + 2) % h][(x) % w]
 							+ fire[(y + 1) % h][(x + 1) % w]
 							+ fire[(y + 3) % h][(x) % w])
@@ -398,6 +410,13 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
+		/*
+		*  ____________
+		* |0,0.........|
+		* |............|
+		* |............|
+		* |________x,_y|
+		*/
 		int j = SCREEN_WIDTH * (SCREEN_HEIGHT - 1);
 		for (int i = 0; i < SCREEN_WIDTH - 1; ++i)
 		{
@@ -411,6 +430,13 @@ void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget,
 				fire[j + i] = 0;
 		}
 
+		/*
+		*  ____________
+		* |0,0.........|
+		* |............|
+		* |............|
+		* |________x,_y|
+		*/
 		/* move fire upwards, start at bottom*/
 		Uint16 temp;
 
