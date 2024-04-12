@@ -874,16 +874,20 @@ void GraphicBoard::RefreshExample()
 			{
 				tgtRect.h = 5 * sizeShift.y + 54;
 
-				if (true)
+				if (false)
 				{
 					// pointer algo :
 					SDL_FireOnTextureBisRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xC0);
 					//SDL_FireOnTextureBisRect(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 0, 0xC0);
 				}
-				else
+				else if (false)
 				{
 					// x, y algo :
-					SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xC0);
+					SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 1, 0xC0);
+				}
+				else
+				{
+					SDL_FireOnTextureRectLinear(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xC0);
 				}
 			}
 			else

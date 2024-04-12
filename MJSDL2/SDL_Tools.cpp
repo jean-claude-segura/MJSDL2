@@ -318,9 +318,9 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 						(
 							(
 								fire[y + 1][(x - 1 + w) % w] +
-								fire[y + 1][x] +
 								fire[y + 1][(x + 1) % w] +
-								fire[(y + 2) % h][x]
+								fire[(y + 2) % h][x] +
+								fire[y + 1][x]
 							)
 							* (size >> 3)) / (1 + ( size >> 1)
 						);
@@ -335,11 +335,15 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 				{
 					fire[y][x] =
 						(
-							(fire[y + 1][(x - 1 + w) % w]
-							+ fire[(y + 2) % h][x]
-							+ fire[y + 1][(x + 1) % w]
-							+ fire[(y + 3) % h][x])
-							* (size >> 2)) / (1 + size);
+							(
+								fire[y + 1][(x - 1 + w) % w] +
+								fire[y + 1][(x + 1) % w] +
+								fire[(y + 2) % h][x] +
+								fire[(y + 3) % h][x]
+							)
+							* (size >> 2)
+						)
+						/ (1 + size);
 				}
 			}
 		}
@@ -373,6 +377,192 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 		delete [] fire[i];
 	}
 	delete [] fire;
+	delete[] palette;
+}
+
+void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, int Width, int Height, int FireType, Uint32 Alpha)
+{
+	SDL_SetRenderTarget(renderer, renderTarget);
+
+	// Adapted from :
+	// https://lodev.org/cgtutor/fire.html
+	//auto test = HSLtoRGB(210, 0.79, 0.3);
+	int h = Height;
+	int w = Width;
+
+	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, w, h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+
+	auto fire = new Uint8[h * w];
+	memset(fire, 0, w * h * sizeof(Uint8));
+	/*auto fire = new Uint8 * [h];
+	for (int i = 0; i < h; ++i)
+	{
+		fire[i] = new Uint8[w];
+		//make sure the fire buffer is zero in the beginning
+		Uint8* f = fire[i];
+		memset(f, 0, w * sizeof(Uint8));
+	}*/
+
+	int size = 256;
+	size = (size >> 1) << 1;
+	Uint32* palette = new Uint32[size];
+	GenerateFirePalette(palette, size, Alpha);
+	for (int i = 0; i < size; ++i)
+		if (palette[i] == Alpha << 24) palette[i] = 0;
+
+	SDL_Event event;
+	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+
+	//start the loop (one frame per loop)
+	while (true)
+	{
+		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
+			break;
+
+		int FSIZE = h * w;
+		/*
+		*  ____________
+		* |0,0.........|
+		* |............|
+		* |............|
+		* |________x,_y|
+		*/
+		switch (FireType)
+		{
+		default:
+		case 0:
+		{
+			//randomize the bottom row of the fire buffer
+			for (int x = 0; x < w; ++x) fire[FSIZE - w + x] = abs(32768 + rand()) % size;
+			//do the fire calculations for every pixel, from top to bottom
+			for (int y = 0; y < FSIZE - w; y += w)
+			{
+				for (int x = 0; x < w; ++x)
+				{
+					fire[y + x] =
+						(
+							(
+								fire[y + w + ((x - 1 + w) % w)] +	// fire[y + 1][(x - 1 + w) % w] +
+								fire[y + w + ((x + 1) % w)] +		// fire[y + 1][(x + 1) % w] +
+								fire[((y + 2 * w) % FSIZE) + x] +	// fire[(y + 2) % h][x] +
+								fire[y + w + x]						// fire[y + 1][x] +
+								)
+							* (size >> 3)) / (1 + (size >> 1)
+								);
+				}
+			}
+		}
+		break;
+		case 1:
+		{
+			//randomize the bottom row of the fire buffer
+			for (int x = 0; x < w; ++x) fire[FSIZE - w + x] = abs(32768 + rand()) % size;
+			//do the fire calculations for every pixel, from top to bottom
+			for (int y = 0; y < FSIZE - w; y += w)
+			{
+				for (int x = 0; x < w; ++x)
+				{
+					fire[y + x] =
+						(
+							(
+								fire[y + w + ((x - 1 + w) % w)] +	// fire[y + 1][(x - 1 + w) % w] +
+								fire[y + w + ((x + 1) % w)] +		// fire[y + 1][(x + 1) % w] +
+								fire[((y + 2 * w) % FSIZE) + x] +	// fire[(y + 2) % h][x] +
+								fire[((y + 3 * w) % FSIZE) + x]		// fire[(y + 3) % h][x]
+								)
+							* (size >> 2)
+							)
+						/ (1 + size);
+				}
+			}
+		}
+		break;
+		case 2:
+		{
+			int j = w * (h - 1);
+			for (int i = 0; i < w - 1; ++i)
+			{
+				// 0 <= rand() <= RAND_MAX
+				// 0  / (RAND_MAX + 1.0) >= rand()  / (RAND_MAX + 1.0) >= RAND_MAX  / (RAND_MAX + 1.0)
+				// 0 >= rand()  / (RAND_MAX + 1.0) >= RAND_MAX  / (RAND_MAX + 1.0)
+				int random = 1 + (int)(16.0 * (rand() / (RAND_MAX + 1.0)));
+				if (random > 9) // the lower the value, the intenser the fire, compensate a lower value with a higher decay value
+					fire[j + i] = 255; // maximum heat
+				else
+					fire[j + i] = 0;
+			}
+
+			/* move fire upwards, start at bottom*/
+			Uint16 temp;
+
+			for (int index = 0; index < 60; ++index) // Nombre de passes. Max : SCREEN_HEIGHT - 1
+			{
+				for (int i = 0; i < w - 1; ++i)
+				{
+					/*if (i == 0) // at the left border
+					{
+						temp = fire[j];
+						temp += fire[j + 1];
+						temp += fire[j - SCREEN_WIDTH];
+						temp /= 3;
+					}
+					else if (i == SCREEN_WIDTH - 1) // at the right border
+					{
+						temp = fire[j + i];
+						temp += fire[j - SCREEN_WIDTH + i];
+						temp += fire[j + i - 1];
+						temp /= 3;
+					}
+					else*/
+					{
+						temp = fire[j + i];
+						temp += fire[j + i + 1];
+						temp += fire[j + i - 1];
+						temp += fire[j - w + i];
+						temp >>= 2;
+					}
+					if (temp > 1)
+						temp -= 1; /* decay */
+
+					fire[j - w + i] = temp;
+				}
+				j -= w;
+			}
+		}
+		break;
+		}
+
+		//set the drawing buffer to the fire buffer, using the palette colors
+		auto p = (Uint32*)firesurface->pixels;
+		Uint8* f = (Uint8*)fire;
+		/**/
+		for (int y = 0; y < h; ++y)
+		{
+			//Uint8* f = fire[y];
+			for (int x = 0; x < w; ++x, ++p, ++f)
+			{
+				*p = palette[*f];
+			}
+		}
+		/**/
+
+		//draw the buffer and redraw the screen
+		if (screen != NULL)
+			SDL_RenderCopy(renderer, screen, NULL, NULL);
+		auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
+		SDL_RenderCopy(renderer, texture, NULL, tgtRect);
+		SDL_DestroyTexture(texture);
+		SDL_RenderPresent(renderer);
+	}
+	SDL_FreeSurface(firesurface);
+	if (screen != NULL)
+		SDL_RenderCopy(renderer, screen, NULL, NULL);
+	SDL_SetRenderTarget(renderer, renderTarget);
+
+	/*for (int i = 0; i < h; ++i) {
+		delete [] fire[i];
+	}*/
+	delete[] fire;
 	delete[] palette;
 }
 
@@ -566,10 +756,12 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 					for (int x = 0; x < w; ++x)
 					{
 						fire[t][y][x] =
-							((fire[t][y + 1][(x - 1 + w) % w]
-								+ fire[t][y + 1][x]
+							((
+								fire[t][y + 1][(x - 1 + w) % w]
 								+ fire[t][y + 1][(x + 1) % w]
-								+ fire[t][(y + 2) % h][x])
+								+ fire[t][(y + 2) % h][x]
+								+ fire[t][y + 1][x]
+								)
 								* (size >> 3)) / (1 + (size >> 1));
 					}
 				}
@@ -581,10 +773,12 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 					for (int x = 0; x < w; ++x)
 					{
 						fire[t][y][x] =
-							((fire[t][y + 1][(x - 1 + w) % w]
-								+ fire[t][(y + 2) % h][x]
+							((
+								fire[t][y + 1][(x - 1 + w) % w]
 								+ fire[t][y + 1][(x + 1) % w]
-								+ fire[t][(y + 3) % h][x])
+								+ fire[t][(y + 2) % h][x]
+								+ fire[t][(y + 3) % h][x]
+								)
 								* (size >> 2)) / (1 + size);
 					}
 				}
