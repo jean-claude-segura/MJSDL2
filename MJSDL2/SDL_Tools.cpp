@@ -878,3 +878,177 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 
 	delete[] palette;
 }
+
+void init_particle(PARTICLE* particle, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
+{
+	/* randomly init particles, generate them in the center of the screen */
+
+	particle->xpos = (SCREEN_WIDTH >> 1) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+	particle->ypos = (SCREEN_HEIGHT >> 1) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+	particle->xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
+	particle->ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	particle->colorindex = 255;
+	particle->dead = false;
+}
+
+void SDL_ExplosionOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int NUMBER_OF_PARTICLES)
+{
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+	SDL_ExplosionOnTexture(renderer, renderTarget, (SDL_Texture*)NULL, Width, Height, NUMBER_OF_PARTICLES);
+}
+
+// Current renderer must be set to the texture target and renderTarget to the main renderer texture
+void SDL_ExplosionOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+{
+	auto screen = SDL_GetRenderTarget(renderer);
+	SDL_ExplosionOnTexture(renderer, renderTarget, screen, Width, Height, NUMBER_OF_PARTICLES, Alpha);
+}
+
+// Current renderer must be set to the texture target and renderTarget to the main renderer texture
+void SDL_ExplosionOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+{
+	SDL_ExplosionOnTextureRect(renderer, renderTarget, screen, NULL, Width, Height, NUMBER_OF_PARTICLES, Alpha);
+}
+
+// Adapted from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
+void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+{
+	SDL_SetRenderTarget(renderer, renderTarget);
+	Uint32 buf, index, temp;
+	int i, j;
+	Uint8 * fire = new Uint8[SCREEN_WIDTH * SCREEN_HEIGHT];
+	memset(fire, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
+	PARTICLE * particles = new PARTICLE[NUMBER_OF_PARTICLES];
+	/*for (i = 0; i < NUMBER_OF_PARTICLES; i++)
+	{
+		init_particle(particles + i, SCREEN_WIDTH, SCREEN_HEIGHT);
+	}*/
+
+	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+
+	int size = 256;
+	size = (size >> 1) << 1;
+	Uint32* palette = new Uint32[size];
+	GenerateFireWithBluePalette(palette, size, Alpha);
+	for (int i = 0; i < size; ++i)
+		if (palette[i] == Alpha << 24) palette[i] = 0;
+
+	SDL_Event event;
+	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+
+	bool bAtLeastOneAlive = false;
+
+	//start the loop (one frame per loop)
+	while (true)
+	{
+		if (!bAtLeastOneAlive)
+		{
+			for (i = 0; i < NUMBER_OF_PARTICLES; ++i)
+			{
+				init_particle(particles + i, SCREEN_WIDTH, SCREEN_HEIGHT);
+			}
+		}
+
+		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
+			break;
+
+		/* move and draw particles into fire array */
+		bAtLeastOneAlive = false;
+		for (i = 0; i < NUMBER_OF_PARTICLES; ++i)
+		{
+			bAtLeastOneAlive |= !particles[i].dead;
+			if (!particles[i].dead)
+			{
+				particles[i].xpos += particles[i].xdir;
+				particles[i].ypos += particles[i].ydir;
+
+				/* is particle dead? */
+
+				if ((particles[i].ypos >= SCREEN_HEIGHT - 3) || particles[i].colorindex == 0 ||
+					particles[i].xpos <= 1 || particles[i].xpos >= SCREEN_WIDTH - 3)
+				{
+					particles[i].dead = true;
+					continue;
+				}
+
+				/* gravity takes over */
+				particles[i].ydir++;
+
+				/* particle cools off */
+				particles[i].colorindex--;
+
+				/* draw particle */
+				temp = particles[i].ypos * SCREEN_WIDTH + particles[i].xpos;
+
+				fire[temp] = particles[i].colorindex;
+				fire[temp - 1] = particles[i].colorindex;
+				fire[temp + SCREEN_WIDTH] = particles[i].colorindex;
+				fire[temp - SCREEN_WIDTH] = particles[i].colorindex;
+				fire[temp + 1] = particles[i].colorindex;
+			}
+		}
+
+		/* create fire effect */
+		for (i = 1; i < SCREEN_HEIGHT - 2; ++i)
+		{
+			index = (i - 1) * SCREEN_WIDTH;
+
+			for (j = 1; j < SCREEN_WIDTH - 2; ++j)
+			{
+				buf = index + j;
+
+				temp = fire[buf];
+				temp += fire[buf + 1];
+				temp += fire[buf - 1];
+				buf += SCREEN_WIDTH;
+				temp += fire[buf - 1];
+				temp += fire[buf + 1];
+				buf += SCREEN_WIDTH;
+				temp += fire[buf];
+				temp += fire[buf + 1];
+				temp += fire[buf - 1];
+
+				temp >>= 3;
+
+				if (temp > 4)
+				{
+					temp -= 4;
+				}
+				else
+				{
+					temp = 0;
+				}
+
+				fire[buf - SCREEN_WIDTH] = temp;
+			}
+		}
+
+		/* draw fire array to screen from bottom to top*/
+		auto p = (Uint32*)firesurface->pixels;
+		auto f = fire;
+		for (int y = 0; y < SCREEN_HEIGHT; ++y)
+		{
+			for (int x = 0; x < SCREEN_WIDTH; ++x, ++p, ++f)
+			{
+				*p = palette[*f];
+			}
+		}
+
+		//draw the buffer and redraw the screen
+		if (screen != NULL)
+			SDL_RenderCopy(renderer, screen, NULL, NULL);
+		auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
+		SDL_RenderCopy(renderer, texture, NULL, tgtRect);
+		SDL_DestroyTexture(texture);
+		SDL_RenderPresent(renderer);
+	}
+
+	SDL_FreeSurface(firesurface);
+	if (screen != NULL)
+		SDL_RenderCopy(renderer, screen, NULL, NULL);
+	SDL_SetRenderTarget(renderer, renderTarget);
+
+	delete[] particles;
+	delete[] fire;
+	delete[] palette;
+}

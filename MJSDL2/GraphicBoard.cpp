@@ -858,7 +858,7 @@ void GraphicBoard::RefreshExample()
 	}
 	if (true)
 	{
-		if (true)
+		if (false)
 		{
 			// Rect parameter
 			SDL_Point sizeShift;
@@ -870,7 +870,7 @@ void GraphicBoard::RefreshExample()
 			tgtRect.x = tWidth;
 			tgtRect.y = tHeight;
 			tgtRect.w = 6 * sizeShift.x - 30;
-			if (true)
+			if (false)
 			{
 				tgtRect.h = 5 * sizeShift.y + 54;
 
@@ -895,9 +895,9 @@ void GraphicBoard::RefreshExample()
 				// x, y algo, 6 ranks :
 				tgtRect.h = sizeShift.y;
 
-				if (false)
+				if (true)
 				{
-					SDL_FireOnTilesRect(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 0, 0xC0);
+					SDL_FireOnTilesRect(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 2, 0xC0);
 				}
 				else
 				{
@@ -906,10 +906,14 @@ void GraphicBoard::RefreshExample()
 				}
 			}
 		}
-		else
+		else if (false)
 		{
 			// x, y algo, full screen with texture target parameter
 			SDL_FireOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 0, 0xC0);
+		}
+		else
+		{
+			SDL_ExplosionOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 500, 0xC0);
 		}
 		SDL_SetRenderTarget(renderer, renderTarget);
 		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
@@ -1008,14 +1012,11 @@ inline void GraphicBoard::RenderCopy(const double x, const double y, const doubl
 
 		SDL_RenderCopyEx(renderer, dominos[domino], NULL, &coordonnees, angle, NULL, flip);
 
-		SDL_Rect coord;
 		if (faces[domino] == NULL)
 			SetFace(dominos[domino], coordonnees, faces[domino]);
 		SDL_QueryTexture(faces[domino], NULL, NULL, &size.x, &size.y);
-		coordonnees.x = 0;
-		coordonnees.y = 0;
-		coordonnees.x += shift.x;
-		coordonnees.y += shift.y;
+		coordonnees.x = shift.x;
+		coordonnees.y = shift.y;
 		coordonnees.w = size.x;
 		coordonnees.h = size.y;
 
@@ -1023,10 +1024,6 @@ inline void GraphicBoard::RenderCopy(const double x, const double y, const doubl
 
 		SDL_SetTextureBlendMode(dominoscache[flip][domino], blendmode);
 		SDL_SetRenderTarget(renderer, renderTarget);
-
-		coordonnees.x = org.x;
-		coordonnees.y = org.y;
-
 	}
 
 	SDL_Point size;
