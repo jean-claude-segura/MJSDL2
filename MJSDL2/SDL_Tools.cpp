@@ -711,17 +711,21 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 
 	delete[] palette;
 }
-/*
-* Why SCREEN_WIDTH * 2 and SCREEN_HEIGHT * 2? Because I don't want to modify the centering part in init_particle(...)
-*/
+
 void init_particles_random_origin(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
 {
-	const int xOrg = (int)((SCREEN_WIDTH  << 1) * (rand() / (RAND_MAX + 1.0)));
-	const int yOrg = (int)((SCREEN_HEIGHT << 1) * (rand() / (RAND_MAX + 1.0)));
+	const int xOrg = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0)));
+	const int yOrg = (int)(SCREEN_HEIGHT * (rand() / (RAND_MAX + 1.0)));
 
 	for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
 	{
-		init_particle(particles + i, xOrg, yOrg);
+		auto particle = particles + i;
+		particle->xpos = xOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+		particle->ypos = yOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+		particle->xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
+		particle->ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+		particle->colorindex = 255;
+		particle->dead = false;
 	}
 }
 

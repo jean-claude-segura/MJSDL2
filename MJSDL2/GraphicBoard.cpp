@@ -873,34 +873,36 @@ void GraphicBoard::RefreshExample()
 	// Copie du fond :
 	SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 
-	// Fin de partie :
-			/**/
+	/**/
 	SDL_Rect coordonnees;
-	//for (int z = 0; z < 5; ++z)
+
+	if (false)
 	{
-		int z = 0;
-		int domino = 0;
-		for (int y = 5; y >= 0; --y)
+		// Fin de partie :
+		//for (int z = 0; z < 5; ++z)
 		{
-			for (int x = 0; x < 7; ++x)
+			int z = 0;
+			int domino = 0;
+			for (int y = 5; y >= 0; --y)
 			{
-				SDL_Point size;
-				SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+				for (int x = 0; x < 7; ++x)
+				{
+					SDL_Point size;
+					SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
 
-				auto tHeight = (Height - (size.y - 40) * 6) / 2;
-				auto tWidth = (Width - (size.x - 40) * 7) / 2;
+					auto tHeight = (Height - (size.y - 40) * 6) / 2;
+					auto tWidth = (Width - (size.x - 40) * 7) / 2;
 
-				coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
-				coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
-				coordonnees.w = size.x;
-				coordonnees.h = size.y;
+					coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
+					coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
+					coordonnees.w = size.x;
+					coordonnees.h = size.y;
 
-				SDL_RenderCopy(renderer, dominos[domino++], NULL, &coordonnees);
+					SDL_RenderCopy(renderer, dominos[domino++], NULL, &coordonnees);
+				}
 			}
 		}
-	}
-	if (true)
-	{
+
 		if (false)
 		{
 			// Rect parameter
@@ -913,15 +915,15 @@ void GraphicBoard::RefreshExample()
 			tgtRect.x = tWidth;
 			tgtRect.y = tHeight;
 			tgtRect.w = 6 * sizeShift.x - 30;
-			if (false)
+			if (true)
 			{
 				tgtRect.h = 5 * sizeShift.y + 54;
 
-				if (false)
+				if (true)
 				{
 					// pointer algo :
-					SDL_FireOnTextureRectLinear(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 2, 0xC0);
-					//SDL_FireOnTextureRectLinear(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 2, 0xC0);
+					SDL_FireOnTextureRectLinear(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 3, 0xC0);
+					//SDL_FireOnTextureRectLinear(renderer, renderTargetOrg, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 2, 0xC0);
 				}
 				else if (false)
 				{
@@ -938,9 +940,9 @@ void GraphicBoard::RefreshExample()
 				// x, y algo, 6 ranks :
 				tgtRect.h = sizeShift.y;
 
-				if (true)
+				if (false)
 				{
-					SDL_FireOnTilesRect(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 2, 0xC0);
+					SDL_FireOnTilesRect(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 0, 0xC0);
 				}
 				else
 				{
@@ -961,13 +963,23 @@ void GraphicBoard::RefreshExample()
 		SDL_SetRenderTarget(renderer, renderTarget);
 		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 	}
-	else
+	else if(false)
 	{
 		// x, y algo, full screen
 		SDL_SetRenderTarget(renderer, renderTarget);
+		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 		SDL_FireOnRenderer(renderer, Width >> 2, Height >> 2, 0);
+		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
+	}
+	else
+	{
+		SDL_RenderCopy(renderer, textureBackgroundVictory, NULL, NULL);
+		SDL_ExplosionOnTexture(renderer, renderTarget, Width >> 1, Height >> 1, 500, 0xC0);
+		SDL_SetRenderTarget(renderer, renderTarget);
+		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 	}
 
+	SDL_DestroyTexture(screen);
 	// Interface :
 	// Ouest :
 	SDL_Point size;
