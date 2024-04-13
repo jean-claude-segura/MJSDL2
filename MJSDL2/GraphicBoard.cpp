@@ -1085,7 +1085,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 	if (refreshMouseMap) RefreshMouseMap();
 
 	SDL_Texture* screen = NULL;
-	auto renderTarget = SDL_GetRenderTarget(renderer);
+	auto renderTargetOrg = SDL_GetRenderTarget(renderer);
 	if (plateau.IsBlocked())
 	{
 		screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
@@ -1168,7 +1168,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 			switch (effect)
 			{
 			default:
-				SDL_FireOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 1, 0xA0);
+				SDL_FireOnTexture(renderer, renderTargetOrg, Width >> 2, Height >> 2, 1, 0xA0);
 				break;
 			case 1:
 				{
@@ -1206,15 +1206,15 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 					tgtRect.y = tHeight;
 					tgtRect.w = 6 * sizeShift.x - 30;
 					tgtRect.h = 5 * sizeShift.y + 54;
-					SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 1, 0xA0);
+					SDL_FireOnTextureRect(renderer, renderTargetOrg, screen, &tgtRect, Width >> 2, Height >> 2, 1, 0xA0);
 				}
 				break;
 			case 2:
 				SDL_RenderCopy(renderer, textureBackgroundVictory, NULL, NULL);
-				SDL_ExplosionOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 500, 0xC0);
+				SDL_ExplosionOnTexture(renderer, renderTargetOrg, Width >> 2, Height >> 2, 500, 0xC0);
 				break;
 			}
-			SDL_SetRenderTarget(renderer, renderTarget);
+			SDL_SetRenderTarget(renderer, renderTargetOrg);
 			SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 		}
 		else
@@ -1223,11 +1223,11 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 			SDL_Texture* greyScreen = NULL;
 			greyScreen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
 			SDL_GreyscaleTexture(renderer, screen, greyScreen);
-			SDL_SetRenderTarget(renderer, renderTarget);
+			SDL_SetRenderTarget(renderer, renderTargetOrg);
 			SDL_RenderCopy(renderer, greyScreen, NULL, NULL);
 			SDL_DestroyTexture(greyScreen);
-			SDL_DestroyTexture(screen);
 		}
+		SDL_DestroyTexture(screen);
 	}
 
 #ifdef _DEBUG
