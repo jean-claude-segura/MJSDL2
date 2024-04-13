@@ -33,6 +33,8 @@ typedef struct
 	bool dead;
 } PARTICLE;
 
+void init_particles_random_origin(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void init_particles_centered(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 void init_particle(PARTICLE* particle, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 
 void SDL_ExplosionOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500);

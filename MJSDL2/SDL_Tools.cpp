@@ -878,11 +878,31 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 
 	delete[] palette;
 }
+/*
+* Why SCREEN_WIDTH * 2 and SCREEN_HEIGHT * 2? Because I don't want to modify the centering part in init_particle(...)
+*/
+void init_particles_random_origin(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
+{
+	const int xOrg = (int)((SCREEN_WIDTH  << 1) * (rand() / (RAND_MAX + 1.0)));
+	const int yOrg = (int)((SCREEN_HEIGHT << 1) * (rand() / (RAND_MAX + 1.0)));
+
+	for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
+	{
+		init_particle(particles + i, xOrg, yOrg);
+	}
+}
+
+void init_particles_centered(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
+{
+	for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
+	{
+		init_particle(particles + i, SCREEN_WIDTH, SCREEN_HEIGHT);
+	}
+}
 
 void init_particle(PARTICLE* particle, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
 {
 	/* randomly init particles, generate them in the center of the screen */
-
 	particle->xpos = (SCREEN_WIDTH >> 1) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
 	particle->ypos = (SCREEN_HEIGHT >> 1) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
 	particle->xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
@@ -918,11 +938,8 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	int i, j;
 	Uint8 * fire = new Uint8[SCREEN_WIDTH * SCREEN_HEIGHT];
 	memset(fire, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
+
 	PARTICLE * particles = new PARTICLE[NUMBER_OF_PARTICLES];
-	/*for (i = 0; i < NUMBER_OF_PARTICLES; i++)
-	{
-		init_particle(particles + i, SCREEN_WIDTH, SCREEN_HEIGHT);
-	}*/
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
@@ -943,10 +960,7 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	{
 		if (!bAtLeastOneAlive)
 		{
-			for (i = 0; i < NUMBER_OF_PARTICLES; ++i)
-			{
-				init_particle(particles + i, SCREEN_WIDTH, SCREEN_HEIGHT);
-			}
+			init_particles_random_origin(particles, NUMBER_OF_PARTICLES, SCREEN_WIDTH, SCREEN_HEIGHT);
 		}
 
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
@@ -963,8 +977,8 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 				particles[i].ypos += particles[i].ydir;
 
 				/* is particle dead? */
-
 				if (particles[i].colorindex == 0 ||
+					particles[i].ypos <= 1 ||
 					(particles[i].ypos >= SCREEN_HEIGHT - 3) ||
 					particles[i].xpos <= 1 ||
 					particles[i].xpos >= SCREEN_WIDTH - 3)
@@ -972,7 +986,7 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 					particles[i].dead = true;
 					continue;
 				}
-
+					
 				/* gravity takes over */
 				particles[i].ydir++;
 
