@@ -122,13 +122,24 @@ void GenerateFireWithBluePalette(uint32_t* palette, const uint32_t size, const u
         palette[i + 224] |= 224 + i;
     }
 
+    int i = 0;
     if (Alpha > 0)
     {
-        for (int i = 0; i < size; ++i) palette[i] |= Alpha << 24;
+        for (; i < 256; ++i) palette[i] |= Alpha << 24;
     }
     else
     {
-        for (int i = 0; i < size; ++i) if (palette[i] != 0) palette[i] |= 0xFF000000;
+        // Alpha is set at 0xFF except for black made transparent.
+        for (; i < 256; ++i) if (palette[i] != 0) palette[i] |= 0xFF000000;
+    }
+
+    if (Alpha > 0)
+    {
+        for (; i < size; ++i) palette[i] = Alpha << 24;
+    }
+    else
+    {
+        for (; i < size; ++i) palette[i] = 0;
     }
 }
 
@@ -252,7 +263,8 @@ void GenerateJaresFirePalette(uint32_t* palette, const uint32_t size, const uint
 		#undef C
 	};
 
-    for (int x = 0; x < size; ++x)
+    int x = 0;
+    for (; x < 256; ++x)
     {
         if (Alpha > 0)
         {
@@ -264,6 +276,20 @@ void GenerateJaresFirePalette(uint32_t* palette, const uint32_t size, const uint
             //set the palette to the calculated RGB value
             // Alpha is set at 0xFF except for black made transparent.
             palette[x] = paletteFromJare[x] != 0 ? (paletteFromJare[x] | 0xFF000000) : paletteFromJare[x];
+        }
+    }
+    for (; x < size; ++x)
+    {
+        if (Alpha > 0)
+        {
+            //set the palette to the calculated RGB value + Alpha
+            palette[x] = Alpha << 24;
+        }
+        else
+        {
+            //set the palette to the calculated RGB value
+            // Alpha is set at 0xFF except for black made transparent.
+            palette[x] = 0;
         }
     }
 }
