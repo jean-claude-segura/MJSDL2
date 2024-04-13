@@ -293,6 +293,45 @@ void GraphicBoard::LoadBackground(const std::string& path)
 	SDL_FreeSurface(temp);
 }
 
+void GraphicBoard::LoadRandomBackgroundVictory(const std::string& path)
+{
+	std::vector<std::string> vPaths;
+	for (const auto& entry : std::filesystem::directory_iterator(path))
+	{
+		if (!entry.is_directory())
+			vPaths.emplace_back(entry.path().string());
+	}
+	std::sort(vPaths.begin(), vPaths.end());
+	std::random_device r;
+	std::default_random_engine e1(r());
+	std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
+	LoadBackgroundVictory(vPaths[uniform_dist(e1)]);
+}
+
+void GraphicBoard::LoadBackgroundVictory(const std::string& path)
+{
+	auto temp = IMG_Load(path.c_str());
+	auto background = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (background == NULL) {
+		SDL_FreeSurface(temp);
+		std::cout << stderr << "could not create background: " << SDL_GetError() << std::endl;
+		ThrowException(1);
+	}
+	else
+	{
+		textureBackgroundVictory = SDL_CreateTextureFromSurface(renderer, background);
+		if (textureBackground == NULL)
+		{
+			SDL_FreeSurface(background);
+			SDL_FreeSurface(temp);
+			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
+	}
+	SDL_FreeSurface(background);
+	SDL_FreeSurface(temp);
+}
+
 void GraphicBoard::LoadTiles()
 {
 	// Bambous : 9*4
@@ -326,6 +365,7 @@ void GraphicBoard::LoadResources()
 	//LoadBackground("./background/10013168.jpg");
 	//LoadBackground("./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg");
 	LoadRandomBackground("./background/");
+	LoadRandomBackgroundVictory("./background-victory/");
 }
 
 void GraphicBoard::LoadButton(SDL_Texture*& button, const std::string& strPath, const std::string& strName)
@@ -1124,7 +1164,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 	{
 		if (plateau.IsEmpty())
 		{
-			auto effect = (int)(3. * (rand() / (RAND_MAX + 1.0)));
+			auto effect = 2;// (int)(3. * (rand() / (RAND_MAX + 1.0)));
 			switch (effect)
 			{
 			default:
@@ -1170,6 +1210,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 				}
 				break;
 			case 2:
+				SDL_RenderCopy(renderer, textureBackgroundVictory, NULL, NULL);
 				SDL_ExplosionOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 500, 0xC0);
 				break;
 			}

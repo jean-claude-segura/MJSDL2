@@ -16,6 +16,10 @@ Image by <a href="https://www.freepik.com/free-vector/flat-design-poker-table-ba
 
 Image by <a href="https://www.freepik.com/free-vector/flat-design-poker-table-background_88532213.htm#from_view=detail_serie">Freepik</a>
 
+<a href="https://www.freepik.com/free-ai-image/chinese-traditional-oriental-fantasy-temple_81438424.htm#fromView=search&page=1&position=1&uuid=350ecfa4-4106-4e0b-bde4-64b796c51cec">Image by vector_corp on Freepik</a>
+
+<a href="https://www.freepik.com/free-ai-image/chinese-oriental-fantasy-temple-background_81438469.htm#fromView=search&page=1&position=4&uuid=350ecfa4-4106-4e0b-bde4-64b796c51cec">Image by vector_corp on Freepik</a>
+
 The file "facedown.svg" is licensed under the <a href="https://en.wikipedia.org/wiki/Creative_Commons">Creative Commons</a>
 <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.en">Attribution-Share Alike 4.0 International</a> license (Based on Cangjie6's work).
 
@@ -25,10 +29,10 @@ https://en.wikipedia.org/wiki/Mahjong_tiles
 
 https://commons.wikimedia.org/wiki/User:Cangjie6
 
-https://commons.wikimedia.org/wiki/File:MJt1-.svg
+https://zh.wikipedia.org/wiki/File:MJd3rv1-.svg
 
 
-Full attribution coming for tiles (There are 42 tiles! I need to confirm the author for each of them!).
+Full attribution coming for the other tiles (There are 42 tiles! I need to confirm the author for each of them!).
 
 UPDATE : Seems they're all Cangjie6's : https://commons.wikimedia.org/wiki/User:Cangjie6
 

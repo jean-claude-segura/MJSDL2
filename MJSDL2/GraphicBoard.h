@@ -46,6 +46,8 @@ private:
 	void LoadTiles();
 	void LoadRandomBackground(const std::string& path);
 	void LoadBackground(const std::string& path);
+	void LoadRandomBackgroundVictory(const std::string& path);
+	void LoadBackgroundVictory(const std::string& path);
 	void LoadResources();
 	void Refresh(const bool);
 #ifdef _DEBUG
@@ -66,6 +68,7 @@ private:
 	SDL_Renderer* renderer;
 	SDL_Texture
 		* textureBackground,
+		* textureBackgroundVictory,
 		* RestartBtn,
 		* HintBtn,
 		* TurnBtn,
