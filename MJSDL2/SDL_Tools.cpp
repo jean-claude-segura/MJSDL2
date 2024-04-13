@@ -964,8 +964,10 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 
 				/* is particle dead? */
 
-				if ((particles[i].ypos >= SCREEN_HEIGHT - 3) || particles[i].colorindex == 0 ||
-					particles[i].xpos <= 1 || particles[i].xpos >= SCREEN_WIDTH - 3)
+				if (particles[i].colorindex == 0 ||
+					(particles[i].ypos >= SCREEN_HEIGHT - 3) ||
+					particles[i].xpos <= 1 ||
+					particles[i].xpos >= SCREEN_WIDTH - 3)
 				{
 					particles[i].dead = true;
 					continue;
