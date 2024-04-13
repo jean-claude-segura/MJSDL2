@@ -373,13 +373,8 @@ void MakeFire(SDL_Surface* & firesurface, Uint8*& fire, Uint32*& palette, const 
 	//set the drawing buffer to the fire buffer, using the palette colors
 	auto p = (Uint32*)firesurface->pixels;
 	Uint8* f = (Uint8*)fire;
-	for (int y = 0; y < SCREEN_HEIGHT; ++y)
-	{
-		for (int x = 0; x < SCREEN_WIDTH; ++x, ++p, ++f)
-		{
-			*p = palette[*f];
-		}
-	}
+	for(int index = 0; index < SCREEN_HEIGHT * SCREEN_WIDTH;  ++index, ++p, ++f)
+		*p = palette[*f];
 }
 
 void SDL_FireOnRenderer(SDL_Renderer * renderer, const int Width, const int Height, const int FireType)
