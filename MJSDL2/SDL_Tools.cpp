@@ -401,14 +401,20 @@ void FireTypeThree(SDL_Surface*& firesurface, Uint8*& fire, Uint8*& prev_fire, U
 	Uint8* f = (Uint8*)fire;
 	for(int index = 0; index < SCREEN_HEIGHT * SCREEN_WIDTH;  ++index, ++p, ++f)
 		*p = palette[*f];
-	}
-	*/
+	/**/
 	/* Copy to framebuffer and map to RGBA, scrolling up one row. */
+	/**/
 	for (i = 0; i < (SCREEN_HEIGHT - 2) * SCREEN_WIDTH; i++) {
 		p[i] = palette[fire[i + SCREEN_WIDTH]];
 	}
+	/**/
 }
 
+/*
+To do or check if one of those does it :
+(x, y) = ((x-1, y-1)+(x, y-1)+(x+1, y-1)) /3
+(x, y) = ((x, y)+(x-1, y-1)+(x, y-1)+(x+1, y-1)) / 4
+*/
 void MakeFire(SDL_Surface* & firesurface, Uint8*& fire, Uint32*& palette, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int FireType)
 {
 	switch (FireType)

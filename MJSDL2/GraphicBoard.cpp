@@ -18,6 +18,7 @@ GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height(0), Width(0)
 	FaceMask = NULL;
 	Inverted = NULL;
 	textureMouseMap = NULL;
+	textureBackgroundVictory = NULL;
 }
 
 GraphicBoard::~GraphicBoard()
@@ -66,6 +67,8 @@ GraphicBoard::~GraphicBoard()
 		SDL_DestroyTexture(ExitBtn);
 	if (textureBackground != NULL)
 		SDL_DestroyTexture(textureBackground);
+	if (textureBackgroundVictory != NULL)
+		SDL_DestroyTexture(textureBackgroundVictory);
 
 	// Renderer :
 	if (renderer != NULL)
