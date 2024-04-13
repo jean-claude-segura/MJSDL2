@@ -946,9 +946,11 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	int size = 256;
 	size = (size >> 1) << 1;
 	Uint32* palette = new Uint32[size];
-	GenerateFireWithBluePalette(palette, size, Alpha);
+	//GenerateFireWithBluePalette(palette, size, Alpha);
+	//GenerateBlueFirePalette(palette, size, Alpha);
+	/*GenerateAnyHSLColourFirePalette(palette, size, (int)(360.0 * (rand() / (RAND_MAX + 1.0))), (int)(360.0 * (rand() / (RAND_MAX + 1.0))), Alpha);
 	for (int i = 0; i < size; ++i)
-		if (palette[i] == Alpha << 24) palette[i] = 0;
+		if (palette[i] == Alpha << 24) palette[i] = 0;*/
 
 	SDL_Event event;
 	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
@@ -960,6 +962,9 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	{
 		if (!bAtLeastOneAlive)
 		{
+			GenerateAnyHSLColourFirePalette(palette, size, (int)(360.0 * (rand() / (RAND_MAX + 1.0))), (int)(360.0 * (rand() / (RAND_MAX + 1.0))), Alpha);
+			for (int i = 0; i < size; ++i)
+				if (palette[i] == Alpha << 24) palette[i] = 0;
 			init_particles_random_origin(particles, NUMBER_OF_PARTICLES, SCREEN_WIDTH, SCREEN_HEIGHT);
 		}
 
