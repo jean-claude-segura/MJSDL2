@@ -5,6 +5,7 @@
 #include <SDL_image.h>
 #include <iostream>
 #include "Tools.h"
+#include <chrono>
 
 void SDL_UpperBlitInverted(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);
 void SDL_UpperBlitXored(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);
@@ -16,12 +17,15 @@ void SDL_HorizontalFlip(SDL_Surface* surface);
 void SDL_UpperBlitCut(SDL_Surface* src, SDL_Surface* dest);
 
 /* FIRES */
+void FireTypeOne(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void FireTypeTwo(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void FireTypeThree(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void MakeFire(SDL_Surface*& firesurface, Uint8*& fire, Uint32*& palette, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int FireType);
 void SDL_FireOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int FireType = 0);
 void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int FireType = 0, const Uint32 Alpha = 0x00);
 void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int FireType = 0, const Uint32 Alpha = 0x00);
 void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int FireType, const Uint32 Alpha);
 void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int FireType, const Uint32 Alpha);
-void SDL_FireOnTextureBisRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int FireType, const Uint32 Alpha);
 void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int FireType, const Uint32 Alpha);
 
 /* EXPLOSIONS */

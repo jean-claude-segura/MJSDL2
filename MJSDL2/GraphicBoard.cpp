@@ -877,8 +877,8 @@ void GraphicBoard::RefreshExample()
 				if (false)
 				{
 					// pointer algo :
-					SDL_FireOnTextureBisRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 0, 0xC0);
-					//SDL_FireOnTextureBisRect(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 0, 0xC0);
+					SDL_FireOnTextureRectLinear(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 2, 0xC0);
+					//SDL_FireOnTextureRectLinear(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 2, 0xC0);
 				}
 				else if (false)
 				{
@@ -902,7 +902,7 @@ void GraphicBoard::RefreshExample()
 				else
 				{
 					// pointer algo :
-					SDL_FireOnTextureBisRect(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 0, 0xC0);
+					SDL_FireOnTextureRectLinear(renderer, renderTarget, screen, &tgtRect, 6 * sizeShift.x - 30, sizeShift.y, 1, 0xC0);
 				}
 			}
 		}
@@ -1124,44 +1124,55 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 	{
 		if (plateau.IsEmpty())
 		{
-			/**/
-			SDL_Rect coordonnees;
-			//for (int z = 0; z < 5; ++z)
+			auto effect = (int)(3. * (rand() / (RAND_MAX + 1.0)));
+			switch (effect)
 			{
-				int z = 0;
-				int domino = 0;
-				for (int y = 5; y >= 0; --y)
+			default:
+				SDL_FireOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 1, 0xA0);
+				break;
+			case 1:
 				{
-					for (int x = 0; x < 7; ++x)
+					SDL_Rect coordonnees;
+					//for (int z = 0; z < 5; ++z)
 					{
-						SDL_Point size;
-						SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+						int z = 0;
+						int domino = 0;
+						for (int y = 5; y >= 0; --y)
+						{
+							for (int x = 0; x < 7; ++x)
+							{
+								SDL_Point size;
+								SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
 
-						auto tHeight = (Height - (size.y - 40) * 6) / 2;
-						auto tWidth = (Width - (size.x - 40) * 7) / 2;
+								auto tHeight = (Height - (size.y - 40) * 6) / 2;
+								auto tWidth = (Width - (size.x - 40) * 7) / 2;
 
-						coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
-						coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
-						coordonnees.w = size.x;
-						coordonnees.h = size.y;
+								coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
+								coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
+								coordonnees.w = size.x;
+								coordonnees.h = size.y;
 
-						SDL_RenderCopy(renderer, dominos[domino++], NULL, &coordonnees);
+								SDL_RenderCopy(renderer, dominos[domino++], NULL, &coordonnees);
+							}
+						}
 					}
-				}
-			}
-			/**/
-			//SDL_FireOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 1, 0xA0);
-			SDL_Point sizeShift;
-			SDL_QueryTexture(MouseMask, NULL, NULL, &sizeShift.x, &sizeShift.y);
-			auto tHeight = (Height - (sizeShift.y - 40) * 6) / 2;
-			auto tWidth = (Width - (sizeShift.x - 40) * 7) / 2;
+					SDL_Point sizeShift;
+					SDL_QueryTexture(MouseMask, NULL, NULL, &sizeShift.x, &sizeShift.y);
+					auto tHeight = (Height - (sizeShift.y - 40) * 6) / 2;
+					auto tWidth = (Width - (sizeShift.x - 40) * 7) / 2;
 
-			SDL_Rect tgtRect;
-			tgtRect.x = tWidth;
-			tgtRect.y = tHeight;
-			tgtRect.w = 6 * sizeShift.x - 30;
-			tgtRect.h = 5 * sizeShift.y + 54;
-			SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 1, 0xA0);
+					SDL_Rect tgtRect;
+					tgtRect.x = tWidth;
+					tgtRect.y = tHeight;
+					tgtRect.w = 6 * sizeShift.x - 30;
+					tgtRect.h = 5 * sizeShift.y + 54;
+					SDL_FireOnTextureRect(renderer, renderTarget, screen, &tgtRect, Width >> 2, Height >> 2, 1, 0xA0);
+				}
+				break;
+			case 2:
+				SDL_ExplosionOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 500, 0xC0);
+				break;
+			}
 			SDL_SetRenderTarget(renderer, renderTarget);
 			SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 		}

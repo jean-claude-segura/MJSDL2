@@ -55,6 +55,8 @@ uint32_t HSLtoARGB8888(const double H, const double S, const double L, const uin
     return (uint32_t(Alpha) << 24) | HSLtoRGB(H, S, L);
 }
 
+// Adapted from :
+// https://lodev.org/cgtutor/fire.html
 void GenerateFirePalette(uint32_t* palette, const uint32_t size, const uint32_t Alpha)
 {
     for (int x = 0; x < size; ++x)
@@ -83,6 +85,8 @@ void GenerateFirePalette(uint32_t* palette, const uint32_t size, const uint32_t 
     }
 }
 
+// Adapted from :
+/* https://demo-effects.sourceforge.net/ */
 void GenerateFireWithBluePalette(uint32_t* palette, const uint32_t size, const uint32_t Alpha)
 {
     memset(palette, 0, size * sizeof(uint32_t));
