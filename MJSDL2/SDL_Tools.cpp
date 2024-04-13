@@ -242,12 +242,11 @@ void SDL_UpperBlitCut(SDL_Surface* src, SDL_Surface* dest)
 	}
 }
 
-void FireTypeOne(Uint8 *& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
+// Adapted from :
+// https://lodev.org/cgtutor/fire.html
+void FireTypeZero(Uint8 *& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
 {
 	{
-		// Adapted from :
-		// https://lodev.org/cgtutor/fire.html
-
 		int FSIZE = SCREEN_HEIGHT * SCREEN_WIDTH;
 		//randomize the bottom row of the fire buffer
 		for (int x = 0; x < SCREEN_WIDTH; ++x) fire[FSIZE - SCREEN_WIDTH + x] = abs(32768 + rand()) % size;
@@ -271,11 +270,10 @@ void FireTypeOne(Uint8 *& fire, const int size, const int SCREEN_WIDTH, const in
 	}
 }
 
-void FireTypeTwo(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
+// Adapted from :
+// https://lodev.org/cgtutor/fire.html
+void FireTypeOne(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
 {
-	// Adapted from :
-	// https://lodev.org/cgtutor/fire.html
-
 	int FSIZE = SCREEN_HEIGHT * SCREEN_WIDTH;
 	//randomize the bottom row of the fire buffer
 	for (int x = 0; x < SCREEN_WIDTH; ++x) fire[FSIZE - SCREEN_WIDTH + x] = abs(32768 + rand()) % size;
@@ -299,7 +297,7 @@ void FireTypeTwo(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int
 	}
 }
 
-void FireTypeThree(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
+void FireTypeTwo(Uint8*& fire, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
 {
 	// Adapted from :
 	/* https://demo-effects.sourceforge.net/ */
@@ -355,18 +353,74 @@ void FireTypeThree(Uint8*& fire, const int size, const int SCREEN_WIDTH, const i
 	}
 }
 
+// https://www.hanshq.net/fire.html
+void FireTypeThree(SDL_Surface*& firesurface, Uint8*& fire, Uint8*& prev_fire, Uint32*& palette, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
+{
+	int i;
+	uint32_t sum;
+	uint8_t avg;
+
+	for (i = SCREEN_WIDTH + 1; i < (SCREEN_HEIGHT - 1) * SCREEN_WIDTH - 1; i++) {
+		/* Average the eight neighbours. */
+		sum = prev_fire[i - SCREEN_WIDTH - 1] +
+			prev_fire[i - SCREEN_WIDTH] +
+			prev_fire[i - SCREEN_WIDTH + 1] +
+			prev_fire[i - 1] +
+			prev_fire[i + 1] +
+			prev_fire[i + SCREEN_WIDTH - 1] +
+			prev_fire[i + SCREEN_WIDTH] +
+			prev_fire[i + SCREEN_WIDTH + 1];
+		avg = (uint8_t)(sum / 8);
+
+		/* "Cool" the pixel if the two bottom bits of the
+		   sum are clear (somewhat random). For the bottom
+		   rows, cooling can overflow, causing "sparks". */
+		if (!(sum & 3) &&
+			(avg > 0 || i >= (SCREEN_HEIGHT - 4) * SCREEN_WIDTH)) {
+			avg--;
+		}
+		fire[i] = avg;
+	}
+
+	/* Copy back and scroll up one row.
+	   The bottom row is all zeros, so it can be skipped. */
+	for (i = 0; i < (SCREEN_HEIGHT - 2) * SCREEN_WIDTH; i++) {
+		prev_fire[i] = fire[i + SCREEN_WIDTH];
+	}
+
+	/* Remove dark pixels from the bottom rows (except again the
+	   bottom row which is all zeros). */
+	for (i = (SCREEN_HEIGHT - 7) * SCREEN_WIDTH; i < (SCREEN_HEIGHT - 1) * SCREEN_WIDTH; i++) {
+		if (fire[i] < 15) {
+			fire[i] = 22 - fire[i];
+		}
+	}
+	//set the drawing buffer to the fire buffer, using the palette colors
+	auto p = (Uint32*)firesurface->pixels;
+	/*
+	Uint8* f = (Uint8*)fire;
+	for(int index = 0; index < SCREEN_HEIGHT * SCREEN_WIDTH;  ++index, ++p, ++f)
+		*p = palette[*f];
+	}
+	*/
+	/* Copy to framebuffer and map to RGBA, scrolling up one row. */
+	for (i = 0; i < (SCREEN_HEIGHT - 2) * SCREEN_WIDTH; i++) {
+		p[i] = palette[fire[i + SCREEN_WIDTH]];
+	}
+}
+
 void MakeFire(SDL_Surface* & firesurface, Uint8*& fire, Uint32*& palette, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int FireType)
 {
 	switch (FireType)
 	{
 	default:
-		FireTypeOne(fire, size, SCREEN_WIDTH, SCREEN_HEIGHT);
+		FireTypeZero(fire, size, SCREEN_WIDTH, SCREEN_HEIGHT);
 		break;
 	case 1:
-		FireTypeTwo(fire, size, SCREEN_WIDTH, SCREEN_HEIGHT);
+		FireTypeOne(fire, size, SCREEN_WIDTH, SCREEN_HEIGHT);
 		break;
 	case 2:
-		FireTypeThree(fire, size, SCREEN_WIDTH, SCREEN_HEIGHT);
+		FireTypeTwo(fire, SCREEN_WIDTH, SCREEN_HEIGHT);
 		break;
 	}
 
@@ -521,6 +575,12 @@ void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarg
 
 	auto fire = new Uint8[SCREEN_HEIGHT * SCREEN_WIDTH];
 	memset(fire, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
+	Uint8* prev_fire = NULL;
+	if (FireType == 3)
+	{
+		prev_fire = new Uint8[SCREEN_HEIGHT * SCREEN_WIDTH];
+		memset(prev_fire, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
+	}
 
 	int size = 256;
 	size = (size >> 1) << 1;
@@ -538,7 +598,10 @@ void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarg
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
-		MakeFire(firesurface, fire, palette, size, SCREEN_WIDTH, SCREEN_HEIGHT, FireType);
+		if(FireType == 3)
+			FireTypeThree(firesurface, fire, prev_fire, palette, size, SCREEN_WIDTH, SCREEN_HEIGHT);
+		else
+			MakeFire(firesurface, fire, palette, size, SCREEN_WIDTH, SCREEN_HEIGHT, FireType);
 
 		//draw the buffer and redraw the screen
 		if (screen != NULL)
@@ -553,6 +616,8 @@ void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarg
 		SDL_RenderCopy(renderer, screen, NULL, NULL);
 	SDL_SetRenderTarget(renderer, renderTarget);
 
+	if (FireType == 3)
+		delete[] prev_fire;
 	delete[] fire;
 	delete[] palette;
 }

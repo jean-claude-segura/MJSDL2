@@ -215,3 +215,55 @@ void GenerateAnyHSLColourFirePalette(uint32_t* palette, const uint32_t size, con
         }
     }
 }
+
+// https://www.hanshq.net/fire.html
+void GenerateJaresFirePalette(uint32_t* palette, const uint32_t size, const uint32_t Alpha)
+{
+	const uint32_t paletteFromJare[256] = {
+		/* Jare's original FirePal. */
+		#define C(r,g,b) ((((r) * 4) << 16) | ((g) * 4 << 8) | ((b) * 4))
+		C(0,   0,   0), C(0,   1,   1), C(0,   4,   5), C(0,   7,   9),
+		C(0,   8,  11), C(0,   9,  12), C(15,   6,   8), C(25,   4,   4),
+		C(33,   3,   3), C(40,   2,   2), C(48,   2,   2), C(55,   1,   1),
+		C(63,   0,   0), C(63,   0,   0), C(63,   3,   0), C(63,   7,   0),
+		C(63,  10,   0), C(63,  13,   0), C(63,  16,   0), C(63,  20,   0),
+		C(63,  23,   0), C(63,  26,   0), C(63,  29,   0), C(63,  33,   0),
+		C(63,  36,   0), C(63,  39,   0), C(63,  39,   0), C(63,  40,   0),
+		C(63,  40,   0), C(63,  41,   0), C(63,  42,   0), C(63,  42,   0),
+		C(63,  43,   0), C(63,  44,   0), C(63,  44,   0), C(63,  45,   0),
+		C(63,  45,   0), C(63,  46,   0), C(63,  47,   0), C(63,  47,   0),
+		C(63,  48,   0), C(63,  49,   0), C(63,  49,   0), C(63,  50,   0),
+		C(63,  51,   0), C(63,  51,   0), C(63,  52,   0), C(63,  53,   0),
+		C(63,  53,   0), C(63,  54,   0), C(63,  55,   0), C(63,  55,   0),
+		C(63,  56,   0), C(63,  57,   0), C(63,  57,   0), C(63,  58,   0),
+		C(63,  58,   0), C(63,  59,   0), C(63,  60,   0), C(63,  60,   0),
+		C(63,  61,   0), C(63,  62,   0), C(63,  62,   0), C(63,  63,   0),
+		/* Followed by "white heat". */
+		#define W C(63,63,63)
+		W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W,
+		W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W,
+		W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W,
+		W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W,
+		W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W,
+		W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W,
+		W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W,
+		W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W, W
+		#undef W
+		#undef C
+	};
+
+    for (int x = 0; x < size; ++x)
+    {
+        if (Alpha > 0)
+        {
+            //set the palette to the calculated RGB value + Alpha
+            palette[x] = paletteFromJare[x] | (Alpha << 24);
+        }
+        else
+        {
+            //set the palette to the calculated RGB value
+            // Alpha is set at 0xFF except for black made transparent.
+            palette[x] = paletteFromJare[x] != 0 ? (paletteFromJare[x] | 0xFF000000) : paletteFromJare[x];
+        }
+    }
+}

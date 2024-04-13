@@ -8,3 +8,4 @@ void GenerateFireWithBluePalette(uint32_t* palette, const uint32_t size, const u
 void GenerateGreyPalette(uint32_t* palette, const uint32_t size, const uint32_t Alpha = 0x00);
 void GenerateBlueFirePalette(uint32_t* palette, const uint32_t size, const uint32_t Alpha = 0x00);
 void GenerateAnyHSLColourFirePalette(uint32_t* palette, const uint32_t size, const int start, const int end, const uint32_t Alpha);
+void GenerateJaresFirePalette(uint32_t* palette, const uint32_t size, const uint32_t Alpha);

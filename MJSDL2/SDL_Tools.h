@@ -17,9 +17,10 @@ void SDL_HorizontalFlip(SDL_Surface* surface);
 void SDL_UpperBlitCut(SDL_Surface* src, SDL_Surface* dest);
 
 /* FIRES */
+void FireTypeZero(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 void FireTypeOne(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
-void FireTypeTwo(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
-void FireTypeThree(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void FireTypeTwo(Uint8*& fire, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void FireTypeThree(SDL_Surface*& firesurface, Uint8*& fire, Uint8*& prev_fire, Uint32*& palette, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 void MakeFire(SDL_Surface*& firesurface, Uint8*& fire, Uint32*& palette, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int FireType);
 void SDL_FireOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int FireType = 0);
 void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int FireType = 0, const Uint32 Alpha = 0x00);
