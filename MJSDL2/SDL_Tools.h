@@ -38,6 +38,7 @@ typedef struct
 	int32_t xdir, ydir;
 	Uint8 colorindex;
 	bool dead;
+	Uint8 radius;
 } PARTICLE;
 
 void init_particles_random_origin(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
@@ -120,6 +121,70 @@ inline void SetParticle(PARTICLE & particle, Uint8* fire, bool & bAtLeastOneAliv
 
 		/* gravity takes over */
 		particle.ydir++;
+
+		/* particle cools off */
+		particle.colorindex--;
+
+		/* draw particle */
+		if (particle.ypos > 1 && particle.xpos > 1 &&
+			(particle.xpos < SCREEN_WIDTH - 3))
+		{
+			temp = particle.ypos * SCREEN_WIDTH + particle.xpos;
+
+			fire[temp] = particle.colorindex;
+			fire[temp - 1] = particle.colorindex;
+			fire[temp + SCREEN_WIDTH] = particle.colorindex;
+			fire[temp - SCREEN_WIDTH] = particle.colorindex;
+			fire[temp + 1] = particle.colorindex;
+		}
+
+		bAtLeastOneAlive = true;
+	}
+}
+
+
+inline void SetParticleNG(PARTICLE& particle, Uint8* fire, bool& bAtLeastOneAlive, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const bool trail = false)
+{
+	int32_t temp;
+
+	if (!particle.dead)
+	{
+		particle.xpos += particle.xdir;
+		particle.ypos += particle.ydir;
+		--particle.radius;
+
+		/* is particle dead? */
+		if (particle.colorindex == 0 ||
+			(particle.ypos >= SCREEN_HEIGHT - 3) ||
+			particle.radius == 0)
+		{
+			particle.dead = true;
+			return;
+		}
+
+		// Is particle on the left side of visible screen coming back ?
+		// If not -> dead.
+		if (particle.xpos <= 1 && particle.xdir <= 0) // Minimal check : those going left are not coming back for sure.
+		{
+			particle.dead = true;
+			return;
+		}
+
+		// Is particle on the right side of visible screen coming back ?
+		// If not -> dead.
+		if ((particle.xpos >= SCREEN_WIDTH - 3) && particle.xdir >= 0) // Minimal check : those going right are not coming back for sure.
+		{
+			particle.dead = true;
+			return;
+		}
+
+		// Is particle above (Actually *under*) visible screen coming back ?
+		// If not -> dead.
+		if (particle.ypos <= 1 && particle.ydir <= 0)
+		{
+			particle.dead = true;
+			return;
+		}
 
 		/* particle cools off */
 		particle.colorindex--;

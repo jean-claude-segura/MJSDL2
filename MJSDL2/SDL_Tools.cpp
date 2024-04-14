@@ -726,6 +726,7 @@ void init_particles_random_origin(PARTICLE* particles, const int NUMBER_OF_PARTI
 		particle->ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
 		particle->colorindex = 255;
 		particle->dead = false;
+		particle->radius = 0;
 	}
 }
 
@@ -746,6 +747,7 @@ void init_particle(PARTICLE* particle, const int SCREEN_WIDTH, const int SCREEN_
 	particle->ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
 	particle->colorindex = 255;
 	particle->dead = false;
+	particle->radius = 0;
 }
 
 void SDL_ExplosionOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int NUMBER_OF_PARTICLES)
@@ -899,6 +901,7 @@ void init_particle_trail(PARTICLE & particle, const int SCREEN_WIDTH, const int 
 	particle.ydir = -32 + (int)(12.0 * (rand() / (RAND_MAX + 1.0))); // -32 -20
 	particle.colorindex = 255;
 	particle.dead = false;
+	particle.radius = 0;
 }
 
 void init_particles_forced_origin(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int xOrg, const int yOrg, const int SCREEN_WIDTH, const int SCREEN_HEIGHT)
@@ -912,6 +915,7 @@ void init_particles_forced_origin(PARTICLE* particles, const int NUMBER_OF_PARTI
 		particle->ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
 		particle->colorindex = 255;
 		particle->dead = false;
+		particle->radius = 0;
 	}
 }
 
@@ -929,6 +933,7 @@ void init_particles_forced_origin_circular_pos(PARTICLE* particles, const int NU
 		particle->ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
 		particle->colorindex = 255;
 		particle->dead = false;
+		particle->radius = 0;
 	}
 }
 
@@ -945,6 +950,7 @@ void init_particles_forced_origin_circular_dir(PARTICLE* particles, const int NU
 		particle->ydir = std::sin(angle) * 10;
 		particle->colorindex = 255;
 		particle->dead = false;
+		particle->radius = 13;
 	}
 }
 
@@ -1037,7 +1043,9 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 #endif
 				//init_particles_forced_origin(particles, NUMBER_OF_PARTICLES, -1, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 				//init_particles_forced_origin(particles, NUMBER_OF_PARTICLES, SCREEN_WIDTH + 1, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-				switch ((int)(3 * (rand() / (RAND_MAX + 1.0))))
+				auto next = (int)(3 * (rand() / (RAND_MAX + 1.0)));
+				//next = 1;
+				switch (next)
 				{
 				default:
 				case 0:
