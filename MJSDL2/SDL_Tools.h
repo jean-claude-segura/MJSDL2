@@ -6,6 +6,7 @@
 #include <iostream>
 #include "Tools.h"
 #include <chrono>
+#include <numbers>
 
 void SDL_UpperBlitInverted(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);
 void SDL_UpperBlitXored(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);
@@ -48,6 +49,11 @@ void SDL_ExplosionOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, c
 void SDL_ExplosionOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500, const Uint32 Alpha = 0x00);
 void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha);
 
+void init_particle_trail(PARTICLE & particle, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void init_particles_forced_origin(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int xOrg, const int yOrg, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void init_particles_forced_origin_circular_pos(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int xOrg, const int yOrg, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void init_particles_forced_origin_circular_dir(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int xOrg, const int yOrg, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+	
 void SDL_FireworkOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500);
 void SDL_FireworkOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500, const Uint32 Alpha = 0x00);
 void SDL_FireworkOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500, const Uint32 Alpha = 0x00);
@@ -59,7 +65,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 
 inline void SetParticle(PARTICLE & particle, Uint8* fire, bool & bAtLeastOneAlive, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const bool trail = false)
 {
-	Uint32 temp;
+	int32_t temp;
 	
 	if (!particle.dead)
 	{
@@ -69,25 +75,41 @@ inline void SetParticle(PARTICLE & particle, Uint8* fire, bool & bAtLeastOneAliv
 		/* is particle dead? */
 		if (particle.colorindex == 0 ||
 			//particle.ypos <= 1 ||
-			(particle.ypos >= SCREEN_HEIGHT - 3) ||
+			(particle.ypos >= SCREEN_HEIGHT - 3) /* ||
 			particle.xpos <= 1 ||
-			particle.xpos >= SCREEN_WIDTH - 3)
+			particle.xpos >= SCREEN_WIDTH - 3*/)
 		{
 			particle.dead = true;
 			return;
 		}
 
-		// Is particle outside of visible screen coming back ?
+		// Is particle on the left side of visible screen coming back ?
+		// If not -> dead.
+		if (!trail && particle.xpos <= 1 && particle.xdir <= 0) // Minimal check : those going left are not coming back for sure.
+		{
+			particle.dead = true;
+			return;
+		}
+
+		// Is particle on the right side of visible screen coming back ?
+		// If not -> dead.
+		if (!trail && (particle.xpos >= SCREEN_WIDTH - 3) && particle.xdir >= 0) // Minimal check : those going right are not coming back for sure.
+		{
+			particle.dead = true;
+			return;
+		}
+
+		// Is particle above (Actually *under*) visible screen coming back ?
 		// If not -> dead.
 		if (particle.ypos <= 1)
 		{
 			int32_t deltaX = particle.xpos - particle.xorg;
-			if (deltaX > 0 && (particle.xpos + deltaX >= SCREEN_WIDTH - 3))
+			if ((deltaX > 0 && (particle.xpos + deltaX >= SCREEN_WIDTH - 3)) ||
+				(deltaX < 0 && (particle.xpos - deltaX <= 1)))
+			{
 				particle.dead = true;
-			if (deltaX < 0 && (particle.xpos - deltaX <= 1))
-				particle.dead = true;
-			if (particle.dead)
 				return;
+			}
 		}
 
 		if (trail && particle.ydir > 0)
@@ -103,9 +125,11 @@ inline void SetParticle(PARTICLE & particle, Uint8* fire, bool & bAtLeastOneAliv
 		particle.colorindex--;
 
 		/* draw particle */
-		if (particle.ypos > 1)
+		if (particle.ypos > 1 && particle.xpos > 1 &&
+			(particle.xpos < SCREEN_WIDTH - 3))
 		{
 			temp = particle.ypos * SCREEN_WIDTH + particle.xpos;
+
 			fire[temp] = particle.colorindex;
 			fire[temp - 1] = particle.colorindex;
 			fire[temp + SCREEN_WIDTH] = particle.colorindex;

@@ -516,7 +516,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			++direction;
 		direction %= 4;
 		plateau.SortBoard(direction);
-		Refresh(true);
+		if (!plateau.IsEmpty()) Refresh(true);
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case NORTH:
@@ -529,7 +529,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		else if (direction == 2)
 			direction = 1;
 		plateau.SortBoard(direction);
-		Refresh(true);
+		if (!plateau.IsEmpty()) Refresh(true);
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case EAST:
@@ -542,7 +542,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		else if (direction == 3)
 			direction = 2;
 		plateau.SortBoard(direction);
-		Refresh(true);
+		if (!plateau.IsEmpty()) Refresh(true);
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case SOUTH:
@@ -555,7 +555,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		else if (direction == 1)
 			direction = 2;
 		plateau.SortBoard(direction);
-		Refresh(true);
+		if (!plateau.IsEmpty()) Refresh(true);
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case WEST:
@@ -568,7 +568,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		else if (direction == 2)
 			direction = 3;
 		plateau.SortBoard(direction);
-		Refresh(true);
+		if (!plateau.IsEmpty()) Refresh(true);
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case EXIT:
@@ -685,6 +685,7 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 	}
 	else
 	{
+		// To cancel current hint.
 		if (!plateau.GetMovesLeft().empty() && itPrevMove != plateau.GetMovesLeft().end())
 		{
 			itNextMove = plateau.GetMovesLeft().begin();
