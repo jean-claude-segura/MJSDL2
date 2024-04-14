@@ -17,11 +17,11 @@ void SDL_HorizontalFlip(SDL_Surface* surface);
 void SDL_UpperBlitCut(SDL_Surface* src, SDL_Surface* dest);
 
 /* FIRES */
-void FireTypeZero(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
-void FireTypeOne(Uint8*& fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
-void FireTypeTwo(Uint8*& fire, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
-void FireTypeThree(SDL_Surface*& firesurface, Uint8*& fire, Uint8*& prev_fire, Uint32*& palette, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
-void MakeFire(SDL_Surface*& firesurface, Uint8*& fire, Uint32*& palette, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int FireType);
+void FireTypeZero(Uint8* fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void FireTypeOne(Uint8* fire, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void FireTypeTwo(Uint8* fire, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void FireTypeThree(SDL_Surface* firesurface, Uint8* fire, Uint8* prev_fire, Uint32* palette, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+void MakeFire(SDL_Surface* firesurface, Uint8* fire, Uint32* palette, const int size, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int FireType);
 void SDL_FireOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int FireType = 0);
 void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int FireType = 0, const Uint32 Alpha = 0x00);
 void SDL_FireOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int FireType = 0, const Uint32 Alpha = 0x00);
@@ -33,7 +33,8 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 /*particle structure*/
 typedef struct
 {
-	Uint16 xpos, ypos, xdir, ydir;
+	int32_t xorg, xpos, ypos;
+	int32_t xdir, ydir;
 	Uint8 colorindex;
 	bool dead;
 } PARTICLE;
@@ -47,9 +48,74 @@ void SDL_ExplosionOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, c
 void SDL_ExplosionOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500, const Uint32 Alpha = 0x00);
 void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha);
 
+void SDL_FireworkOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500);
+void SDL_FireworkOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500, const Uint32 Alpha = 0x00);
+void SDL_FireworkOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500, const Uint32 Alpha = 0x00);
+void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha);
+
 /* *********************************************************************************** /
 /*                                       INLINE                                       */
-/* *********************************************************************************** /
+/* ********************************************************************************** */
+
+inline void SetParticle(PARTICLE & particle, Uint8* fire, bool & bAtLeastOneAlive, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const bool trail = false)
+{
+	Uint32 temp;
+	
+	if (!particle.dead)
+	{
+		particle.xpos += particle.xdir;
+		particle.ypos += particle.ydir;
+
+		/* is particle dead? */
+		if (particle.colorindex == 0 ||
+			//particle.ypos <= 1 ||
+			(particle.ypos >= SCREEN_HEIGHT - 3) ||
+			particle.xpos <= 1 ||
+			particle.xpos >= SCREEN_WIDTH - 3)
+		{
+			particle.dead = true;
+			return;
+		}
+
+		// Is particle outside of visible screen coming back ?
+		// If not -> dead.
+		if (particle.ypos <= 1)
+		{
+			int32_t deltaX = particle.xpos - particle.xorg;
+			if (deltaX > 0 && (particle.xpos + deltaX >= SCREEN_WIDTH - 3))
+				particle.dead = true;
+			if (deltaX < 0 && (particle.xpos - deltaX <= 1))
+				particle.dead = true;
+			if (particle.dead)
+				return;
+		}
+
+		if (trail && particle.ydir > 0)
+		{
+			particle.dead = true;
+			return;
+		}
+
+		/* gravity takes over */
+		particle.ydir++;
+
+		/* particle cools off */
+		particle.colorindex--;
+
+		/* draw particle */
+		if (particle.ypos > 1)
+		{
+			temp = particle.ypos * SCREEN_WIDTH + particle.xpos;
+			fire[temp] = particle.colorindex;
+			fire[temp - 1] = particle.colorindex;
+			fire[temp + SCREEN_WIDTH] = particle.colorindex;
+			fire[temp - SCREEN_WIDTH] = particle.colorindex;
+			fire[temp + 1] = particle.colorindex;
+		}
+
+		bAtLeastOneAlive = true;
+	}
+}
 
 /* ************************************************************************************************************************** /
 * https://discourse.libsdl.org/t/sdl-composecustomblendmode-error-in-windows/35241/1                                          /
@@ -119,7 +185,7 @@ inline SDL_Texture* SDL_DuplicateTexture(SDL_Renderer* renderer, SDL_Texture* sr
 	return tgt;
 }
 
-inline SDL_Texture* SDL_CutTextureOnAlpha(SDL_Renderer* renderer, SDL_Texture* src, SDL_Texture*& tgt)
+inline SDL_Texture* SDL_CutTextureOnAlpha(SDL_Renderer* renderer, SDL_Texture* src, SDL_Texture* tgt)
 {
 	auto renderTarget = SDL_GetRenderTarget(renderer);
 	auto SDLRenderer = renderer;

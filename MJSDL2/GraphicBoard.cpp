@@ -971,10 +971,17 @@ void GraphicBoard::RefreshExample()
 		SDL_FireOnRenderer(renderer, Width >> 2, Height >> 2, 0);
 		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 	}
+	else if (false)
+	{
+		SDL_RenderCopy(renderer, textureBackgroundVictory, NULL, NULL);
+		SDL_ExplosionOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 500, 0xC0);
+		SDL_SetRenderTarget(renderer, renderTarget);
+		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
+	}
 	else
 	{
 		SDL_RenderCopy(renderer, textureBackgroundVictory, NULL, NULL);
-		SDL_ExplosionOnTexture(renderer, renderTarget, Width >> 1, Height >> 1, 500, 0xC0);
+		SDL_FireworkOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 500, 0xC0);
 		SDL_SetRenderTarget(renderer, renderTarget);
 		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 	}
@@ -1226,7 +1233,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 				break;
 			case 2:
 				SDL_RenderCopy(renderer, textureBackgroundVictory, NULL, NULL);
-				SDL_ExplosionOnTexture(renderer, renderTargetOrg, Width >> 2, Height >> 2, 500, 0xC0);
+				SDL_FireworkOnTexture(renderer, renderTargetOrg, Width >> 2, Height >> 2, 500, 0xC0);
 				break;
 			}
 			SDL_SetRenderTarget(renderer, renderTargetOrg);
