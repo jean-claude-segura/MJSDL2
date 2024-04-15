@@ -818,17 +818,9 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 				}
 
 				fire[buf - SCREEN_WIDTH] = temp;
-			}
-		}
 
-		/* draw fire array to screen from bottom to top*/
-		auto p = (Uint32*)firesurface->pixels;
-		auto f = fire;
-		for (int y = 0; y < SCREEN_HEIGHT; ++y)
-		{
-			for (int x = 0; x < SCREEN_WIDTH; ++x, ++p, ++f)
-			{
-				*p = palette[*f];
+				((Uint32*)firesurface->pixels)[buf - SCREEN_WIDTH] = palette[temp];
+
 			}
 		}
 
@@ -997,17 +989,8 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 				}
 
 				fire[buf - SCREEN_WIDTH] = temp;
-			}
-		}
 
-		/* draw fire array to screen from bottom to top*/
-		auto p = (Uint32*)firesurface->pixels;
-		auto f = fire;
-		for (int y = 0; y < SCREEN_HEIGHT; ++y)
-		{
-			for (int x = 0; x < SCREEN_WIDTH; ++x, ++p, ++f)
-			{
-				*p = palette[*f];
+				((Uint32*)firesurface->pixels)[buf - SCREEN_WIDTH] = palette[temp];
 			}
 		}
 
@@ -1055,7 +1038,11 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	Uint32 buf, index, temp;
 	int i, j;
 
-	const Uint8 number_of_fires = 3;
+#ifdef _DEBUG
+	const Uint8 number_of_fires = 5;
+#else
+	const Uint8 number_of_fires = 5 + (int)(10 * (rand() / (RAND_MAX + 1.0)));
+#endif
 
 	std::vector<PARTICLES::PARTICULES_TYPES> choices;
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_FORCEDORIGIN);
@@ -1096,9 +1083,6 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	auto start{ std::chrono::steady_clock::now() };
 	auto end{ std::chrono::steady_clock::now() };
 
-#ifdef _DEBUG
-	Uint32 remaining = NUMBER_OF_PARTICLES;
-#endif
 	//start the loop (one frame per loop)
 	while (true)
 	{
@@ -1111,7 +1095,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 			continue;
 		start = std::chrono::steady_clock::now();
 
-		for (int i = 0; i < 3; ++i)
+		for (int i = 0; i < number_of_fires; ++i)
 		{
 			if (!bAtLeastOneAlive[i])
 			{
@@ -1132,15 +1116,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 				vtrails[i].draw(fire[i], bTrailAlive[i]);
 				if (!bTrailAlive[i])
 				{
-#ifdef _DEBUG
-					std::cout << "Trail died at : (" << vtrails[i].getXPos() << ";" << vtrails[i].getYPos() << ").";
-					std::cout << " Screen is : (" << SCREEN_WIDTH << ";" << SCREEN_HEIGHT << ")." << std::endl;
-					remaining = NUMBER_OF_PARTICLES;
-#endif
-					//init_particles_forced_origin(particles, NUMBER_OF_PARTICLES, -1, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-					//init_particles_forced_origin(particles, NUMBER_OF_PARTICLES, SCREEN_WIDTH + 1, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 					auto next = (int)(4 * (rand() / (RAND_MAX + 1.0)));
-
 					vparticles[i].init(NUMBER_OF_PARTICLES, choices[next], vtrails[i].getXPos(), vtrails[i].getYPos());
 				}
 
@@ -1149,14 +1125,6 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 			{
 				/* move and draw particles into fire[i] array */
 				bAtLeastOneAlive[i] = vparticles[i].draw(fire[i]);
-#ifdef _DEBUG
-				Uint32 currentremaining = vparticles[i].getRemaining();
-				if (remaining != currentremaining)
-				{
-					remaining = currentremaining;
-					std::cout << remaining << " particles remaining." << std::endl;
-				}
-#endif
 			}
 
 			/* create fire[i] effect */
@@ -1191,20 +1159,12 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 					}
 
 					fire[i][buf - SCREEN_WIDTH] = temp;
-				}
-			}
-		}
 
-		/* draw fire[i] array to screen from bottom to top*/
-		auto p = (Uint32*)firesurface->pixels;
-		auto f0 = fire[0];
-		auto f1 = fire[1];
-		auto f2 = fire[2];
-		for (int y = 0; y < SCREEN_HEIGHT; ++y)
-		{
-			for (int x = 0; x < SCREEN_WIDTH; ++x, ++p, ++f0, ++f1, ++f2)
-			{
-				*p = palette[0][*f0] | palette[1][*f1] | palette[2][*f2];
+					if (i == 0)
+						((Uint32*)firesurface->pixels)[buf - SCREEN_WIDTH] = palette[i][temp];
+					else
+						((Uint32*)firesurface->pixels)[buf - SCREEN_WIDTH] |= palette[i][temp];
+				}
 			}
 		}
 
