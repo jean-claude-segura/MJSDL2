@@ -147,12 +147,14 @@
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="GraphicBoard.cpp" />
     <ClCompile Include="MJSDL2.cpp" />
+    <ClCompile Include="PARTICLES.cpp" />
     <ClCompile Include="SDL_Tools.cpp" />
     <ClCompile Include="Tools.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Board.h" />
     <ClInclude Include="GraphicBoard.h" />
+    <ClInclude Include="PARTICLES.h" />
     <ClInclude Include="SDL_Tools.h" />
     <ClInclude Include="Tools.h" />
   </ItemGroup>
