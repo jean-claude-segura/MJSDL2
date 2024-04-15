@@ -32,28 +32,320 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 
 /* EXPLOSIONS */
 /*particle structure*/
-typedef struct
+class PARTICLE
 {
-	int32_t xorg, xpos, ypos;
+protected:
+	int32_t xpos, ypos;
 	int32_t xdir, ydir;
 	Uint8 colorindex;
 	bool dead;
-	Uint8 radius;
-} PARTICLE;
+	int32_t SCREEN_WIDTH;
+	int32_t SCREEN_HEIGHT;
+	virtual const bool setDeath() = 0;
+	PARTICLE(const int _SCREEN_WIDTH, const int _SCREEN_HEIGHT) : SCREEN_WIDTH(_SCREEN_WIDTH), SCREEN_HEIGHT(_SCREEN_HEIGHT)
+	{
+		xpos = ypos = 0;
+		xdir = ydir = 0;
+		colorindex = 255;
+		dead = false;
+	}
+public:
+	bool draw(Uint8 * fire, bool &bAtLeastOneAlive)
+	{
+		if (!dead && !setDeath())
+		{
+			int32_t temp;
+			/* draw particle */
+			if (ypos > 1 && xpos > 1 &&
+				(xpos < SCREEN_WIDTH - 3))
+			{
+				temp = ypos * SCREEN_WIDTH + xpos;
 
-void init_particles_random_origin(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
-void init_particles_centered(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
-void init_particle(PARTICLE* particle, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+				fire[temp] = colorindex;
+				fire[temp - 1] = colorindex;
+				fire[temp + SCREEN_WIDTH] = colorindex;
+				fire[temp - SCREEN_WIDTH] = colorindex;
+				fire[temp + 1] = colorindex;
+			}
+			bAtLeastOneAlive = true;
+			return true;
+		}
+		return false;
+	}
+};
+
+class COMMON : public PARTICLE
+{
+protected:
+	const bool setDeath()
+	{
+		xpos += xdir;
+		ypos += ydir;
+
+		/* is particle dead? */
+		if (colorindex == 0 ||
+			(ypos >= SCREEN_HEIGHT - 3))
+		{
+			dead = true;
+			return true;
+		}
+
+		// Is particle on the left side of visible screen coming back ?
+		// If not -> dead.
+		if (xpos <= 1 && xdir <= 0) // Minimal check : those going left are not coming back for sure.
+		{
+			dead = true;
+			return true;
+		}
+
+		// Is particle on the right side of visible screen coming back ?
+		// If not -> dead.
+		if ((xpos >= SCREEN_WIDTH - 3) && xdir >= 0) // Minimal check : those going right are not coming back for sure.
+		{
+			dead = true;
+			return true;
+		}
+
+		// Is particle above (Actually *under*) visible screen coming back ?
+		// If not -> dead.
+		if (ypos <= 1)
+		{
+			int32_t deltaX = xdir;
+			if ((deltaX > 0 && (xpos + deltaX >= SCREEN_WIDTH - 3)) ||
+				(deltaX < 0 && (xpos + deltaX <= 1)))
+			{
+				dead = true;
+				return true;
+			}
+		}
+
+		/* gravity takes over */
+		ydir++;
+
+		/* particle cools off */
+		colorindex--;
+
+		return false;
+	}
+
+	COMMON(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT) {};
+};
+
+class RANDOMORIGIN : public COMMON
+{
+public:
+	RANDOMORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : COMMON(SCREEN_WIDTH, SCREEN_HEIGHT)
+	{
+		xpos = xOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+		ypos = yOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+		xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
+		ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	}
+};
+
+class CENTEREDEDORIGIN : public COMMON
+{
+public:
+	CENTEREDEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : COMMON(SCREEN_WIDTH, SCREEN_HEIGHT)
+	{
+		/* randomly init particle, generate it in the center of the screen */
+		xpos = (SCREEN_WIDTH >> 1) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+		ypos = (SCREEN_HEIGHT >> 1) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+		xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
+		ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	}
+};
+
+class FORCEDORIGIN : public COMMON
+{
+public:
+	FORCEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : COMMON(SCREEN_WIDTH, SCREEN_HEIGHT)
+	{
+		xpos = xOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+		ypos = yOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+		xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
+		ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	}
+};
+
+class CIRCULARPOS : public COMMON
+{
+private:
+	const double radius;
+public:
+	CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double _radius) : radius(_radius), COMMON(SCREEN_WIDTH, SCREEN_HEIGHT)
+	{
+		double angle = std::numbers::pi * 2 * (rand() / (RAND_MAX + 1.0));
+		xpos = xOrg + std::cos(angle) * radius; // X est le cosinus de l'angle.
+		ypos = yOrg + std::sin(angle) * radius; // Y est le sinus de l'angle.
+		xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
+		ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	}
+};
+
+class CIRCULARDIR : public COMMON
+{
+public:
+	CIRCULARDIR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : COMMON(SCREEN_WIDTH, SCREEN_HEIGHT)
+	{
+		double angle = std::numbers::pi * 2 * (rand() / (RAND_MAX + 1.0));
+		xpos = xOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+		ypos = yOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+		xdir = std::cos(angle) * 10;
+		ydir = std::sin(angle) * 10;
+	}
+};
+
+class TRAIL : public PARTICLE
+{
+public:
+	TRAIL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+	{
+		xpos = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0))) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+		ypos = SCREEN_HEIGHT - 4;
+		xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
+		ydir = -32 + (int)(12.0 * (rand() / (RAND_MAX + 1.0))); // -33 <  < -20
+	}
+
+	void init()
+	{
+		xpos = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0))) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+		ypos = SCREEN_HEIGHT - 4;
+		xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
+		ydir = -32 + (int)(12.0 * (rand() / (RAND_MAX + 1.0))); // -32 -20
+		colorindex = 255;
+		dead = false;
+	}
+
+	const int32_t getXPos() { return xpos; }
+	const int32_t getYPos() { return ypos; }
+
+protected:
+	const bool setDeath()
+	{
+		xpos += xdir;
+		ypos += ydir;
+
+		/* is particle dead? */
+		if (colorindex == 0 ||
+			(ypos >= SCREEN_HEIGHT - 3))
+		{
+			dead = true;
+			return true;
+		}
+
+		// Is particle above (Actually *under*) visible screen coming back ?
+		// If not -> dead.
+		if (ypos <= 1)
+		{
+			int32_t deltaX = xdir;
+			if ((deltaX > 0 && (xpos + deltaX >= SCREEN_WIDTH - 3)) ||
+				(deltaX < 0 && (xpos + deltaX <= 1)))
+			{
+				dead = true;
+				return true;
+			}
+		}
+
+		if (ydir > 0)
+		{
+			dead = true;
+			return true;
+		}
+
+		/* gravity takes over */
+		ydir++;
+
+		/* particle cools off */
+		colorindex--;
+		return false;
+	}
+};
+
+class CIRCLE : public CIRCULARDIR
+{
+public:
+	CIRCLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : CIRCULARDIR(SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
+	{
+		radius = 30;
+	}
+private:
+	Uint8 radius;
+protected:
+	const bool setDeath()
+	{
+		xpos += xdir;
+		ypos += ydir;
+		if(radius > 0)
+			--radius;
+
+		/* is particle dead? */
+		if (colorindex == 0 ||
+			(ypos >= SCREEN_HEIGHT - 3) ||
+			radius == 0)
+		{
+			dead = true;
+			return true;
+		}
+
+		// Is particle on the left side of visible screen coming back ?
+		// If not -> dead.
+		if (xpos <= 1 && xdir <= 0) // Minimal check : those going left are not coming back for sure.
+		{
+			dead = true;
+			return true;
+		}
+
+		// Is particle on the right side of visible screen coming back ?
+		// If not -> dead.
+		if ((xpos >= SCREEN_WIDTH - 3) && xdir >= 0) // Minimal check : those going right are not coming back for sure.
+		{
+			dead = true;
+			return true;
+		}
+
+		if (true)
+		{
+			// Is particle above (Actually *under*) visible screen coming back ?
+			// If not -> dead.
+			if (ypos <= 1 && ydir <= 0) // Circulars never fall.
+			{
+				dead = true;
+				return true;
+			}
+		}
+		else
+		{
+			// Is particle above (Actually *under*) visible screen coming back ?
+			// If not -> dead.
+			if (ypos <= 1)
+			{
+				int32_t deltaX = xdir;
+				if ((deltaX > 0 && (xpos + deltaX >= SCREEN_WIDTH - 3)) ||
+					(deltaX < 0 && (xpos + deltaX <= 1)))
+				{
+					dead = true;
+					return true;
+				}
+			}
+		}
+
+		/* gravity takes over */
+		if(false && radius == 0)
+			ydir++;
+
+		/* particle cools off */
+		colorindex--;
+
+		return false;
+	}
+};
+
 
 void SDL_ExplosionOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500);
 void SDL_ExplosionOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500, const Uint32 Alpha = 0x00);
 void SDL_ExplosionOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500, const Uint32 Alpha = 0x00);
 void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha);
-
-void init_particle_trail(PARTICLE & particle, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
-void init_particles_forced_origin(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int xOrg, const int yOrg, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
-void init_particles_forced_origin_circular_pos(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int xOrg, const int yOrg, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
-void init_particles_forced_origin_circular_dir(PARTICLE* particles, const int NUMBER_OF_PARTICLES, const int xOrg, const int yOrg, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 	
 void SDL_FireworkOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500);
 void SDL_FireworkOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500, const Uint32 Alpha = 0x00);
@@ -63,148 +355,6 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 /* *********************************************************************************** /
 /*                                       INLINE                                       */
 /* ********************************************************************************** */
-
-inline void SetParticle(PARTICLE & particle, Uint8* fire, bool & bAtLeastOneAlive, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const bool trail = false)
-{
-	int32_t temp;
-	
-	if (!particle.dead)
-	{
-		particle.xpos += particle.xdir;
-		particle.ypos += particle.ydir;
-
-		/* is particle dead? */
-		if (particle.colorindex == 0 ||
-			//particle.ypos <= 1 ||
-			(particle.ypos >= SCREEN_HEIGHT - 3) /* ||
-			particle.xpos <= 1 ||
-			particle.xpos >= SCREEN_WIDTH - 3*/)
-		{
-			particle.dead = true;
-			return;
-		}
-
-		// Is particle on the left side of visible screen coming back ?
-		// If not -> dead.
-		if (!trail && particle.xpos <= 1 && particle.xdir <= 0) // Minimal check : those going left are not coming back for sure.
-		{
-			particle.dead = true;
-			return;
-		}
-
-		// Is particle on the right side of visible screen coming back ?
-		// If not -> dead.
-		if (!trail && (particle.xpos >= SCREEN_WIDTH - 3) && particle.xdir >= 0) // Minimal check : those going right are not coming back for sure.
-		{
-			particle.dead = true;
-			return;
-		}
-
-		// Is particle above (Actually *under*) visible screen coming back ?
-		// If not -> dead.
-		if (particle.ypos <= 1)
-		{
-			int32_t deltaX = particle.xpos - particle.xorg;
-			if ((deltaX > 0 && (particle.xpos + deltaX >= SCREEN_WIDTH - 3)) ||
-				(deltaX < 0 && (particle.xpos - deltaX <= 1)))
-			{
-				particle.dead = true;
-				return;
-			}
-		}
-
-		if (trail && particle.ydir > 0)
-		{
-			particle.dead = true;
-			return;
-		}
-
-		/* gravity takes over */
-		particle.ydir++;
-
-		/* particle cools off */
-		particle.colorindex--;
-
-		/* draw particle */
-		if (particle.ypos > 1 && particle.xpos > 1 &&
-			(particle.xpos < SCREEN_WIDTH - 3))
-		{
-			temp = particle.ypos * SCREEN_WIDTH + particle.xpos;
-
-			fire[temp] = particle.colorindex;
-			fire[temp - 1] = particle.colorindex;
-			fire[temp + SCREEN_WIDTH] = particle.colorindex;
-			fire[temp - SCREEN_WIDTH] = particle.colorindex;
-			fire[temp + 1] = particle.colorindex;
-		}
-
-		bAtLeastOneAlive = true;
-	}
-}
-
-
-inline void SetParticleNG(PARTICLE& particle, Uint8* fire, bool& bAtLeastOneAlive, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const bool trail = false)
-{
-	int32_t temp;
-
-	if (!particle.dead)
-	{
-		particle.xpos += particle.xdir;
-		particle.ypos += particle.ydir;
-		--particle.radius;
-
-		/* is particle dead? */
-		if (particle.colorindex == 0 ||
-			(particle.ypos >= SCREEN_HEIGHT - 3) ||
-			particle.radius == 0)
-		{
-			particle.dead = true;
-			return;
-		}
-
-		// Is particle on the left side of visible screen coming back ?
-		// If not -> dead.
-		if (particle.xpos <= 1 && particle.xdir <= 0) // Minimal check : those going left are not coming back for sure.
-		{
-			particle.dead = true;
-			return;
-		}
-
-		// Is particle on the right side of visible screen coming back ?
-		// If not -> dead.
-		if ((particle.xpos >= SCREEN_WIDTH - 3) && particle.xdir >= 0) // Minimal check : those going right are not coming back for sure.
-		{
-			particle.dead = true;
-			return;
-		}
-
-		// Is particle above (Actually *under*) visible screen coming back ?
-		// If not -> dead.
-		if (particle.ypos <= 1 && particle.ydir <= 0)
-		{
-			particle.dead = true;
-			return;
-		}
-
-		/* particle cools off */
-		particle.colorindex--;
-
-		/* draw particle */
-		if (particle.ypos > 1 && particle.xpos > 1 &&
-			(particle.xpos < SCREEN_WIDTH - 3))
-		{
-			temp = particle.ypos * SCREEN_WIDTH + particle.xpos;
-
-			fire[temp] = particle.colorindex;
-			fire[temp - 1] = particle.colorindex;
-			fire[temp + SCREEN_WIDTH] = particle.colorindex;
-			fire[temp - SCREEN_WIDTH] = particle.colorindex;
-			fire[temp + 1] = particle.colorindex;
-		}
-
-		bAtLeastOneAlive = true;
-	}
-}
 
 /* ************************************************************************************************************************** /
 * https://discourse.libsdl.org/t/sdl-composecustomblendmode-error-in-windows/35241/1                                          /
