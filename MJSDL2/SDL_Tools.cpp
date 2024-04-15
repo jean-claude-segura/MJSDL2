@@ -740,7 +740,7 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	Uint8 * fire = new Uint8[SCREEN_WIDTH * SCREEN_HEIGHT];
 	memset(fire, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
 
-	std::vector<std::unique_ptr<PARTICLE*>> particles;
+	std::vector<std::unique_ptr<PARTICLE>> particles;
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
@@ -783,14 +783,14 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 			const int yOrg = (int)(SCREEN_HEIGHT * (rand() / (RAND_MAX + 1.0)));
 			for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
 			{
-				particles.push_back(std::make_unique<PARTICLE*>(new RANDOMORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+				particles.push_back(std::make_unique<RANDOMORIGIN>(RANDOMORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 			}
 		}
 
 		/* move and draw particles into fire array */
 		bAtLeastOneAlive = false;
 		for (auto& particle : particles)
-			(*particle)->draw(fire, bAtLeastOneAlive);
+			particle->draw(fire, bAtLeastOneAlive);
 
 		/* create fire effect */
 		for (i = 1; i < SCREEN_HEIGHT - 2; ++i)
@@ -884,7 +884,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 	Uint8* fire = new Uint8[SCREEN_WIDTH * SCREEN_HEIGHT];
 	memset(fire, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
 
-	std::vector<std::unique_ptr<PARTICLE*>> particles;
+	std::vector<std::unique_ptr<PARTICLE>> particles;
 	TRAIL trail(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
@@ -953,22 +953,22 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 				default:
 				case 0:
 					for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-						particles.push_back(std::make_unique<PARTICLE*>(new FORCEDORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT, trail.getXPos(), trail.getYPos() }));
+						particles.push_back(std::make_unique<FORCEDORIGIN>(FORCEDORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT, trail.getXPos(), trail.getYPos() }));
 					break;
 				case 1:
 					for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-						particles.push_back(std::make_unique<PARTICLE*>(new CIRCULARDIR{ SCREEN_WIDTH, SCREEN_HEIGHT, trail.getXPos(), trail.getYPos() }));
+						particles.push_back(std::make_unique<CIRCULARDIR>(CIRCULARDIR{ SCREEN_WIDTH, SCREEN_HEIGHT, trail.getXPos(), trail.getYPos() }));
 					break;
 				case 2:
 				{
 					const double radius = (int)(50.0 * (rand() / (RAND_MAX + 1.0))) + 30;
 					for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-						particles.push_back(std::make_unique<PARTICLE*>(new CIRCULARPOS{ SCREEN_WIDTH, SCREEN_HEIGHT, trail.getXPos(), trail.getYPos(), radius }));
+						particles.push_back(std::make_unique<CIRCULARPOS>(CIRCULARPOS{ SCREEN_WIDTH, SCREEN_HEIGHT, trail.getXPos(), trail.getYPos(), radius }));
 					break;
 				}
 				case 3:
 					for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-						particles.push_back(std::make_unique<PARTICLE*>(new CIRCLE{ SCREEN_WIDTH, SCREEN_HEIGHT, trail.getXPos(), trail.getYPos() }));
+						particles.push_back(std::make_unique<CIRCLE>(CIRCLE{ SCREEN_WIDTH, SCREEN_HEIGHT, trail.getXPos(), trail.getYPos() }));
 					break;
 				}
 			}
@@ -983,7 +983,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 			bAtLeastOneAlive = false;
 			for (auto& particle : particles)
 			{
-				if (!(*particle)->draw(fire, bAtLeastOneAlive))
+				if (!particle->draw(fire, bAtLeastOneAlive))
 				{
 #ifdef _DEBUG
 					--currentremaining;
