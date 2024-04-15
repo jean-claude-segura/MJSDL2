@@ -979,10 +979,17 @@ void GraphicBoard::RefreshExample()
 		SDL_SetRenderTarget(renderer, renderTarget);
 		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 	}
-	else
+	else if (false)
 	{
 		SDL_RenderCopy(renderer, textureBackgroundVictory, NULL, NULL);
 		SDL_FireworkOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 500, 0xC0);
+		SDL_SetRenderTarget(renderer, renderTarget);
+		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
+	}
+	else
+	{
+		SDL_RenderCopy(renderer, textureBackgroundVictory, NULL, NULL);
+		SDL_FireworksOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 500, 0xC0);
 		SDL_SetRenderTarget(renderer, renderTarget);
 		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 	}

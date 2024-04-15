@@ -40,6 +40,11 @@ void SDL_FireworkOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, co
 void SDL_FireworkOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500, const Uint32 Alpha = 0x00);
 void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha);
 
+void SDL_FireworksOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500);
+void SDL_FireworksOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500, const Uint32 Alpha = 0x00);
+void SDL_FireworksOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int NUMBER_OF_PARTICLES = 500, const Uint32 Alpha = 0x00);
+void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha);
+
 /* *********************************************************************************** /
 /*                                       INLINE                                       */
 /* ********************************************************************************** */

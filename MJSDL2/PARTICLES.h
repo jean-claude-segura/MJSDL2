@@ -22,7 +22,7 @@ private:
 	uint8_t Remaining;
 	std::vector<std::unique_ptr<PARTICLE>> particles;
 public:
-	PARTICLES(const int32_t, const int32_t);
+	PARTICLES(const int _SCREEN_WIDTH, const int _SCREEN_HEIGHT);
 
 	enum PARTICULES_TYPES {
 		TYPE_RANDOMORIGIN,

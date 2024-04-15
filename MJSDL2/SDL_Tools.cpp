@@ -740,7 +740,7 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	Uint8 * fire = new Uint8[SCREEN_WIDTH * SCREEN_HEIGHT];
 	memset(fire, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
 
-	std::vector<std::unique_ptr<PARTICLE>> particles;
+	PARTICLES particles(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
@@ -778,19 +778,13 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 			GenerateAnyHSLColourFirePalette(palette, size, (int)(360.0 * (rand() / (RAND_MAX + 1.0))), (int)(360.0 * (rand() / (RAND_MAX + 1.0))), Alpha);
 			for (int i = 0; i < size; ++i)
 				if (palette[i] == Alpha << 24) palette[i] = 0;
-			particles.clear();
 			const int xOrg = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0)));
 			const int yOrg = (int)(SCREEN_HEIGHT * (rand() / (RAND_MAX + 1.0)));
-			for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-			{
-				particles.push_back(std::make_unique<RANDOMORIGIN>(RANDOMORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
-			}
+			particles.init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_RANDOMORIGIN, xOrg, yOrg);
 		}
 
 		/* move and draw particles into fire array */
-		bAtLeastOneAlive = false;
-		for (auto& particle : particles)
-			particle->draw(fire, bAtLeastOneAlive);
+		bAtLeastOneAlive = particles.draw(fire);
 
 		/* create fire effect */
 		for (i = 1; i < SCREEN_HEIGHT - 2; ++i)
@@ -884,7 +878,13 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 	Uint8* fire = new Uint8[SCREEN_WIDTH * SCREEN_HEIGHT];
 	memset(fire, 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
 
-	std::vector<std::unique_ptr<PARTICLE>> particles;
+	std::vector<PARTICLES::PARTICULES_TYPES> choices;
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_FORCEDORIGIN);
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCULARDIR);
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCULARPOS);
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCLE);
+
+	PARTICLES particles(SCREEN_WIDTH, SCREEN_HEIGHT);
 	TRAIL trail(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
@@ -946,51 +946,17 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 				//init_particles_forced_origin(particles, NUMBER_OF_PARTICLES, -1, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 				//init_particles_forced_origin(particles, NUMBER_OF_PARTICLES, SCREEN_WIDTH + 1, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 				auto next = (int)(4 * (rand() / (RAND_MAX + 1.0)));
-				//next = 3;
-				particles.clear();
-				switch (next)
-				{
-				default:
-				case 0:
-					for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-						particles.push_back(std::make_unique<FORCEDORIGIN>(FORCEDORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT, trail.getXPos(), trail.getYPos() }));
-					break;
-				case 1:
-					for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-						particles.push_back(std::make_unique<CIRCULARDIR>(CIRCULARDIR{ SCREEN_WIDTH, SCREEN_HEIGHT, trail.getXPos(), trail.getYPos() }));
-					break;
-				case 2:
-				{
-					const double radius = (int)(50.0 * (rand() / (RAND_MAX + 1.0))) + 30;
-					for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-						particles.push_back(std::make_unique<CIRCULARPOS>(CIRCULARPOS{ SCREEN_WIDTH, SCREEN_HEIGHT, trail.getXPos(), trail.getYPos(), radius }));
-					break;
-				}
-				case 3:
-					for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-						particles.push_back(std::make_unique<CIRCLE>(CIRCLE{ SCREEN_WIDTH, SCREEN_HEIGHT, trail.getXPos(), trail.getYPos() }));
-					break;
-				}
+
+				particles.init(NUMBER_OF_PARTICLES, choices[next], trail.getXPos(), trail.getYPos());
 			}
 
 		}
 		else
 		{
-#ifdef _DEBUG
-			Uint32 currentremaining = NUMBER_OF_PARTICLES;
-#endif
 			/* move and draw particles into fire array */
-			bAtLeastOneAlive = false;
-			for (auto& particle : particles)
-			{
-				if (!particle->draw(fire, bAtLeastOneAlive))
-				{
+			bAtLeastOneAlive = particles.draw(fire);
 #ifdef _DEBUG
-					--currentremaining;
-#endif
-				}
-			}
-#ifdef _DEBUG
+			Uint32 currentremaining = particles.getRemaining();
 			if (remaining != currentremaining)
 			{
 				remaining = currentremaining;
@@ -1059,6 +1025,210 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 		SDL_RenderCopy(renderer, screen, NULL, NULL);
 	SDL_SetRenderTarget(renderer, renderTarget);
 
+	delete[] fire;
+	delete[] palette;
+}
+
+void SDL_FireworksOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int NUMBER_OF_PARTICLES)
+{
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+	SDL_FireworksOnTexture(renderer, renderTarget, (SDL_Texture*)NULL, Width, Height, NUMBER_OF_PARTICLES);
+}
+
+// Current renderer must be set to the texture target and renderTarget to the main renderer texture
+void SDL_FireworksOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+{
+	auto screen = SDL_GetRenderTarget(renderer);
+	SDL_FireworksOnTexture(renderer, renderTarget, screen, Width, Height, NUMBER_OF_PARTICLES, Alpha);
+}
+
+// Current renderer must be set to the texture target and renderTarget to the main renderer texture
+void SDL_FireworksOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+{
+	SDL_FireworksOnTextureRect(renderer, renderTarget, screen, NULL, Width, Height, NUMBER_OF_PARTICLES, Alpha);
+}
+
+// Adapted from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
+void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+{
+	SDL_SetRenderTarget(renderer, renderTarget);
+	Uint32 buf, index, temp;
+	int i, j;
+
+	const Uint8 number_of_fires = 3;
+
+	std::vector<PARTICLES::PARTICULES_TYPES> choices;
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_FORCEDORIGIN);
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCULARDIR);
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCULARPOS);
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCLE);
+
+	std::vector<PARTICLES> vparticles;
+	std::vector<TRAIL> vtrails;
+
+	bool * bAtLeastOneAlive = new bool [number_of_fires];
+	bool * bTrailAlive = new bool[number_of_fires];
+
+	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+
+	int size = 256;
+	size = (size >> 1) << 1;
+	Uint32** palette = new Uint32*[size];
+
+	Uint8** fire = new Uint8*[number_of_fires];
+
+	for (Uint8 i = 0; i < number_of_fires; ++i)
+	{
+		vparticles.emplace_back(PARTICLES(SCREEN_WIDTH, SCREEN_HEIGHT));
+		vtrails.emplace_back(TRAIL(SCREEN_WIDTH, SCREEN_HEIGHT));
+		bAtLeastOneAlive[i] = false;
+		bTrailAlive[i] = false;
+		palette[i] = NULL;
+
+		fire[i] = new Uint8[SCREEN_WIDTH * SCREEN_HEIGHT];
+		memset(fire[i], 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
+	}
+
+
+	SDL_Event event;
+	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+
+	auto start{ std::chrono::steady_clock::now() };
+	auto end{ std::chrono::steady_clock::now() };
+
+#ifdef _DEBUG
+	Uint32 remaining = NUMBER_OF_PARTICLES;
+#endif
+	//start the loop (one frame per loop)
+	while (true)
+	{
+		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
+			break;
+
+		end = std::chrono::steady_clock::now();
+		std::chrono::duration<double> elapsed_seconds{end - start};
+		if (elapsed_seconds.count() < 0.03)
+			continue;
+		start = std::chrono::steady_clock::now();
+
+		for (int i = 0; i < 3; ++i)
+		{
+			if (!bAtLeastOneAlive[i])
+			{
+				vtrails[i].init();
+				if (palette[i] != NULL)
+					delete[] palette[i];
+				palette[i] = new Uint32[size];
+				GenerateAnyHSLColourFirePalette(palette[i], size, (int)(360.0 * (rand() / (RAND_MAX + 1.0))), (int)(360.0 * (rand() / (RAND_MAX + 1.0))), Alpha);
+				for (int c = 0; c < size; ++c)
+					if (palette[i][c] == Alpha << 24) palette[i][c] = 0;
+				bTrailAlive[i] = true; // To start the trail.
+				bAtLeastOneAlive[i] = true; // To prevent init of the trail on next loop.
+			}
+
+			if (bTrailAlive[i])
+			{
+				bTrailAlive[i] = false;
+				vtrails[i].draw(fire[i], bTrailAlive[i]);
+				if (!bTrailAlive[i])
+				{
+#ifdef _DEBUG
+					std::cout << "Trail died at : (" << vtrails[i].getXPos() << ";" << vtrails[i].getYPos() << ").";
+					std::cout << " Screen is : (" << SCREEN_WIDTH << ";" << SCREEN_HEIGHT << ")." << std::endl;
+					remaining = NUMBER_OF_PARTICLES;
+#endif
+					//init_particles_forced_origin(particles, NUMBER_OF_PARTICLES, -1, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+					//init_particles_forced_origin(particles, NUMBER_OF_PARTICLES, SCREEN_WIDTH + 1, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+					auto next = (int)(4 * (rand() / (RAND_MAX + 1.0)));
+
+					vparticles[i].init(NUMBER_OF_PARTICLES, choices[next], vtrails[i].getXPos(), vtrails[i].getYPos());
+				}
+
+			}
+			else
+			{
+				/* move and draw particles into fire[i] array */
+				bAtLeastOneAlive[i] = vparticles[i].draw(fire[i]);
+#ifdef _DEBUG
+				Uint32 currentremaining = vparticles[i].getRemaining();
+				if (remaining != currentremaining)
+				{
+					remaining = currentremaining;
+					std::cout << remaining << " particles remaining." << std::endl;
+				}
+#endif
+			}
+
+			/* create fire[i] effect */
+			for (int h = 1; h < SCREEN_HEIGHT - 2; ++h)
+			{
+				index = (h - 1) * SCREEN_WIDTH;
+
+				for (j = 1; j < SCREEN_WIDTH - 2; ++j)
+				{
+					buf = index + j;
+
+					temp = fire[i][buf];
+					temp += fire[i][buf + 1];
+					temp += fire[i][buf - 1];
+					buf += SCREEN_WIDTH;
+					temp += fire[i][buf - 1];
+					temp += fire[i][buf + 1];
+					buf += SCREEN_WIDTH;
+					temp += fire[i][buf];
+					temp += fire[i][buf + 1];
+					temp += fire[i][buf - 1];
+
+					temp >>= 3;
+
+					if (temp > 4)
+					{
+						temp -= 4;
+					}
+					else
+					{
+						temp = 0;
+					}
+
+					fire[i][buf - SCREEN_WIDTH] = temp;
+				}
+			}
+		}
+
+		/* draw fire[i] array to screen from bottom to top*/
+		auto p = (Uint32*)firesurface->pixels;
+		auto f0 = fire[0];
+		auto f1 = fire[1];
+		auto f2 = fire[2];
+		for (int y = 0; y < SCREEN_HEIGHT; ++y)
+		{
+			for (int x = 0; x < SCREEN_WIDTH; ++x, ++p, ++f0, ++f1, ++f2)
+			{
+				*p = palette[0][*f0] | palette[1][*f1] | palette[2][*f2];
+			}
+		}
+
+		//draw the buffer and redraw the screen
+		if (screen != NULL)
+			SDL_RenderCopy(renderer, screen, NULL, NULL);
+		auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
+		SDL_RenderCopy(renderer, texture, NULL, tgtRect);
+		SDL_DestroyTexture(texture);
+		SDL_RenderPresent(renderer);
+	}
+
+	SDL_FreeSurface(firesurface);
+	if (screen != NULL)
+		SDL_RenderCopy(renderer, screen, NULL, NULL);
+	SDL_SetRenderTarget(renderer, renderTarget);
+
+	for (int z = 0; z < number_of_fires; ++z)
+	{
+		if (palette[z] != NULL)
+			delete[] palette[z];
+		if (fire[z] != NULL)
+			delete[] fire[z];
+	}
 	delete[] fire;
 	delete[] palette;
 }
