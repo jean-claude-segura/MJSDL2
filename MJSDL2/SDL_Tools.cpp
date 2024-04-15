@@ -778,9 +778,7 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 			GenerateAnyHSLColourFirePalette(palette, size, (int)(360.0 * (rand() / (RAND_MAX + 1.0))), (int)(360.0 * (rand() / (RAND_MAX + 1.0))), Alpha);
 			for (int i = 0; i < size; ++i)
 				if (palette[i] == Alpha << 24) palette[i] = 0;
-			const int xOrg = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0)));
-			const int yOrg = (int)(SCREEN_HEIGHT * (rand() / (RAND_MAX + 1.0)));
-			particles.init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_RANDOMORIGIN, xOrg, yOrg);
+			particles.init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_RANDOMORIGIN);
 		}
 
 		/* move and draw particles into fire array */
@@ -875,6 +873,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCULARDIR);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCULARPOS);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCLE);
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_WATERFALL);
 
 	PARTICLES particles(SCREEN_WIDTH, SCREEN_HEIGHT);
 	TRAIL trail(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -935,11 +934,9 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 				std::cout << " Screen is : (" << SCREEN_WIDTH << ";" << SCREEN_HEIGHT << ")." << std::endl;
 				remaining = NUMBER_OF_PARTICLES;
 #endif
-				//init_particles_forced_origin(particles, NUMBER_OF_PARTICLES, -1, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-				//init_particles_forced_origin(particles, NUMBER_OF_PARTICLES, SCREEN_WIDTH + 1, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-				auto next = (int)(4 * (rand() / (RAND_MAX + 1.0)));
-
+				auto next = (int)(choices.size() * (rand() / (RAND_MAX + 1.0)));
 				particles.init(NUMBER_OF_PARTICLES, choices[next], trail.getXPos(), trail.getYPos());
+				//vparticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_THISISMADNESS, vtrails[i].getXPos(), vtrails[i].getYPos());
 			}
 
 		}
@@ -1036,7 +1033,6 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 {
 	SDL_SetRenderTarget(renderer, renderTarget);
 	Uint32 buf, index, temp;
-	int i, j;
 
 #ifdef _DEBUG
 	const Uint8 number_of_fires = 5;
@@ -1049,6 +1045,8 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCULARDIR);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCULARPOS);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCLE);
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_WATERFALL);
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_TRAIL);
 
 	std::vector<PARTICLES> vparticles;
 	std::vector<TRAIL> vtrails;
@@ -1116,8 +1114,10 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 				vtrails[i].draw(fire[i], bTrailAlive[i]);
 				if (!bTrailAlive[i])
 				{
-					auto next = (int)(4 * (rand() / (RAND_MAX + 1.0)));
+					auto next = (int)(choices.size() * (rand() / (RAND_MAX + 1.0)));
 					vparticles[i].init(NUMBER_OF_PARTICLES, choices[next], vtrails[i].getXPos(), vtrails[i].getYPos());
+					//vparticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_THISISMADNESS, vtrails[i].getXPos(), vtrails[i].getYPos());
+					//vparticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_CIRCLE, vtrails[i].getXPos(), vtrails[i].getYPos());
 				}
 
 			}
@@ -1132,7 +1132,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 			{
 				index = (h - 1) * SCREEN_WIDTH;
 
-				for (j = 1; j < SCREEN_WIDTH - 2; ++j)
+				for (int j = 1; j < SCREEN_WIDTH - 2; ++j)
 				{
 					buf = index + j;
 
