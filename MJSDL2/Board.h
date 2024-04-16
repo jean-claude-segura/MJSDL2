@@ -65,22 +65,37 @@ inline void RemoveTile(
 	std::array<bool, 144>& Removable,
 	std::map<int, int>& TilesMap,
 	std::vector<int>& WhatsLeft,
-	std::map<std::tuple<double, double, double>, int>& mOccupationBoard)
+	std::map<std::tuple<double, double, double>, int>& mOccupationBoard,
+	/* *********************************************************************** */
+	std::vector<std::tuple<double, double, double, int, int>>& LogicalBoardBack,
+	std::vector<int>& RemovableFalseBack,
+	std::vector<int>& RemovableTrueBack,
+	std::map<int, int>& TilesMapBack,
+	std::vector<int>& WhatsLeftBack,
+	std::map<std::tuple<double, double, double>, int>& mOccupationBoardBack
+	)
 {
+	TilesMapBack[index] = TilesMap[index];
 	TilesMap.erase(index);
 
 	std::vector<std::tuple<double, double, double, int, int>>::iterator it = LogicalBoard.begin();
 	for (; it != LogicalBoard.end() && std::get<4>(*it) != index; ++it);
-	int x = std::get<0>(*it);
-	int y = std::get<1>(*it);
-	int z = std::get<2>(*it);
+	double x = std::get<0>(*it);
+	double y = std::get<1>(*it);
+	double z = std::get<2>(*it);
+	LogicalBoardBack.emplace_back(*it);
 	LogicalBoard.erase(it);
-	mOccupationBoard.erase(std::make_tuple<double, double, double>(x, y, z));
+	mOccupationBoardBack[std::make_tuple(x, y, z)] = index;
+	mOccupationBoard.erase(std::make_tuple(x, y, z));
 
 	auto itWL = std::find(WhatsLeft.begin(), WhatsLeft.end(), index);
 	if (itWL != WhatsLeft.end())
+	{
+		WhatsLeftBack.emplace_back(*itWL);
 		WhatsLeft.erase(itWL);
+	}
 
+	RemovableFalseBack.emplace_back(index);
 	Removable[index] = false;
 
 	if (index == 0x8F)
@@ -89,33 +104,59 @@ inline void RemoveTile(
 		Removable[0x89] = true;
 		Removable[0x8A] = true;
 		Removable[0x8B] = true;
+
+		RemovableTrueBack.emplace_back(0x88);
+		RemovableTrueBack.emplace_back(0x89);
+		RemovableTrueBack.emplace_back(0x8A);
+		RemovableTrueBack.emplace_back(0x8B);
 	}
 	else if (index == 0x8C)
 	{
 		Removable[0x1E] = true;
 		Removable[0x2A] = true;
+		RemovableTrueBack.emplace_back(0x1E);
+		RemovableTrueBack.emplace_back(0x2A);
 	}
 	else if (index == 0x8E)
 	{
 		Removable[0x8D] = true;
+		RemovableTrueBack.emplace_back(0x8D);
 	}
 	else if (index == 0x8D)
 	{
 		Removable[0x29] = true;
+		RemovableTrueBack.emplace_back(0x29);
 		Removable[0x35] = true;
+		RemovableTrueBack.emplace_back(0x35);
 	}
 	else
 	{
-		if (x < 11 && mOccupationBoard.contains(std::make_tuple<double, double, double>(x + 1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple<double, double, double>(x + 1, y, z + 1))))
-			Removable[mOccupationBoard[std::make_tuple<double, double, double>(x + 1, y, z)]] = true;
-		if (x > 0 && mOccupationBoard.contains(std::make_tuple<double, double, double>(x - 1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple<double, double, double>(x - 1, y, z + 1))))
-			Removable[mOccupationBoard[std::make_tuple<double, double, double>(x - 1, y, z)]] = true;
-		if (z > 0) // mOccupationBoard[std::make_tuple<double, double, double>(x, y, z-1)] DOIT exister.
+		if (x < 11 && mOccupationBoard.contains(std::make_tuple(x + 1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple(x + 1, y, z + 1))))
 		{
-			if (x < 11 && !mOccupationBoard.contains(std::make_tuple<double, double, double>(x + 1, y, z - 1)))
-				Removable[mOccupationBoard[std::make_tuple<double, double, double>(x, y, z - 1)]] = true;
-			if (x > 0 && !mOccupationBoard.contains(std::make_tuple<double, double, double>(x - 1, y, z - 1)))
-				Removable[mOccupationBoard[std::make_tuple<double, double, double>(x, y, z - 1)]] = true;
+			auto index = mOccupationBoard[std::make_tuple(x + 1, y, z)];
+			Removable[index] = true;
+			RemovableTrueBack.emplace_back(index);
+		}
+		if (x > 0 && mOccupationBoard.contains(std::make_tuple(x - 1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple(x - 1, y, z + 1))))
+		{
+			auto index = mOccupationBoard[std::make_tuple(x - 1, y, z)];
+			Removable[index] = true;
+			RemovableTrueBack.emplace_back(index);
+		}
+		if (z > 0) // mOccupationBoard[std::make_tuple(x, y, z-1)] DOIT exister.
+		{
+			if (x < 11 && !mOccupationBoard.contains(std::make_tuple(x + 1, y, z - 1)))
+			{
+				auto index = mOccupationBoard[std::make_tuple(x, y, z - 1)];
+				Removable[index] = true;
+				RemovableTrueBack.emplace_back(index);
+			}
+			if (x > 0 && !mOccupationBoard.contains(std::make_tuple(x - 1, y, z - 1)))
+			{
+				auto index = mOccupationBoard[std::make_tuple(x, y, z - 1)];
+				Removable[index] = true;
+				RemovableTrueBack.emplace_back(index);
+			}
 		}
 	}
 }
@@ -169,15 +210,25 @@ inline void SetMoves(std::vector<std::tuple<double, double, double, int, int>>& 
 }
 
 inline bool SolveRec(
-	std::pair<int, int> Move,
+	std::pair<int, int> & Move,
 	int _index,
-	std::vector<std::pair<int, int>> Moves,
-	std::vector<std::tuple<double, double, double, int, int>> LogicalBoard,
-	std::array<bool, 144> Removable,
-	std::map<int, int> TilesMap,
-	std::vector<int> WhatsLeft,
-	std::map<std::tuple<double, double, double>, int> mOccupationBoard, std::vector<std::pair<int, int>>& Solution)
+	std::vector<std::pair<int, int>> & Moves,
+	std::vector<std::tuple<double, double, double, int, int>> & LogicalBoard,
+	std::array<bool, 144> & Removable,
+	std::map<int, int> & TilesMap,
+	std::vector<int> & WhatsLeft,
+	std::map<std::tuple<double, double, double>, int> & mOccupationBoard,
+	std::vector<std::pair<int, int>>& Solution)
 {
+	std::vector<std::pair<int, int>> newMoves;
+
+	std::vector<std::tuple<double, double, double, int, int>> LogicalBoardBack;
+	std::vector<int> RemovableFalseBack;
+	std::vector<int> RemovableTrueBack;
+	std::map<int, int> TilesMapBack;
+	std::vector<int> WhatsLeftBack;
+	std::map<std::tuple<double, double, double>, int> mOccupationBoardBack;
+
 	if (Moves.size() >= (_index + 6) && Move.first == Moves[_index + 1].first && Move.first == Moves[_index + 2].first)
 	{
 		Solution.emplace_back(std::pair(Move.first, Move.second));
@@ -188,26 +239,34 @@ inline bool SolveRec(
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard);
+			mOccupationBoard, LogicalBoardBack, RemovableFalseBack, RemovableTrueBack, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 		RemoveTile(Move.second,
 			LogicalBoard,
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard);
+			mOccupationBoard, LogicalBoardBack, RemovableFalseBack, RemovableTrueBack, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 		RemoveTile(Moves[_index + 5].first,
 			LogicalBoard,
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard);
+			mOccupationBoard, LogicalBoardBack, RemovableFalseBack, RemovableTrueBack, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 		RemoveTile(Moves[_index + 5].second,
 			LogicalBoard,
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard);
-		SetMoves(LogicalBoard, Removable, Moves);
+			mOccupationBoard, LogicalBoardBack, RemovableFalseBack, RemovableTrueBack, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
+		/*for (auto& item : Moves)
+		{
+			if (Move.first != item.first && Move.second != item.first &&
+				Move.first != item.second && Move.second != item.second &&
+				Moves[_index + 5].first != item.first && Moves[_index + 5].second != item.first &&
+				Moves[_index + 5].first != item.second && Moves[_index + 5].second != item.second)
+				newMoves.emplace_back(item);
+		}*/
+		SetMoves(LogicalBoard, Removable, newMoves);
 	}
 	else
 	{
@@ -216,14 +275,19 @@ inline bool SolveRec(
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard);
+			mOccupationBoard, LogicalBoardBack, RemovableFalseBack, RemovableTrueBack, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 		RemoveTile(Move.second,
 			LogicalBoard,
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard);
-		SetMoves(LogicalBoard, Removable, Moves);
+			mOccupationBoard, LogicalBoardBack, RemovableFalseBack, RemovableTrueBack, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
+		/*for (auto& item : Moves)
+		{
+			if (Move.first != item.first && Move.second != item.second)
+				newMoves.emplace_back(item);
+		}*/
+		SetMoves(LogicalBoard, Removable, newMoves);
 		Solution.emplace_back(Move);
 	}
 
@@ -231,16 +295,24 @@ inline bool SolveRec(
 		return true;
 
 	int index = 0;
-	for (auto& move : Moves)
+	for (auto& move : newMoves)
 	{
-		auto ret = SolveRec(move, index, Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution);
+		auto ret = SolveRec(move, index, newMoves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution);
 		++index;
 		if (ret)
 		{
 			return true;
 		}
 	}
+
 	Solution.pop_back();
+	for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
+	for (auto& item : RemovableFalseBack) Removable[item] = true;
+	for (auto& item : RemovableTrueBack) Removable[item] = false;
+	for (auto& item : TilesMapBack) TilesMap[item.first] = item.second;
+	for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
+	for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
+
 	return false;
 }
 

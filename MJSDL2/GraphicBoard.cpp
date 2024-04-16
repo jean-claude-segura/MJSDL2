@@ -455,6 +455,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			}
 			else
 			{
+				std::cout << "Recherche de la solution..." << std::endl;
 				plateau.Solve();
 
 				if (!plateau.Solution.empty())
@@ -492,6 +493,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 				}
 				else
 				{
+					std::cout << "Pas de solution" << std::endl;
 					plateau.InitBoard();
 					plateau.SortBoard(direction);
 					itNextMove = plateau.GetMovesLeft().begin();
