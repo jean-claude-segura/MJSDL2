@@ -1093,7 +1093,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	auto start{ std::chrono::steady_clock::now() };
 	auto end{ std::chrono::steady_clock::now() };
 
-	int limit = 2;
+	int limit = 2; // Why 2 and not a boolean? Because at start, the duration is not related to the actual rendering time.
 	//start the loop (one frame per loop)
 	while (true)
 	{
@@ -1102,10 +1102,12 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
+		// Read comment on limit = 2.
 		std::chrono::duration<double> elapsed_seconds{end - start};
 		if (limit > 0)
 		{
-			if (elapsed_seconds.count() < 1. / 30. && number_of_fires != max_number_of_fires)
+			// Read comment on limit = 2;
+			if (limit == 1 && elapsed_seconds.count() < 1. / 30. && number_of_fires != max_number_of_fires)
 			{
 				++number_of_fires;
 				number_of_fires = std::min(number_of_fires, max_number_of_fires);
@@ -1137,7 +1139,8 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 			{
 				--limit;
 #ifdef _DEBUG
-				std::cout << "Count of fireworks : " << int(number_of_fires) << "." << std::endl;
+				if(limit == 0)
+					std::cout << "Final count of fireworks : " << int(number_of_fires) << "." << std::endl;
 #endif
 			}
 		}
