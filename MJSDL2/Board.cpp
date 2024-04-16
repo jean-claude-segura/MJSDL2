@@ -246,7 +246,7 @@ void Board::InitBoard()
 		auto x = std::get<0>(InitIndexToCoord[index]);
 		auto y = std::get<1>(InitIndexToCoord[index]);
 		auto z = std::get<2>(InitIndexToCoord[index]);
-		LogicalBoard.push_back(std::make_tuple(x, y, z, domino, index));
+		LogicalBoard.emplace_back(std::make_tuple(x, y, z, domino, index));
 		TilesMap[index] = domino;
 	}
 

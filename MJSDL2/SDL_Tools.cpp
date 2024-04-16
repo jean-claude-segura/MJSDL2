@@ -1034,14 +1034,8 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	SDL_SetRenderTarget(renderer, renderTarget);
 	Uint32 buf, index, temp;
 
-#ifdef _DEBUG
 	const Uint8 max_number_of_fires = 15;
 	Uint8 number_of_fires = 1;
-#else
-	//const Uint8 number_of_fires = 5 + (int)(10 * (rand() / (RAND_MAX + 1.0)));
-	const Uint8 max_number_of_fires = 20;
-	Uint8 number_of_fires = 1;
-#endif
 
 	std::vector<PARTICLES::PARTICULES_TYPES> choices;
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_FORCEDORIGIN);
@@ -1093,7 +1087,10 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	auto start{ std::chrono::steady_clock::now() };
 	auto end{ std::chrono::steady_clock::now() };
 
-	int limit = 2; // Why 2 and not a boolean? Because at start, the duration is not related to the actual rendering time.
+	int limit = 5; // Why 2 and not a boolean? Because at start, the duration is not related to the actual rendering time.
+	// Ok, so now why 5 and not 2? Well, because of the dynamic clocking, the cpu is not ready yet and the count is wrong.
+	// But why 5? Well, I like this number, it's more than 2 and it seems it's high enough.
+
 	//start the loop (one frame per loop)
 	while (true)
 	{
