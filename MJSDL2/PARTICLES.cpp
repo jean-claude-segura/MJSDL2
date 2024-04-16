@@ -206,6 +206,7 @@ RANDOMORIGIN::RANDOMORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PA
 	ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
 }
 
+// Original settings from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
 CENTEREDEDORIGIN::CENTEREDEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	/* randomly init particle, generate it in the center of the screen */
@@ -243,18 +244,47 @@ CIRCULARDIR::CIRCULARDIR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const 
 
 TRAIL::TRAIL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
+	int32_t ydirbase = -32;
+	auto ydirdecbase = 12.;
+	if (SCREEN_HEIGHT >= 1080)
+	{
+		ydirbase = -46;
+		ydirdecbase = 18;
+	}
+	else if (SCREEN_HEIGHT >= 2160)
+	{
+		ydirbase = -65;
+		ydirdecbase = 25;
+	}
 	xpos = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0))) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
 	ypos = SCREEN_HEIGHT - 4;
 	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = -32 + (int)(12.0 * (rand() / (RAND_MAX + 1.0))); // -33 <  < -20
+	ydir = ydirbase + (int)(ydirdecbase * (rand() / (RAND_MAX + 1.0))); // -32 -20
 }
 
 void TRAIL::init()
 {
+	// 540 : ( 32 / 20 / 12) +14 +8
+	//  *2    +14   +8   +6
+	// 1080 : (46 / 28 / 18)
+	//  *2    +19 / +12  +7
+	// 2160 :  65 / 40 / 25
+	int32_t ydirbase = -32;
+	auto ydirdecbase = 12.;
+	if (SCREEN_HEIGHT >= 1080)
+	{
+		ydirbase = -46;
+		ydirdecbase = 18;
+	}
+	else if (SCREEN_HEIGHT >= 2160)
+	{
+		ydirbase = -65;
+		ydirdecbase = 25;
+	}
 	xpos = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0))) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
 	ypos = SCREEN_HEIGHT - 4;
 	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = -32 + (int)(12.0 * (rand() / (RAND_MAX + 1.0))); // -32 -20
+	ydir = ydirbase + (int)(ydirdecbase * (rand() / (RAND_MAX + 1.0))); // -32 -20
 	colorindex = 255;
 	dead = false;
 }

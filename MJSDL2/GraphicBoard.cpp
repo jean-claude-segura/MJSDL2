@@ -1241,7 +1241,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 				break;
 			case 2:
 				SDL_RenderCopy(renderer, textureBackgroundVictory, NULL, NULL);
-				SDL_FireworksOnTexture(renderer, renderTargetOrg, Width >> 2, Height >> 2, 500, 0xC0);
+				SDL_FireworksOnTexture(renderer, renderTargetOrg, Width >> 1, Height >> 1, 500, 0xC0);
 				break;
 			}
 			SDL_SetRenderTarget(renderer, renderTargetOrg);

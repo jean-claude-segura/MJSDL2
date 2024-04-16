@@ -1035,9 +1035,12 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	Uint32 buf, index, temp;
 
 #ifdef _DEBUG
-	const Uint8 number_of_fires = 5;
+	const Uint8 max_number_of_fires = 15;
+	Uint8 number_of_fires = 15;
 #else
-	const Uint8 number_of_fires = 5 + (int)(10 * (rand() / (RAND_MAX + 1.0)));
+	//const Uint8 number_of_fires = 5 + (int)(10 * (rand() / (RAND_MAX + 1.0)));
+	const Uint8 max_number_of_fires = 20;
+	Uint8 number_of_fires = 20;
 #endif
 
 	std::vector<PARTICLES::PARTICULES_TYPES> choices;
@@ -1051,8 +1054,8 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	std::vector<PARTICLES> vparticles;
 	std::vector<TRAIL> vtrails;
 
-	bool * bAtLeastOneAlive = new bool [number_of_fires];
-	bool * bTrailAlive = new bool[number_of_fires];
+	bool * bAtLeastOneAlive = new bool [max_number_of_fires];
+	bool * bTrailAlive = new bool[max_number_of_fires];
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
@@ -1060,9 +1063,9 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	size = (size >> 1) << 1;
 	Uint32** palette = new Uint32*[size];
 
-	Uint8** fire = new Uint8*[number_of_fires];
+	Uint8** fire = new Uint8*[max_number_of_fires];
 
-	for (Uint8 i = 0; i < number_of_fires; ++i)
+	for (Uint8 i = 0; i < max_number_of_fires; ++i)
 	{
 		vparticles.emplace_back(PARTICLES(SCREEN_WIDTH, SCREEN_HEIGHT));
 		vtrails.emplace_back(TRAIL(SCREEN_WIDTH, SCREEN_HEIGHT));
@@ -1081,16 +1084,59 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	auto start{ std::chrono::steady_clock::now() };
 	auto end{ std::chrono::steady_clock::now() };
 
+	//auto enc = std::make_pair(Uint8(1), max_number_of_fires);
+	int limit = 2;
 	//start the loop (one frame per loop)
 	while (true)
 	{
+		end = std::chrono::steady_clock::now();
+
 		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
 			break;
 
-		end = std::chrono::steady_clock::now();
 		std::chrono::duration<double> elapsed_seconds{end - start};
-		if (elapsed_seconds.count() < 0.03)
+		if (limit > 0)
+		{
+			if (elapsed_seconds.count() >= 1. / 26. && number_of_fires != 1)
+			{
+				//enc.first = enc.second;
+				--number_of_fires;// -= number_of_fires >> 1;
+				number_of_fires = std::max(number_of_fires, Uint8(1));
+				//enc.second = number_of_fires;
+				for (int i = 0; i < number_of_fires; ++i)
+				{
+					vtrails[i].init();
+					if (palette[i] != NULL)
+						delete[] palette[i];
+					palette[i] = new Uint32[size];
+					GenerateAnyHSLColourFirePalette(palette[i], size, (int)(360.0 * (rand() / (RAND_MAX + 1.0))), (int)(360.0 * (rand() / (RAND_MAX + 1.0))), Alpha);
+					for (int c = 0; c < size; ++c)
+						if (palette[i][c] == Alpha << 24) palette[i][c] = 0;
+					bTrailAlive[i] = true; // To start the trail.
+					bAtLeastOneAlive[i] = true; // To prevent init of the trail on next loop.
+				}
+#ifdef _DEBUG
+				std::cout << int(number_of_fires) << std::endl;
+#endif
+			}
+			else
+			{
+				--limit;
+			}
+		}
+		else if (elapsed_seconds.count() < 1. / 26.)
+		{
 			continue;
+		}
+
+#ifdef _DEBUG
+			//std::cout << int(enc.first) << " " << int(enc.second) << std::endl;
+#endif
+
+		/*else if (elapsed_seconds.count() < 0.03)
+		{
+			continue;
+		}*/
 		start = std::chrono::steady_clock::now();
 
 		for (int i = 0; i < number_of_fires; ++i)
@@ -1174,7 +1220,8 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 		auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
 		SDL_RenderCopy(renderer, texture, NULL, tgtRect);
 		SDL_DestroyTexture(texture);
-		SDL_RenderPresent(renderer);
+		if(!limit)
+			SDL_RenderPresent(renderer);
 	}
 
 	SDL_FreeSurface(firesurface);

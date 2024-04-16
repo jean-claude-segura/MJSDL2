@@ -60,6 +60,7 @@ public:
 	bool draw(uint8_t* fire, bool& bAtLeastOneAlive);
 };
 
+// Original settings from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
 class RANDOMORIGIN : public PARTICLE
 {
 public:
