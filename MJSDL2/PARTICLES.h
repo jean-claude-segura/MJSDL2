@@ -87,7 +87,7 @@ private:
 	const double radius;
 public:
 	// Starts from (xOrg; yOrg)
-	// Every particle with the same (xOrg; yOrg) will be at the same distance from it (In a circle with the radius specified centered from there)
+	// Every particle with the same (xOrg; yOrg) will be at the same distance from it (On a circle with the radius specified centered from there)
 	CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double _radius);
 };
 
