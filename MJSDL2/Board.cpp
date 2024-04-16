@@ -312,11 +312,11 @@ void Board::RemoveTile(const int index)
 
 	std::vector<std::tuple<double, double, double, int, int>>::iterator it = LogicalBoard.begin();
 	for (; it != LogicalBoard.end() && std::get<4>(*it) != index; ++it);
-	int x = std::get<0>(*it);
-	int y = std::get<1>(*it);
-	int z = std::get<2>(*it);
+	double x = std::get<0>(*it);
+	double y = std::get<1>(*it);
+	double z = std::get<2>(*it);
 	LogicalBoard.erase(it);
-	mOccupationBoard.erase(std::make_tuple<double, double, double>(x, y, z));
+	mOccupationBoard.erase(std::make_tuple(x, y, z));
 
 	auto itWL = std::find(WhatsLeft.begin(), WhatsLeft.end(), index);
 	if (itWL != WhatsLeft.end())
@@ -347,16 +347,16 @@ void Board::RemoveTile(const int index)
 	}
 	else
 	{
-		if (x < 11 && mOccupationBoard.contains(std::make_tuple<double, double, double>(x+1, y, z)) && ( z > 3 || !mOccupationBoard.contains(std::make_tuple<double, double, double>(x+1, y, z+1))))
-			Removable[mOccupationBoard[std::make_tuple<double, double, double>(x+1, y, z)]] = true;
-		if (x > 0 && mOccupationBoard.contains(std::make_tuple<double, double, double>(x-1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple<double, double, double>(x-1, y, z+1))))
-			Removable[mOccupationBoard[std::make_tuple<double, double, double>(x - 1, y, z)]] = true;
-		if (z > 0) // mOccupationBoard[std::make_tuple<double, double, double>(x, y, z-1)] DOIT exister.
+		if (x < 11 && mOccupationBoard.contains(std::make_tuple(x + 1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple(x + 1, y, z + 1))))
+			Removable[mOccupationBoard[std::make_tuple(x + 1, y, z)]] = true;
+		if (x > 0 && mOccupationBoard.contains(std::make_tuple(x - 1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple(x - 1, y, z + 1))))
+			Removable[mOccupationBoard[std::make_tuple(x - 1, y, z)]] = true;
+		if (z > 0) // mOccupationBoard[std::make_tuple(x, y, z-1)] DOIT exister.
 		{
-			if (x < 11 && !mOccupationBoard.contains(std::make_tuple<double, double, double>(x+1, y, z-1)))
-				Removable[mOccupationBoard[std::make_tuple<double, double, double>(x, y, z-1)]] = true;
-			if (x > 0 && !mOccupationBoard.contains(std::make_tuple<double, double, double>(x-1, y, z-1)))
-				Removable[mOccupationBoard[std::make_tuple<double, double, double>(x, y, z-1)]] = true;
+			if (x < 11 && !mOccupationBoard.contains(std::make_tuple(x + 1, y, z - 1)))
+				Removable[mOccupationBoard[std::make_tuple(x, y, z - 1)]] = true;
+			if (x > 0 && !mOccupationBoard.contains(std::make_tuple(x - 1, y, z - 1)))
+				Removable[mOccupationBoard[std::make_tuple(x, y, z - 1)]] = true;
 		}
 	}
 }
