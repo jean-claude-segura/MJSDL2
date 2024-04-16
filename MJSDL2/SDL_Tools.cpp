@@ -1065,7 +1065,16 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 
 	Uint8** fire = new Uint8*[max_number_of_fires];
 
+	// Kept for deleters :
 	for (Uint8 i = 0; i < max_number_of_fires; ++i)
+	{
+		palette[i] = NULL;
+
+		fire[i] = NULL;
+	}
+
+	//for (Uint8 i = 0; i < max_number_of_fires; ++i)
+	int i = 0;
 	{
 		vparticles.emplace_back(PARTICLES(SCREEN_WIDTH, SCREEN_HEIGHT));
 		vtrails.emplace_back(TRAIL(SCREEN_WIDTH, SCREEN_HEIGHT));
@@ -1084,7 +1093,6 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	auto start{ std::chrono::steady_clock::now() };
 	auto end{ std::chrono::steady_clock::now() };
 
-	//auto enc = std::make_pair(Uint8(1), max_number_of_fires);
 	int limit = 2;
 	//start the loop (one frame per loop)
 	while (true)
@@ -1099,12 +1107,19 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 		{
 			if (elapsed_seconds.count() < 1. / 30. && number_of_fires != max_number_of_fires)
 			{
-				//enc.first = enc.second;
-				++number_of_fires;// -= number_of_fires >> 1;
+				++number_of_fires;
 				number_of_fires = std::min(number_of_fires, max_number_of_fires);
-				//enc.second = number_of_fires;
 				int i = number_of_fires - 1;
 				{
+					vparticles.emplace_back(PARTICLES(SCREEN_WIDTH, SCREEN_HEIGHT));
+					vtrails.emplace_back(TRAIL(SCREEN_WIDTH, SCREEN_HEIGHT));
+					bAtLeastOneAlive[i] = false;
+					bTrailAlive[i] = false;
+					palette[i] = NULL;
+
+					fire[i] = new Uint8[SCREEN_WIDTH * SCREEN_HEIGHT];
+					memset(fire[i], 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
+
 					vtrails[i].init();
 					if (palette[i] != NULL)
 						delete[] palette[i];
@@ -1117,13 +1132,13 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 					auto next = (int)(choices.size() * (rand() / (RAND_MAX + 1.0)));
 					vparticles[i].init(NUMBER_OF_PARTICLES, choices[next], vtrails[i].getXPos(), vtrails[i].getYPos());
 				}
-#ifdef _DEBUG
-				std::cout << int(number_of_fires) << std::endl;
-#endif
 			}
 			else
 			{
 				--limit;
+#ifdef _DEBUG
+				std::cout << "Count of fireworks : " << int(number_of_fires) << "." << std::endl;
+#endif
 			}
 		}
 		else if (elapsed_seconds.count() < 1. / 30.)
@@ -1131,14 +1146,6 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 			continue;
 		}
 
-#ifdef _DEBUG
-			//std::cout << int(enc.first) << " " << int(enc.second) << std::endl;
-#endif
-
-		/*else if (elapsed_seconds.count() < 0.03)
-		{
-			continue;
-		}*/
 		start = std::chrono::steady_clock::now();
 
 		for (int i = 0; i < number_of_fires; ++i)
@@ -1230,7 +1237,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 		SDL_RenderCopy(renderer, screen, NULL, NULL);
 	SDL_SetRenderTarget(renderer, renderTarget);
 
-	for (int z = 0; z < number_of_fires; ++z)
+	for (int z = 0; z < max_number_of_fires; ++z)
 	{
 		if (palette[z] != NULL)
 			delete[] palette[z];
