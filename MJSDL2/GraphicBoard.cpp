@@ -147,6 +147,7 @@ void GraphicBoard::Init()
 	plateau.SortBoard(direction);
 	itNextMove = plateau.GetMovesLeft().begin();
 	itPrevMove = plateau.GetMovesLeft().end();
+
 	Refresh(true);
 }
 
@@ -424,30 +425,81 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 	case RESTART:
 		if (right)
 		{
-			while (!plateau.GetMovesLeft().empty())
+			if (false)//Solution.empty())
 			{
-				itNextMove = plateau.GetMovesLeft().begin();
-				if (0 <= selected && selected < 143)
-					clicked[selected] = false;
-				selected = -1;
-				Refresh(false);
+				while (!plateau.GetMovesLeft().empty())
+				{
+					itNextMove = plateau.GetMovesLeft().begin();
+					if (0 <= selected && selected < 143)
+						clicked[selected] = false;
+					selected = -1;
+					Refresh(false);
 
-				clicked[itNextMove->first] = true;
-				clicked[itNextMove->second] = true;
+					clicked[itNextMove->first] = true;
+					clicked[itNextMove->second] = true;
 
-				Refresh(false);
+					Refresh(false);
 
-				clicked[itNextMove->first] = false;
-				clicked[itNextMove->second] = false;
+					clicked[itNextMove->first] = false;
+					clicked[itNextMove->second] = false;
 
-				plateau.RemovePairOfTiles(itNextMove->first, itNextMove->second);
+					plateau.RemovePairOfTiles(itNextMove->first, itNextMove->second);
 
-				Refresh(false);
+					Refresh(false);
 
-				itNextMove = plateau.GetMovesLeft().begin();
-				itPrevMove = plateau.GetMovesLeft().end();
+					itNextMove = plateau.GetMovesLeft().begin();
+					itPrevMove = plateau.GetMovesLeft().end();
+
+					RefreshMouseMap();
+				}
 			}
-			RefreshMouseMap();
+			else
+			{
+				plateau.Solve();
+
+				if (!plateau.Solution.empty())
+				{
+					for (std::vector<std::pair<int, int>>::iterator it = plateau.Solution.begin(); it != plateau.Solution.end(); ++it)
+					{
+						Solution.emplace_back(*it);
+					}
+
+					itNextMove = plateau.GetMovesLeft().begin();
+					for (std::vector<std::pair<int, int>>::iterator it = Solution.begin(); it != Solution.end(); ++it)
+					{
+						if (0 <= selected && selected < 143)
+							clicked[selected] = false;
+						selected = -1;
+						Refresh(false);
+
+						clicked[it->first] = true;
+						clicked[it->second] = true;
+
+						Refresh(false);
+
+						clicked[it->first] = false;
+						clicked[it->second] = false;
+
+						plateau.RemovePairOfTiles(it->first, it->second);
+
+						Refresh(false);
+
+					}
+					itNextMove = plateau.GetMovesLeft().begin();
+					itPrevMove = plateau.GetMovesLeft().end();
+
+					RefreshMouseMap();
+				}
+				else
+				{
+					plateau.InitBoard();
+					plateau.SortBoard(direction);
+					itNextMove = plateau.GetMovesLeft().begin();
+					itPrevMove = plateau.GetMovesLeft().end();
+					LoadTiles();
+					Refresh(true);
+				}
+			}
 		}
 		else
 		{
