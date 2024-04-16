@@ -1036,11 +1036,11 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 
 #ifdef _DEBUG
 	const Uint8 max_number_of_fires = 15;
-	Uint8 number_of_fires = 15;
+	Uint8 number_of_fires = 1;
 #else
 	//const Uint8 number_of_fires = 5 + (int)(10 * (rand() / (RAND_MAX + 1.0)));
 	const Uint8 max_number_of_fires = 20;
-	Uint8 number_of_fires = 20;
+	Uint8 number_of_fires = 1;
 #endif
 
 	std::vector<PARTICLES::PARTICULES_TYPES> choices;
@@ -1097,13 +1097,13 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 		std::chrono::duration<double> elapsed_seconds{end - start};
 		if (limit > 0)
 		{
-			if (elapsed_seconds.count() >= 1. / 26. && number_of_fires != 1)
+			if (elapsed_seconds.count() < 1. / 30. && number_of_fires != max_number_of_fires)
 			{
 				//enc.first = enc.second;
-				--number_of_fires;// -= number_of_fires >> 1;
-				number_of_fires = std::max(number_of_fires, Uint8(1));
+				++number_of_fires;// -= number_of_fires >> 1;
+				number_of_fires = std::min(number_of_fires, max_number_of_fires);
 				//enc.second = number_of_fires;
-				for (int i = 0; i < number_of_fires; ++i)
+				int i = number_of_fires - 1;
 				{
 					vtrails[i].init();
 					if (palette[i] != NULL)
@@ -1114,6 +1114,8 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 						if (palette[i][c] == Alpha << 24) palette[i][c] = 0;
 					bTrailAlive[i] = true; // To start the trail.
 					bAtLeastOneAlive[i] = true; // To prevent init of the trail on next loop.
+					auto next = (int)(choices.size() * (rand() / (RAND_MAX + 1.0)));
+					vparticles[i].init(NUMBER_OF_PARTICLES, choices[next], vtrails[i].getXPos(), vtrails[i].getYPos());
 				}
 #ifdef _DEBUG
 				std::cout << int(number_of_fires) << std::endl;
@@ -1124,7 +1126,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 				--limit;
 			}
 		}
-		else if (elapsed_seconds.count() < 1. / 26.)
+		else if (elapsed_seconds.count() < 1. / 30.)
 		{
 			continue;
 		}
@@ -1220,8 +1222,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 		auto texture = SDL_CreateTextureFromSurface(renderer, firesurface);
 		SDL_RenderCopy(renderer, texture, NULL, tgtRect);
 		SDL_DestroyTexture(texture);
-		if(!limit)
-			SDL_RenderPresent(renderer);
+		SDL_RenderPresent(renderer);
 	}
 
 	SDL_FreeSurface(firesurface);
