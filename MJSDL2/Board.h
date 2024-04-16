@@ -6,26 +6,6 @@
 #include <random>
 #include <cmath>
 
-void RemoveTile(
-	const int index,
-	std::vector<std::tuple<double, double, double, int, int>>& LogicalBoard,
-	std::array<bool, 144>& Removable,
-	std::map<int, int>& TilesMap,
-	std::vector<int>& WhatsLeft,
-	std::map<std::tuple<double, double, double>, int>& mOccupationBoard);
-void BuildMoves(std::vector<std::tuple<double, double, double, int, int>>& RemovableBoard, std::vector<std::tuple<double, double, double, int, int>>::iterator& itFirst, std::vector<std::pair<int, int>>& Moves);
-bool SolveRec(
-	std::pair<int, int> Move,
-	int _index,
-	std::vector<std::pair<int, int>> Moves,
-	std::vector<std::tuple<double, double, double, int, int>> LogicalBoard,
-	std::array<bool, 144> Removable,
-	std::map<int, int> TilesMap,
-	std::vector<int> WhatsLeft,
-	std::map<std::tuple<double, double, double>, int> mOccupationBoard,
-	std::vector<std::pair<int, int>>& Solution);
-void SetMoves(std::vector<std::tuple<double, double, double, int, int>>& LogicalBoard, std::array<bool, 144>& Removable, std::vector<std::pair<int, int>>& Moves);
-
 static bool CompLogicalBoardDownLeft(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right);
 static bool CompLogicalBoardUpLeft(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right);
 static bool CompLogicalBoardUpRight(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right);
@@ -51,7 +31,7 @@ public:
 	const std::vector<int>& getWhatsLeft() { return WhatsLeft; }
 	const std::vector<std::tuple<double, double, double, int, int>>& getLogicalBoard() { return LogicalBoard; }
 	void SortBoard(const uint8_t direction);
-	void Solve();
+	bool Solve();
 	
 private:
 	std::vector<std::pair<int, int>> History;
@@ -261,5 +241,28 @@ inline bool SolveRec(
 		}
 	}
 	Solution.pop_back();
+	return false;
+}
+
+// Just to work on a copy.
+inline bool SolveRecInit(
+	std::vector<std::pair<int, int>> Moves,
+	std::vector<std::tuple<double, double, double, int, int>> LogicalBoard,
+	std::array<bool, 144> Removable,
+	std::map<int, int> TilesMap,
+	std::vector<int> WhatsLeft,
+	std::map<std::tuple<double, double, double>, int> mOccupationBoard, std::vector<std::pair<int, int>>& Solution)
+{
+	int index = 0;
+	for (auto& move : Moves)
+	{
+		auto ret = SolveRec(move, index, Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution);
+		++index;
+		if (ret)
+		{
+			return true;
+		}
+	}
+
 	return false;
 }

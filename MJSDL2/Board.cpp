@@ -430,18 +430,13 @@ void Board::SetMoves()
 	BuildMoves(RemovableBoard, itFirst, Moves);
 }
 
-void Board::Solve()
+bool Board::Solve()
 {
-	int index = 0;
-	for (auto& move : Moves)
+	if (SolveRecInit(Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution))
 	{
-		auto ret = SolveRec(move, index, Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution);
-		++index;
-		if (ret)
-		{
-			for (auto& move : Solution)
-				std::cout << move.first << ";" << move.second << std::endl;
-			return;
-		}
+		for (auto& move : Solution)
+			std::cout << move.first << ";" << move.second << std::endl;
+		return true;
 	}
+	return false;
 }
