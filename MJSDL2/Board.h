@@ -223,6 +223,8 @@ inline uint64_t getHash(std::vector<std::pair<int, int>>& Moves,
 	uint64_t removables = 0ULL; // 8 : 7 + 8 + 13
 	uint64_t nmoves = 0ULL; // 7 : 8 + 13
 	uint64_t count = 0ULL; // 8 : 13
+	// Actually sum(coord) <=> sum(indexes)
+	// I have 13 bits to fill wih something better.
 	uint64_t coordround = 0ULL; // 13
 
 	for (auto& item : TilesMap)
