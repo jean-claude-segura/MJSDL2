@@ -209,6 +209,8 @@ inline void SetMoves(std::vector<std::tuple<double, double, double, int, int>>& 
 }
 
 static std::vector<uint64_t> HashBoard;
+// Pseudo-hash.
+// Collision rate to check.
 inline uint64_t getHash(std::vector<std::pair<int, int>>& Moves,
 	std::vector<std::tuple<double, double, double, int, int>>& LogicalBoard,
 	std::array<bool, 144>& Removable,
@@ -231,10 +233,11 @@ inline uint64_t getHash(std::vector<std::pair<int, int>>& Moves,
 	}
 	double coord = 0.;
 	for (auto& item : Removable) if (item) ++removables;
-	for (auto& item : LogicalBoard) coord += 5.9 *  (std::get<0>(item) + std::get<1>(item) + std::get<2>(item));
-	coordround = uint64_t(std::round(coord));
+	for (auto& item : LogicalBoard) coord += std::get<0>(item) + std::get<1>(item) + std::get<2>(item);
+	// 5.9 is to fill the 13 bits. The full board is 1387.5 and 1387.5 * 5.9 = 8186.25 < 8191 (13 bits)
+	coordround = uint64_t(std::round(5.9 * coord));
 	nmoves = Moves.size(); // 7
-	uint64_t hash = indexsum << (14 + 8 + 7 + 8 + 13) | tilesum << (8 + 7 + 8 + 13) | removables << (7 + 8 + 13) | nmoves << (8 + 13) | count << (13) | ((coordround) & 0b1111111111111ULL);
+	uint64_t hash = indexsum << (14 + 8 + 7 + 8 + 13) | tilesum << (8 + 7 + 8 + 13) | removables << (7 + 8 + 13) | nmoves << (8 + 13) | count << (13) | coordround;
 	return hash;
 }
 
