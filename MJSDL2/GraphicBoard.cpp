@@ -425,7 +425,37 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 	case RESTART:
 		if (right)
 		{
-			if (false)//Solution.empty())
+			if (plateau.Solve())
+			{
+				Solution.clear();
+				for (std::vector<std::pair<int, int>>::iterator it = plateau.Solution.begin(); it != plateau.Solution.end(); ++it)
+				{
+					Solution.emplace_back(*it);
+				}
+
+				for (std::vector<std::pair<int, int>>::iterator it = Solution.begin(); it != Solution.end(); ++it)
+				{
+					if (0 <= selected && selected < 143)
+						clicked[selected] = false;
+					selected = -1;
+					Refresh(false);
+
+					clicked[it->first] = true;
+					clicked[it->second] = true;
+
+					Refresh(false);
+
+					clicked[it->first] = false;
+					clicked[it->second] = false;
+
+					plateau.RemovePairOfTiles(it->first, it->second);
+
+					Refresh(false);
+				}
+
+				RefreshMouseMap();
+			}
+			else
 			{
 				while (!plateau.GetMovesLeft().empty())
 				{
@@ -449,58 +479,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 
 					itNextMove = plateau.GetMovesLeft().begin();
 					itPrevMove = plateau.GetMovesLeft().end();
-
-					RefreshMouseMap();
 				}
-			}
-			else
-			{
-				std::cout << "Recherche de la solution..." << std::endl;
-				plateau.Solve();
 
-				if (!plateau.Solution.empty())
-				{
-					for (std::vector<std::pair<int, int>>::iterator it = plateau.Solution.begin(); it != plateau.Solution.end(); ++it)
-					{
-						Solution.emplace_back(*it);
-					}
-
-					itNextMove = plateau.GetMovesLeft().begin();
-					for (std::vector<std::pair<int, int>>::iterator it = Solution.begin(); it != Solution.end(); ++it)
-					{
-						if (0 <= selected && selected < 143)
-							clicked[selected] = false;
-						selected = -1;
-						Refresh(false);
-
-						clicked[it->first] = true;
-						clicked[it->second] = true;
-
-						Refresh(false);
-
-						clicked[it->first] = false;
-						clicked[it->second] = false;
-
-						plateau.RemovePairOfTiles(it->first, it->second);
-
-						Refresh(false);
-
-					}
-					itNextMove = plateau.GetMovesLeft().begin();
-					itPrevMove = plateau.GetMovesLeft().end();
-
-					RefreshMouseMap();
-				}
-				else
-				{
-					std::cout << "Pas de solution" << std::endl;
-					plateau.InitBoard();
-					plateau.SortBoard(direction);
-					itNextMove = plateau.GetMovesLeft().begin();
-					itPrevMove = plateau.GetMovesLeft().end();
-					LoadTiles();
-					Refresh(true);
-				}
+				RefreshMouseMap();
 			}
 		}
 		else

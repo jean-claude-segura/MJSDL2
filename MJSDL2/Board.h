@@ -35,9 +35,9 @@ public:
 	
 private:
 	std::vector<std::pair<int, int>> History;
-	std::vector<int> WhatsLeft;
-	std::map<int, int> TilesMap; // (index, domino)
-	std::map<std::tuple<double, double, double>, int> mOccupationBoard;
+	std::vector<int> WhatsLeft; // Index
+	std::map<int, int> TilesMap; // index -> domino
+	std::map<std::tuple<double, double, double>, int> mOccupationBoard; // (x, y, z) -> index
 	std::array<std::tuple<double, double, double>, 144> InitIndexToCoord;
 	std::vector<std::tuple<double, double, double, int, int>> LogicalBoard; // (x, y, z, domino, index)
 	std::array<bool, 144> Removable = {
@@ -209,6 +209,36 @@ inline void SetMoves(std::vector<std::tuple<double, double, double, int, int>>& 
 	BuildMoves(RemovableBoard, itFirst, Moves);
 }
 
+static std::vector<uint64_t> HashBoard;
+inline uint64_t getHash(std::vector<std::pair<int, int>>& Moves,
+	std::vector<std::tuple<double, double, double, int, int>>& LogicalBoard,
+	std::array<bool, 144>& Removable,
+	std::map<int, int>& TilesMap
+	)
+{
+	// 64 56 48 40 32 24 16 8
+	uint64_t indexsum = 0ULL; // 14 : 14 + 8 + 7 + 8 + 13
+	uint64_t tilesum = 0ULL; // 14 : 8 + 7 + 8 + 13
+	uint64_t removables = 0ULL; // 8 : 7 + 8 + 13
+	uint64_t nmoves = 0ULL; // 7 : 8 + 13
+	uint64_t count = 0ULL; // 8 : 13
+	uint64_t coordround = 0ULL; // 13
+
+	for (auto& item : TilesMap)
+	{
+		indexsum += item.first;
+		tilesum += item.second;
+		++count;
+	}
+	double coord = 0.;
+	for (auto& item : Removable) if (item) ++removables;
+	for (auto& item : LogicalBoard) coord += 5.9 *  (std::get<0>(item) + std::get<1>(item) + std::get<2>(item));
+	coordround = uint64_t(std::round(coord));
+	nmoves = Moves.size(); // 7
+	uint64_t hash = indexsum << (14 + 8 + 7 + 8 + 13) | tilesum << (8 + 7 + 8 + 13) | removables << (7 + 8 + 13) | nmoves << (8 + 13) | count << (13) | ((coordround) & 0b1111111111111ULL);
+	return hash;
+}
+
 inline bool SolveRec(
 	std::pair<int, int> & Move,
 	int _index,
@@ -220,6 +250,11 @@ inline bool SolveRec(
 	std::map<std::tuple<double, double, double>, int> & mOccupationBoard,
 	std::vector<std::pair<int, int>>& Solution)
 {
+	auto hash = getHash(Moves, LogicalBoard, Removable, TilesMap);
+	auto it = std::find(HashBoard.begin(), HashBoard.end(), hash);
+	if (it != HashBoard.end())
+		return false;
+	HashBoard.emplace_back(hash);
 	std::vector<std::pair<int, int>> newMoves;
 
 	std::vector<std::tuple<double, double, double, int, int>> LogicalBoardBack;
@@ -228,9 +263,10 @@ inline bool SolveRec(
 	std::map<int, int> TilesMapBack;
 	std::vector<int> WhatsLeftBack;
 	std::map<std::tuple<double, double, double>, int> mOccupationBoardBack;
-
+	bool full = false;
 	if (Moves.size() >= (_index + 6) && Move.first == Moves[_index + 1].first && Move.first == Moves[_index + 2].first)
 	{
+		full = true;
 		Solution.emplace_back(std::pair(Move.first, Move.second));
 		Solution.emplace_back(std::pair(Moves[_index + 5].first, Moves[_index + 5].second));
 
@@ -305,13 +341,17 @@ inline bool SolveRec(
 		}
 	}
 
+	if(full)
+		Solution.pop_back();
 	Solution.pop_back();
+	/**/
 	for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
 	for (auto& item : RemovableFalseBack) Removable[item] = true;
 	for (auto& item : RemovableTrueBack) Removable[item] = false;
 	for (auto& item : TilesMapBack) TilesMap[item.first] = item.second;
 	for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
+	/**/
 
 	return false;
 }
@@ -325,6 +365,8 @@ inline bool SolveRecInit(
 	std::vector<int> WhatsLeft,
 	std::map<std::tuple<double, double, double>, int> mOccupationBoard, std::vector<std::pair<int, int>>& Solution)
 {
+	Solution.clear();
+	HashBoard.clear();
 	int index = 0;
 	for (auto& move : Moves)
 	{
