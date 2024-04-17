@@ -314,10 +314,6 @@ inline bool SolveRec(
 	std::map<std::tuple<double, double, double>, int> & mOccupationBoard,
 	std::vector<std::pair<int, int>>& Solution)
 {
-	if (stopNow(Moves, Removable, TilesMap))
-	{
-		return false;
-	}
 	std::vector<std::pair<int, int>> newMoves;
 
 	std::vector<std::tuple<double, double, double, int, int>> LogicalBoardBack;
@@ -387,28 +383,32 @@ inline bool SolveRec(
 		for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
 		for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
 		/**/
+
 		return true;
 	}
 
-	int index = 0;
-	for (auto& move : newMoves)
+	if (!stopNow(Moves, Removable, TilesMap))
 	{
-		auto ret = SolveRec(move, index, newMoves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution);
-		++index;
-		if (ret)
+		int index = 0;
+		for (auto& move : newMoves)
 		{
-			/**/
-			for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
-			for (auto& item : RemovableWasTrue) Removable[item] = true;
-			for (auto& item : RemovableWasFalse) Removable[item] = false;
-			for (auto& item : TilesMapBack) TilesMap[item.first] = item.second;
-			for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
-			for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
-			/**/
-			return true;
+			auto ret = SolveRec(move, index, newMoves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution);
+			++index;
+			if (ret)
+			{
+				/**/
+				for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
+				for (auto& item : RemovableWasTrue) Removable[item] = true;
+				for (auto& item : RemovableWasFalse) Removable[item] = false;
+				for (auto& item : TilesMapBack) TilesMap[item.first] = item.second;
+				for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
+				for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
+				/**/
+
+				return true;
+			}
 		}
 	}
-
 	if(full)
 		Solution.pop_back();
 	Solution.pop_back();
