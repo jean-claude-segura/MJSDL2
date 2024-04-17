@@ -5,6 +5,7 @@
 #include <map>
 #include <random>
 #include <cmath>
+#include <map>
 
 class Board
 {
@@ -208,11 +209,11 @@ inline void SetMoves(std::vector<std::tuple<double, double, double, int, int>>& 
 	BuildMoves(RemovableBoard, itFirst, Moves);
 }
 
-static std::vector<uint64_t> HashBoard;
+static std::map<uint64_t, std::array<uint64_t, 144 / 8>> hashtable;
+
 // Pseudo-hash.
 // Collision rate to check.
 inline uint64_t getHash(std::vector<std::pair<int, int>>& Moves,
-	std::vector<std::tuple<double, double, double, int, int>>& LogicalBoard,
 	std::array<bool, 144>& Removable,
 	std::map<int, int>& TilesMap
 	)
@@ -223,24 +224,82 @@ inline uint64_t getHash(std::vector<std::pair<int, int>>& Moves,
 	uint64_t removables = 0ULL; // 8 : 7 + 8 + 13
 	uint64_t nmoves = 0ULL; // 7 : 8 + 13
 	uint64_t count = 0ULL; // 8 : 13
-	// Actually sum(coord) <=> sum(indexes)
-	// I have 13 bits to fill wih something better.
-	uint64_t coordround = 0ULL; // 13
 
+	uint64_t alternateindexsum = 0ULL;
+	uint64_t alternatetilesum = 0ULL;
+	int pair = true;
 	for (auto& item : TilesMap)
 	{
 		indexsum += item.first;
 		tilesum += item.second;
 		++count;
+		alternateindexsum = pair ? item.first : 3 * item.first;
+		alternatetilesum = pair ? item.second : 3 * item.second;
 	}
-	double coord = 0.;
+
 	for (auto& item : Removable) if (item) ++removables;
-	for (auto& item : LogicalBoard) coord += std::get<0>(item) + std::get<1>(item) + std::get<2>(item);
-	// 5.9 is to fill the 13 bits. The full board is 1387.5 and 1387.5 * 5.9 = 8186.25 < 8191 (13 bits)
-	coordround = uint64_t(std::round(5.9 * coord));
+
 	nmoves = Moves.size(); // 7
-	uint64_t hash = indexsum << (14 + 8 + 7 + 8 + 13) | tilesum << (8 + 7 + 8 + 13) | removables << (7 + 8 + 13) | nmoves << (8 + 13) | count << (13) | coordround;
+
+	auto rIndex = alternateindexsum % 10; // 7
+	auto rTile = alternatetilesum % 5; // 6
+	rIndex = rIndex == 0 ? 0 : 10 - rIndex;
+	rTile = rTile == 0 ? 0 : 5 - rTile;
+
+	uint64_t hash = indexsum << (14 + 8 + 7 + 8 + 13) | tilesum << (8 + 7 + 8 + 13) | removables << (7 + 8 + 13) | nmoves << (8 + 13) | count << (13) | alternateindexsum << 6 | alternatetilesum;
+	
 	return hash;
+}
+
+inline bool stopNow(std::vector<std::pair<int, int>>& Moves,
+	std::array<bool, 144>& Removable,
+	std::map<int, int>& TilesMap
+)
+{
+	auto hash = getHash(Moves, Removable, TilesMap);
+
+	uint64_t tileTab[144];
+	memset(tileTab, 0, 144 * sizeof(uint64_t));
+
+	for (auto& item : TilesMap)
+	{
+		tileTab[item.first] = item.second;
+	}
+
+	std::array<uint64_t, 144 / 8> boardDescription;
+
+	for (int i = 0; i < 144; i += 8)
+	{
+		uint64_t temp = tileTab[i] << 56;
+		temp |= tileTab[i + 1] << 48;
+		temp |= tileTab[i + 2] << 40;
+		temp |= tileTab[i + 3] << 32;
+		temp |= tileTab[i + 4] << 24;
+		temp |= tileTab[i + 5] << 16;
+		temp |= tileTab[i + 6] << 8;
+		temp |= tileTab[i + 7];
+		boardDescription[i / 8] = temp;
+	}
+
+	if (hashtable.contains(hash))
+	{
+		auto boardDescriptionInHashtable = hashtable[hash];
+		for (int i = 0; i < 144 / 8; ++i)
+		{
+			if (boardDescriptionInHashtable[i] != boardDescription[i])
+			{
+				std::cout << "Collision de hash" << std::endl;
+				return false;
+			}
+		}
+		return true;
+	}
+	else
+	{
+		auto temp = std::make_pair(hash, boardDescription);
+		hashtable.emplace(temp);
+		return false;
+	}
 }
 
 inline bool SolveRec(
@@ -254,11 +313,8 @@ inline bool SolveRec(
 	std::map<std::tuple<double, double, double>, int> & mOccupationBoard,
 	std::vector<std::pair<int, int>>& Solution)
 {
-	auto hash = getHash(Moves, LogicalBoard, Removable, TilesMap);
-	auto it = std::find(HashBoard.begin(), HashBoard.end(), hash);
-	if (it != HashBoard.end())
+	if(stopNow(Moves, Removable, TilesMap))
 		return false;
-	HashBoard.emplace_back(hash);
 	std::vector<std::pair<int, int>> newMoves;
 
 	std::vector<std::tuple<double, double, double, int, int>> LogicalBoardBack;
@@ -370,7 +426,7 @@ inline bool SolveRecInit(
 	std::map<std::tuple<double, double, double>, int> mOccupationBoard, std::vector<std::pair<int, int>>& Solution)
 {
 	Solution.clear();
-	HashBoard.clear();
+	//hashtable.clear();
 	int index = 0;
 	for (auto& move : Moves)
 	{

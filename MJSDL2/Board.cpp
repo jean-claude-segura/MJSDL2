@@ -434,8 +434,10 @@ bool Board::Solve()
 {
 	if (SolveRecInit(Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution))
 	{
+#ifdef _DEBUG
 		for (auto& move : Solution)
 			std::cout << move.first << ";" << move.second << std::endl;
+#endif
 		return true;
 	}
 	return false;
