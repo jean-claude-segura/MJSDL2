@@ -5,7 +5,6 @@
 #endif
 int main()
 {
-	ShowWindow(GetConsoleWindow(), SW_SHOW);
 	try
 	{
 		// https://stackoverflow.com/questions/31162367/significance-of-ios-basesync-with-stdiofalse-cin-tienull
