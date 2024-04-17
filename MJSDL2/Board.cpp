@@ -70,7 +70,7 @@ Board::Board()
 	/**/
 }
 
-bool CompLogicalBoardDownLeft(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
+bool Board::CompLogicalBoardDownLeft(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
 {
 	return
 		(
@@ -86,7 +86,7 @@ bool CompLogicalBoardDownLeft(const std::tuple<double, double, double, int, int>
 }
 
 
-bool CompLogicalBoardDownRight(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
+bool Board::CompLogicalBoardDownRight(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
 {
 	return
 		(
@@ -97,7 +97,7 @@ bool CompLogicalBoardDownRight(const std::tuple<double, double, double, int, int
 				)
 			);
 }
-bool CompLogicalBoardUpLeft(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
+bool Board::CompLogicalBoardUpLeft(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
 {
 	return
 		(
@@ -109,7 +109,7 @@ bool CompLogicalBoardUpLeft(const std::tuple<double, double, double, int, int>& 
 			);
 }
 
-bool CompLogicalBoardUpRight(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
+bool Board::CompLogicalBoardUpRight(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
 {
 	return
 		(
@@ -128,16 +128,16 @@ void Board::SortBoard(const uint8_t direction)
 	{
 	default:
 	case 3:
-		Comparateur = CompLogicalBoardDownLeft;
+		Comparateur = Board::CompLogicalBoardDownLeft;
 		break;
 	case 0:
-		Comparateur = CompLogicalBoardUpLeft;
+		Comparateur = Board::CompLogicalBoardUpLeft;
 		break;
 	case 1:
-		Comparateur = CompLogicalBoardUpRight;
+		Comparateur = Board::CompLogicalBoardUpRight;
 		break;
 	case 2:
-		Comparateur = CompLogicalBoardDownRight;
+		Comparateur = Board::CompLogicalBoardDownRight;
 		break;
 	}
 	std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
@@ -411,7 +411,7 @@ void Board::BuildMoves(std::vector<std::tuple<double, double, double, int, int>>
 	}
 }
 
-bool CompRemovableBoard(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
+bool Board::CompRemovableBoard(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
 {
 	return std::get<3>(left) < std::get<3>(right);
 }
@@ -425,7 +425,7 @@ void Board::SetMoves()
 	}
 
 	Moves.clear();
-	std::sort(RemovableBoard.begin(), RemovableBoard.end(), CompRemovableBoard);
+	std::sort(RemovableBoard.begin(), RemovableBoard.end(), Board::CompRemovableBoard);
 	auto itFirst = RemovableBoard.begin();
 	BuildMoves(RemovableBoard, itFirst, Moves);
 }
