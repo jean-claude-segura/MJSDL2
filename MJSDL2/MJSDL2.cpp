@@ -1,7 +1,7 @@
 #include "GraphicBoard.h"
 #include <windows.h>
 #ifndef _DEBUG
-//#include <windows.h>
+#include <windows.h>
 #endif
 int main()
 {
@@ -12,7 +12,7 @@ int main()
 		std::ios_base::sync_with_stdio(false);
 		std::cin.tie(NULL); 
 #ifndef _DEBUG
-		//ShowWindow(GetConsoleWindow(), SW_HIDE);
+		ShowWindow(GetConsoleWindow(), SW_HIDE);
 #endif
 		GraphicBoard plateau;
 		plateau.Loop();
@@ -22,7 +22,7 @@ int main()
 	}
 
 #ifndef _DEBUG
-	//ShowWindow(GetConsoleWindow(), SW_SHOW);
+	ShowWindow(GetConsoleWindow(), SW_SHOW);
 #endif
 	return 0;
 }
