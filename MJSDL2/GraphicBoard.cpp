@@ -427,28 +427,22 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		{
 			if (plateau.Solve())
 			{
-				Solution.clear();
-				for (std::vector<std::pair<int, int>>::iterator it = plateau.Solution.begin(); it != plateau.Solution.end(); ++it)
-				{
-					Solution.emplace_back(*it);
-				}
-
-				for (std::vector<std::pair<int, int>>::iterator it = Solution.begin(); it != Solution.end(); ++it)
+				for (const auto & move : plateau.GetSolution())
 				{
 					if (0 <= selected && selected < 143)
 						clicked[selected] = false;
 					selected = -1;
 					Refresh(false);
 
-					clicked[it->first] = true;
-					clicked[it->second] = true;
+					clicked[move.first] = true;
+					clicked[move.second] = true;
 
 					Refresh(false);
 
-					clicked[it->first] = false;
-					clicked[it->second] = false;
+					clicked[move.first] = false;
+					clicked[move.second] = false;
 
-					plateau.RemovePairOfTiles(it->first, it->second);
+					plateau.RemovePairOfTiles(move.first, move.second);
 
 					Refresh(false);
 				}

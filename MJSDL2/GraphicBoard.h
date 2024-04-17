@@ -64,7 +64,6 @@ private:
 	void LoadButton(SDL_Texture*& button, const std::string& strPath, const std::string& strName);
 
 private:
-	std::vector<std::pair<int, int>> Solution;
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 	SDL_Texture

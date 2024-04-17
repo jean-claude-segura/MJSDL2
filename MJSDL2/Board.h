@@ -17,7 +17,6 @@ private:
 	static bool CompRemovableBoard(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right);
 
 public:
-	std::vector<std::pair<int, int>> Solution;
 	Board();
 	void InitBoard();
 	const int getDominoFromIndex(const int index) { return TilesMap[index]; }
@@ -32,8 +31,10 @@ public:
 	const std::vector<std::tuple<double, double, double, int, int>>& getLogicalBoard() { return LogicalBoard; }
 	void SortBoard(const uint8_t direction);
 	bool Solve();
-	
+	const std::vector<std::pair<int, int>>& GetSolution() { return Solution; }
+
 private:
+	std::vector<std::pair<int, int>> Solution;
 	std::vector<std::pair<int, int>> History;
 	std::vector<int> WhatsLeft; // Index
 	std::map<int, int> TilesMap; // index -> domino
@@ -68,8 +69,8 @@ inline void RemoveTile(
 	std::map<std::tuple<double, double, double>, int>& mOccupationBoard,
 	/* *********************************************************************** */
 	std::vector<std::tuple<double, double, double, int, int>>& LogicalBoardBack,
-	std::vector<int>& RemovableFalseBack,
-	std::vector<int>& RemovableTrueBack,
+	std::vector<int>& RemovableWasTrue,
+	std::vector<int>& RemovableWasFalse,
 	std::map<int, int>& TilesMapBack,
 	std::vector<int>& WhatsLeftBack,
 	std::map<std::tuple<double, double, double>, int>& mOccupationBoardBack
@@ -95,67 +96,67 @@ inline void RemoveTile(
 		WhatsLeft.erase(itWL);
 	}
 
-	RemovableFalseBack.emplace_back(index);
+	if(Removable[index]) RemovableWasTrue.emplace_back(index);
 	Removable[index] = false;
 
 	if (index == 0x8F)
 	{
+		if (!Removable[0x88]) RemovableWasFalse.emplace_back(0x88);
+		if (!Removable[0x89]) RemovableWasFalse.emplace_back(0x89);
+		if (!Removable[0x8A]) RemovableWasFalse.emplace_back(0x8A);
+		if (!Removable[0x8B]) RemovableWasFalse.emplace_back(0x8B);
+
 		Removable[0x88] = true;
 		Removable[0x89] = true;
 		Removable[0x8A] = true;
 		Removable[0x8B] = true;
-
-		RemovableTrueBack.emplace_back(0x88);
-		RemovableTrueBack.emplace_back(0x89);
-		RemovableTrueBack.emplace_back(0x8A);
-		RemovableTrueBack.emplace_back(0x8B);
 	}
 	else if (index == 0x8C)
 	{
+		if (!Removable[0x1E]) RemovableWasFalse.emplace_back(0x1E);
+		if (!Removable[0x2A]) RemovableWasFalse.emplace_back(0x2A);
 		Removable[0x1E] = true;
 		Removable[0x2A] = true;
-		RemovableTrueBack.emplace_back(0x1E);
-		RemovableTrueBack.emplace_back(0x2A);
 	}
 	else if (index == 0x8E)
 	{
+		if (!Removable[0x8D]) RemovableWasFalse.emplace_back(0x8D);
 		Removable[0x8D] = true;
-		RemovableTrueBack.emplace_back(0x8D);
 	}
 	else if (index == 0x8D)
 	{
+		if (!Removable[0x29]) RemovableWasFalse.emplace_back(0x29);
+		if (!Removable[0x35]) RemovableWasFalse.emplace_back(0x35);
 		Removable[0x29] = true;
-		RemovableTrueBack.emplace_back(0x29);
 		Removable[0x35] = true;
-		RemovableTrueBack.emplace_back(0x35);
 	}
 	else
 	{
 		if (x < 11 && mOccupationBoard.contains(std::make_tuple(x + 1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple(x + 1, y, z + 1))))
 		{
 			auto index = mOccupationBoard[std::make_tuple(x + 1, y, z)];
+			if (!Removable[index]) RemovableWasFalse.emplace_back(index);
 			Removable[index] = true;
-			RemovableTrueBack.emplace_back(index);
 		}
 		if (x > 0 && mOccupationBoard.contains(std::make_tuple(x - 1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple(x - 1, y, z + 1))))
 		{
 			auto index = mOccupationBoard[std::make_tuple(x - 1, y, z)];
+			if (!Removable[index]) RemovableWasFalse.emplace_back(index);
 			Removable[index] = true;
-			RemovableTrueBack.emplace_back(index);
 		}
 		if (z > 0) // mOccupationBoard[std::make_tuple(x, y, z-1)] DOIT exister.
 		{
 			if (x < 11 && !mOccupationBoard.contains(std::make_tuple(x + 1, y, z - 1)))
 			{
 				auto index = mOccupationBoard[std::make_tuple(x, y, z - 1)];
+				if (!Removable[index]) RemovableWasFalse.emplace_back(index);
 				Removable[index] = true;
-				RemovableTrueBack.emplace_back(index);
 			}
 			if (x > 0 && !mOccupationBoard.contains(std::make_tuple(x - 1, y, z - 1)))
 			{
 				auto index = mOccupationBoard[std::make_tuple(x, y, z - 1)];
+				if (!Removable[index]) RemovableWasFalse.emplace_back(index);
 				Removable[index] = true;
-				RemovableTrueBack.emplace_back(index);
 			}
 		}
 	}
@@ -278,7 +279,7 @@ inline bool stopNow(std::vector<std::pair<int, int>>& Moves,
 		temp |= tileTab[i + 5] << 16;
 		temp |= tileTab[i + 6] << 8;
 		temp |= tileTab[i + 7];
-		boardDescription[i / 8] = temp;
+		boardDescription[i >> 3] = temp;
 	}
 
 	if (hashtable.contains(hash))
@@ -313,13 +314,15 @@ inline bool SolveRec(
 	std::map<std::tuple<double, double, double>, int> & mOccupationBoard,
 	std::vector<std::pair<int, int>>& Solution)
 {
-	if(stopNow(Moves, Removable, TilesMap))
+	if (stopNow(Moves, Removable, TilesMap))
+	{
 		return false;
+	}
 	std::vector<std::pair<int, int>> newMoves;
 
 	std::vector<std::tuple<double, double, double, int, int>> LogicalBoardBack;
-	std::vector<int> RemovableFalseBack;
-	std::vector<int> RemovableTrueBack;
+	std::vector<int> RemovableWasTrue;
+	std::vector<int> RemovableWasFalse;
 	std::map<int, int> TilesMapBack;
 	std::vector<int> WhatsLeftBack;
 	std::map<std::tuple<double, double, double>, int> mOccupationBoardBack;
@@ -335,33 +338,25 @@ inline bool SolveRec(
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard, LogicalBoardBack, RemovableFalseBack, RemovableTrueBack, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
+			mOccupationBoard, LogicalBoardBack, RemovableWasTrue, RemovableWasFalse, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 		RemoveTile(Move.second,
 			LogicalBoard,
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard, LogicalBoardBack, RemovableFalseBack, RemovableTrueBack, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
+			mOccupationBoard, LogicalBoardBack, RemovableWasTrue, RemovableWasFalse, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 		RemoveTile(Moves[_index + 5].first,
 			LogicalBoard,
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard, LogicalBoardBack, RemovableFalseBack, RemovableTrueBack, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
+			mOccupationBoard, LogicalBoardBack, RemovableWasTrue, RemovableWasFalse, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 		RemoveTile(Moves[_index + 5].second,
 			LogicalBoard,
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard, LogicalBoardBack, RemovableFalseBack, RemovableTrueBack, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
-		/*for (auto& item : Moves)
-		{
-			if (Move.first != item.first && Move.second != item.first &&
-				Move.first != item.second && Move.second != item.second &&
-				Moves[_index + 5].first != item.first && Moves[_index + 5].second != item.first &&
-				Moves[_index + 5].first != item.second && Moves[_index + 5].second != item.second)
-				newMoves.emplace_back(item);
-		}*/
+			mOccupationBoard, LogicalBoardBack, RemovableWasTrue, RemovableWasFalse, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 		SetMoves(LogicalBoard, Removable, newMoves);
 	}
 	else
@@ -371,24 +366,29 @@ inline bool SolveRec(
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard, LogicalBoardBack, RemovableFalseBack, RemovableTrueBack, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
+			mOccupationBoard, LogicalBoardBack, RemovableWasTrue, RemovableWasFalse, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 		RemoveTile(Move.second,
 			LogicalBoard,
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard, LogicalBoardBack, RemovableFalseBack, RemovableTrueBack, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
-		/*for (auto& item : Moves)
-		{
-			if (Move.first != item.first && Move.second != item.second)
-				newMoves.emplace_back(item);
-		}*/
+			mOccupationBoard, LogicalBoardBack, RemovableWasTrue, RemovableWasFalse, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 		SetMoves(LogicalBoard, Removable, newMoves);
 		Solution.emplace_back(Move);
 	}
 
 	if (LogicalBoard.empty())
+	{
+		/**/
+		for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
+		for (auto& item : RemovableWasTrue) Removable[item] = true;
+		for (auto& item : RemovableWasFalse) Removable[item] = false;
+		for (auto& item : TilesMapBack) TilesMap[item.first] = item.second;
+		for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
+		for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
+		/**/
 		return true;
+	}
 
 	int index = 0;
 	for (auto& move : newMoves)
@@ -397,6 +397,14 @@ inline bool SolveRec(
 		++index;
 		if (ret)
 		{
+			/**/
+			for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
+			for (auto& item : RemovableWasTrue) Removable[item] = true;
+			for (auto& item : RemovableWasFalse) Removable[item] = false;
+			for (auto& item : TilesMapBack) TilesMap[item.first] = item.second;
+			for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
+			for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
+			/**/
 			return true;
 		}
 	}
@@ -406,8 +414,8 @@ inline bool SolveRec(
 	Solution.pop_back();
 	/**/
 	for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
-	for (auto& item : RemovableFalseBack) Removable[item] = true;
-	for (auto& item : RemovableTrueBack) Removable[item] = false;
+	for (auto& item : RemovableWasTrue) Removable[item] = true;
+	for (auto& item : RemovableWasFalse) Removable[item] = false;
 	for (auto& item : TilesMapBack) TilesMap[item.first] = item.second;
 	for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
@@ -423,20 +431,52 @@ inline bool SolveRecInit(
 	std::array<bool, 144> Removable,
 	std::map<int, int> TilesMap,
 	std::vector<int> WhatsLeft,
-	std::map<std::tuple<double, double, double>, int> mOccupationBoard, std::vector<std::pair<int, int>>& Solution)
+	std::map<std::tuple<double, double, double>, int> mOccupationBoard,
+	std::vector<std::pair<int, int>>& Solution)
 {
+#ifdef _DEBUG
+	std::vector<std::pair<int, int>> MovesBack = Moves;
+	std::vector<std::tuple<double, double, double, int, int>> LogicalBoardBack = LogicalBoard;
+	std::array<bool, 144> RemovableBack = Removable;
+	std::map<int, int> TilesMapBack = TilesMap;
+	std::vector<int> WhatsLeftBack = WhatsLeft;
+	std::map<std::tuple<double, double, double>, int> mOccupationBoardBack = mOccupationBoard;
+#endif
+
 	Solution.clear();
-	//hashtable.clear();
+	// Must be cleared. The hash just means the poitions has been seen at least once. It doens't mean it was in a lost game.
+	// And the start position is always different.
+	hashtable.clear();
+	bool ret = false;
 	int index = 0;
 	for (auto& move : Moves)
 	{
-		auto ret = SolveRec(move, index, Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution);
+		ret = SolveRec(move, index, Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution);
 		++index;
-		if (ret)
-		{
-			return true;
-		}
+		if (ret) break;
 	}
 
-	return false;
+#ifdef _DEBUG
+	bool MovesOk = MovesBack.size() == Moves.size();
+	bool LogicalBoardOk = LogicalBoardBack.size() == LogicalBoard.size();
+	bool RemovableOk = RemovableBack.size() == Removable.size();
+	bool TilesMapOk = TilesMapBack.size() == TilesMap.size();
+	bool WhatsLeftOk = WhatsLeftBack.size() == WhatsLeft.size();
+	bool mOccupationBoardOk = mOccupationBoardBack.size() == mOccupationBoard.size();
+	for (auto& item : MovesBack) MovesOk &= Moves.end() != std::find(Moves.begin(), Moves.end(), item);
+	for (auto& item : LogicalBoardBack) MovesOk &= LogicalBoard.end() != std::find(LogicalBoard.begin(), LogicalBoard.end(), item);
+	for (int i = 0;  i < RemovableBack.size(); ++i) RemovableOk &= Removable[i] == RemovableBack[i];
+	for (auto& item : TilesMapBack) TilesMapOk &= TilesMap.contains(item.first) && TilesMap[item.first] == item.second;
+	for (auto& item : WhatsLeftBack) WhatsLeftOk &= WhatsLeftBack.end() != std::find(WhatsLeftBack.begin(), WhatsLeftBack.end(), item);
+	for (auto& item : mOccupationBoardBack)  mOccupationBoardOk &= mOccupationBoard.contains(item.first) && mOccupationBoard[item.first] == item.second;
+
+	std::cout << MovesOk << std::endl;
+	std::cout << LogicalBoardOk << std::endl;
+	std::cout << RemovableOk << std::endl;
+	std::cout << TilesMapOk << std::endl;
+	std::cout << WhatsLeftOk << std::endl;
+	std::cout << mOccupationBoardOk << std::endl;
+#endif
+
+	return ret;
 }
