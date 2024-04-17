@@ -270,6 +270,8 @@ inline bool stopNow(std::vector<std::pair<int, int>>& Moves,
 
 	std::array<uint64_t, 144 / 8> boardDescription;
 
+	// All numbers are 8 bits.
+	// Stored 8 by 8 in 18 slides of 64 bits.
 	for (int i = 0; i < 144; i += 8)
 	{
 		uint64_t temp = tileTab[i] << 56;
