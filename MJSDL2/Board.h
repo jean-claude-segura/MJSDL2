@@ -211,6 +211,7 @@ inline void SetMoves(std::vector<std::tuple<double, double, double, int, int>>& 
 }
 
 static std::map<uint64_t, std::array<uint64_t, 144 / 8>> hashtable;
+static std::vector<std::array<uint64_t, 144 / 8>> vBoardDescription;
 
 // Pseudo-hash.
 // Collision rate to check.
@@ -289,8 +290,16 @@ inline bool stopNow(std::vector<std::pair<int, int>>& Moves,
 		{
 			if (boardDescriptionInHashtable[i] != boardDescription[i])
 			{
-				std::cout << "Collision de hash" << std::endl;
-				return false;
+				if (vBoardDescription.end() == std::find(vBoardDescription.begin(), vBoardDescription.end(), boardDescription))
+				{
+					std::cout << "Collision de hash" << std::endl;
+					vBoardDescription.emplace_back(boardDescription);
+					return false;
+				}
+				else
+				{
+					return true;
+				}
 			}
 		}
 		return true;
