@@ -162,7 +162,7 @@ inline void RemoveTile(
 	}
 }
 
-inline void BuildMoves(std::vector<std::tuple<double, double, double, int, int>>& RemovableBoard, std::vector<std::tuple<double, double, double, int, int>>::iterator& itFirst, std::vector<std::vector<int>>& Moves)
+inline void BuildMoves(const std::vector<std::tuple<double, double, double, int, int>>& RemovableBoard, std::vector<std::tuple<double, double, double, int, int>>::const_iterator& itFirst, std::vector<std::vector<int>>& Moves)
 {
 	if (itFirst != RemovableBoard.end())
 	{
@@ -196,6 +196,7 @@ inline void BuildMoves(std::vector<std::tuple<double, double, double, int, int>>
 		{
 			if (temp.size() == 3)
 			{
+				// Little issue with my trick...
 				Moves.emplace_back(std::vector<int>{temp[0], temp[1]});
 				Moves.emplace_back(std::vector<int>{temp[0], temp[2]});
 				Moves.emplace_back(std::vector<int>{temp[1], temp[2]});
@@ -210,7 +211,7 @@ inline void BuildMoves(std::vector<std::tuple<double, double, double, int, int>>
 	}
 }
 
-inline void SetMoves(std::vector<std::tuple<double, double, double, int, int>>& LogicalBoard, std::array<bool, 144>& Removable, std::vector<std::vector<int>>& Moves)
+inline void SetMoves(const std::vector<std::tuple<double, double, double, int, int>>& LogicalBoard, const std::array<bool, 144>& Removable, std::vector<std::vector<int>>& Moves)
 {
 	std::vector<std::tuple<double, double, double, int, int>> RemovableBoard; // (x, y, z, domino, index)
 	for (const auto& tuple : LogicalBoard)
@@ -232,17 +233,17 @@ static std::vector<std::array<uint64_t, 144 / 8>> vBoardDescription;
 
 // Pseudo-hash.
 // Collision rate to check.
-inline uint64_t getHash(std::vector<std::vector<int>>& Moves,
-	std::array<bool, 144>& Removable,
-	std::map<int, int>& TilesMap
+inline uint64_t getHash(const std::vector<std::vector<int>>& Moves,
+	const std::array<bool, 144>& Removable,
+	const std::map<int, int>& TilesMap
 	)
 {
 	// 64 56 48 40 32 24 16 8
-	uint64_t indexsum = 0ULL; // 14 : 14 + 8 + 7 + 8 + 13
-	uint64_t tilesum = 0ULL; // 14 : 8 + 7 + 8 + 13
-	uint64_t removables = 0ULL; // 8 : 7 + 8 + 13
-	uint64_t nmoves = 0ULL; // 7 : 8 + 13
-	uint64_t count = 0ULL; // 8 : 13
+	uint64_t indexsum = 0ULL; // 14 : 14 + 8 + 6 + 8 + 13
+	uint64_t tilesum = 0ULL; // 14 : 8 + 6 + 8 + 13
+	uint64_t removables = 0ULL; // 8 : 6 + 8 + 13
+	uint64_t nmoves = 0ULL; // 6 (max 40 moves) : 8 + 13
+	uint64_t count = 0ULL; // 8 : 14
 
 	uint64_t alternateindexsum = 0ULL;
 	uint64_t alternatetilesum = 0ULL;
@@ -261,18 +262,18 @@ inline uint64_t getHash(std::vector<std::vector<int>>& Moves,
 	nmoves = Moves.size(); // 7
 
 	auto rIndex = alternateindexsum % 10; // 7
-	auto rTile = alternatetilesum % 5; // 6
+	auto rTile = alternatetilesum % 10; // 7
 	rIndex = rIndex == 0 ? 0 : 10 - rIndex;
-	rTile = rTile == 0 ? 0 : 5 - rTile;
+	rTile = rTile == 0 ? 0 : 10 - rTile;
 
-	uint64_t hash = indexsum << (14 + 8 + 7 + 8 + 13) | tilesum << (8 + 7 + 8 + 13) | removables << (7 + 8 + 13) | nmoves << (8 + 13) | count << (13) | rIndex << 6 | rTile;
+	uint64_t hash = indexsum << (14 + 8 + 6 + 8 + 14) | tilesum << (8 + 6 + 8 + 14) | removables << (6 + 8 + 14) | nmoves << (8 + 14) | count << (14) | rIndex << 7 | rTile;
 	
 	return hash;
 }
 
 inline bool stopNow(std::vector<std::vector<int>>& Moves,
-	std::array<bool, 144>& Removable,
-	std::map<int, int>& TilesMap
+	const std::array<bool, 144>& Removable,
+	const std::map<int, int>& TilesMap
 )
 {
 	auto hash = getHash(Moves, Removable, TilesMap);
@@ -309,9 +310,11 @@ inline bool stopNow(std::vector<std::vector<int>>& Moves,
 		{
 			if (boardDescriptionInHashtable[i] != boardDescription[i])
 			{
+#ifdef _DEBUG
+				std::cout << "Collision de hash" << std::endl;
+#endif
 				if (vBoardDescription.end() == std::find(vBoardDescription.begin(), vBoardDescription.end(), boardDescription))
 				{
-					std::cout << "Collision de hash" << std::endl;
 					vBoardDescription.emplace_back(boardDescription);
 					return false;
 				}
@@ -332,9 +335,9 @@ inline bool stopNow(std::vector<std::vector<int>>& Moves,
 }
 
 inline bool SolveRec(
-	std::vector<int>& Move,
+	const std::vector<int>& Move,
 	int _index,
-	std::vector<std::vector<int>> & Moves,
+	const std::vector<std::vector<int>> & Moves,
 	std::vector<std::tuple<double, double, double, int, int>> & LogicalBoard,
 	std::array<bool, 144> & Removable,
 	std::map<int, int> & TilesMap,
@@ -343,8 +346,6 @@ inline bool SolveRec(
 	std::vector<std::pair<int, int>>& Solution)
 {
 
-	if (stopNow(Moves, Removable, TilesMap))
-		return false;
 	std::vector<std::vector<int>> newMoves;
 
 	std::vector<std::tuple<double, double, double, int, int>> LogicalBoardBack;
@@ -386,7 +387,7 @@ inline bool SolveRec(
 		return true;
 	}
 
-	if (!stopNow(Moves, Removable, TilesMap))
+	if (!stopNow(newMoves, Removable, TilesMap))
 	{
 		int index = 0;
 		for (auto& move : newMoves)
@@ -434,7 +435,6 @@ inline bool SolveRecInit(
 	std::vector<std::pair<int, int>>& Solution)
 {
 #ifdef _DEBUG
-	//std::vector<std::pair<int, int>> MovesBack = oldMoves;
 	std::vector<std::tuple<double, double, double, int, int>> LogicalBoardBack = LogicalBoard;
 	std::array<bool, 144> RemovableBack = Removable;
 	std::map<int, int> TilesMapBack = TilesMap;
@@ -443,11 +443,13 @@ inline bool SolveRecInit(
 #endif
 
 	Solution.clear();
-	// Must be cleared. The hash just means the poitions has been seen at least once. It doens't mean it was in a lost game.
+	// Must be cleared. The hash just means the positions has been seen at least once before. It doesn't mean it was in a lost game.
 	// And the start position is always different.
 	hashtable.clear();
 	bool ret = false;
 	int index = 0;
+
+	// New move container to remove the tiles 2 at once or 4 at once.
 	std::vector<std::vector<int>> Moves;
 	for(int _index = 0; _index < oldMoves.size();)
 	{
@@ -474,20 +476,17 @@ inline bool SolveRecInit(
 	}
 
 #ifdef _DEBUG
-	//bool MovesOk = MovesBack.size() == Moves.size();
 	bool LogicalBoardOk = LogicalBoardBack.size() == LogicalBoard.size();
 	bool RemovableOk = RemovableBack.size() == Removable.size();
 	bool TilesMapOk = TilesMapBack.size() == TilesMap.size();
 	bool WhatsLeftOk = WhatsLeftBack.size() == WhatsLeft.size();
 	bool mOccupationBoardOk = mOccupationBoardBack.size() == mOccupationBoard.size();
-	//for (auto& item : MovesBack) MovesOk &= Moves.end() != std::find(Moves.begin(), Moves.end(), item);
 	for (auto& item : LogicalBoardBack) LogicalBoardOk &= LogicalBoard.end() != std::find(LogicalBoard.begin(), LogicalBoard.end(), item);
 	for (int i = 0;  i < RemovableBack.size(); ++i) RemovableOk &= Removable[i] == RemovableBack[i];
 	for (auto& item : TilesMapBack) TilesMapOk &= TilesMap.contains(item.first) && TilesMap[item.first] == item.second;
 	for (auto& item : WhatsLeftBack) WhatsLeftOk &= WhatsLeftBack.end() != std::find(WhatsLeftBack.begin(), WhatsLeftBack.end(), item);
 	for (auto& item : mOccupationBoardBack)  mOccupationBoardOk &= mOccupationBoard.contains(item.first) && mOccupationBoard[item.first] == item.second;
 
-	//std::cout << MovesOk << std::endl;
 	std::cout << LogicalBoardOk << std::endl;
 	std::cout << RemovableOk << std::endl;
 	std::cout << TilesMapOk << std::endl;
