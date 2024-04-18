@@ -2,72 +2,6 @@
 
 Board::Board()
 {
-	std::array<std::array<std::array<bool, 5>, 8>, 12> BasePattern;
-	for (int z = 0; z < 5; ++z)
-		for (int y = 0; y < 8; ++y)
-			for (int x = 0; x < 12; ++x)
-				BasePattern[x][y][z] = false;
-	for (int x = 0; x < 12; ++x)
-	{
-		BasePattern[x][0][0] = true;
-		BasePattern[x][7][0] = true;
-		BasePattern[x][3][0] = true;
-		BasePattern[x][4][0] = true;
-	}
-
-	for (int x = 2; x < 10; ++x)
-	{
-		BasePattern[x][1][0] = true;
-		BasePattern[x][6][0] = true;
-	}
-	for (int x = 1; x < 11; ++x)
-	{
-		BasePattern[x][2][0] = true;
-		BasePattern[x][5][0] = true;
-	}
-	for (int x = 3; x < 9; ++x)
-		for (int y = 1; y < 7; ++y)
-			BasePattern[x][y][1] = true;
-
-	for (int x = 4; x < 8; ++x)
-		for (int y = 2; y < 6; ++y)
-			BasePattern[x][y][2] = true;
-
-	for (int x = 5; x < 7; ++x)
-		for (int y = 3; y < 5; ++y)
-			BasePattern[x][y][3] = true;
-
-	int index = 0;
-	for (int z = 0; z < 5; ++z)
-	{
-		for (int y = 0; y < 8; ++y)
-		{
-			for (int x = 0; x < 12; ++x)
-			{
-				if (BasePattern[x][y][z]) InitIndexToCoord[index++] = std::make_tuple(x, y, z);
-			}
-		}
-	}
-
-	InitIndexToCoord[140] = std::make_tuple(-1, 3.5, 0);
-	InitIndexToCoord[141] = std::make_tuple(12, 3.5, 0);
-	InitIndexToCoord[142] = std::make_tuple(13, 3.5, 0);
-	InitIndexToCoord[143] = std::make_tuple(5.5, 3.5, 4);
-
-	/*
-	int cptr = 0;
-
-	for (int z = 0; z < 5; ++z)
-	{
-		for (int y = 0; y < 8; ++y)
-		{
-			for (int x = 0; x < 12; ++x)
-			{
-				if (BasePattern[x][y][z] == 1) ++cptr;
-			}
-		}
-	}
-	/**/
 }
 
 bool Board::CompLogicalBoardDownLeft(const std::tuple<double, double, double, int, int>& left, const std::tuple<double, double, double, int, int>& right)
@@ -242,10 +176,10 @@ void Board::InitBoard()
 		} while (tempDominos[domino] == 0);
 		int debugdom = tempDominos[domino];
 		--tempDominos[domino];
-		mOccupationBoard[InitIndexToCoord[index]] = index;
-		auto x = std::get<0>(InitIndexToCoord[index]);
-		auto y = std::get<1>(InitIndexToCoord[index]);
-		auto z = std::get<2>(InitIndexToCoord[index]);
+		mOccupationBoard[IndexToCoord[index]] = index;
+		auto x = std::get<0>(IndexToCoord[index]);
+		auto y = std::get<1>(IndexToCoord[index]);
+		auto z = std::get<2>(IndexToCoord[index]);
 		LogicalBoard.emplace_back(std::make_tuple(x, y, z, domino, index));
 		TilesMap[index] = domino;
 	}
