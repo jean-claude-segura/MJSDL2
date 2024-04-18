@@ -339,11 +339,11 @@ static std::map<uint64_t, std::array<uint64_t, 144 / 8>> hashtable;
 inline uint64_t getFNV1(const std::map<int, int>& TilesMap)
 {
 	uint64_t tileTab[144];
-	memset(tileTab, 44, 144 * sizeof(char));
+	memset(tileTab, 44, 144 * sizeof(uint64_t));
 
 	for (auto& item : TilesMap)
 	{
-		tileTab[item.first] = item.second == 0 ? 43ULL : uint64_t(item.second);
+		tileTab[item.first] = uint64_t(item.second);
 	}
 
 	uint64_t hash = FNV_offset_basis;
@@ -361,11 +361,11 @@ inline uint64_t getFNV1(const std::map<int, int>& TilesMap)
 inline uint64_t getFNV1a(const std::map<int, int>& TilesMap)
 {
 	uint64_t tileTab[144];
-	memset(tileTab, 44, 144 * sizeof(char));
+	memset(tileTab, 44, 144 * sizeof(uint64_t));
 
 	for (auto& item : TilesMap)
 	{
-		tileTab[item.first] = item.second == 0 ? 43ULL : uint64_t(item.second);
+		tileTab[item.first] = uint64_t(item.second);
 	}
 
 	uint64_t hash = FNV_offset_basis;
@@ -378,16 +378,19 @@ inline uint64_t getFNV1a(const std::map<int, int>& TilesMap)
 	return hash;
 }
 
-inline bool stopNow( const std::map<int, int>& TilesMap, uint64_t& positions )
+inline bool stopNow( const std::map<int, int>& TilesMap 
+#ifdef _DEBUG
+	, uint64_t& positions
+#endif
+)
 {
-	auto hash = getFNV1a(TilesMap);
 
 	uint64_t tileTab[144];
 	memset(tileTab, 0, 144 * sizeof(uint64_t));
 
 	for (auto& item : TilesMap)
 	{
-		tileTab[item.first] = item.second;
+		tileTab[item.first] = uint64_t(item.second);
 	}
 
 	std::array<uint64_t, 144 / 8> boardDescription;
@@ -405,6 +408,13 @@ inline bool stopNow( const std::map<int, int>& TilesMap, uint64_t& positions )
 		temp |= tileTab[i + 6] << 8;
 		temp |= tileTab[i + 7];
 		boardDescription[i >> 3] = temp;
+	}
+
+	uint64_t hash = FNV_offset_basis;
+	for (int i = 0; i < 144; ++i)
+	{
+		hash ^= tileTab[i];
+		hash *= FNV_prime;
 	}
 
 	if (hashtable.contains(hash))
@@ -440,8 +450,11 @@ inline bool SolveRec(
 	std::map<int, int> & TilesMap,
 	std::vector<int> & WhatsLeft,
 	std::map<Coordinates, int> & mOccupationBoard,
-	std::vector<DominoIndex>& Solution,
-	uint64_t& positions)
+	std::vector<DominoIndex>& Solution
+#ifdef _DEBUG
+	, uint64_t& positions
+#endif
+)
 {
 
 	std::vector<std::vector<int>> newMoves;
@@ -485,12 +498,21 @@ inline bool SolveRec(
 		return true;
 	}
 
-	if (!stopNow(TilesMap, positions))
+	if (!stopNow(TilesMap
+#ifdef _DEBUG
+		, positions
+#endif
+	))
 	{
 		int index = 0;
 		for (auto& move : newMoves)
 		{
-			auto ret = SolveRec(move, index, newMoves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution, ++positions);
+			auto ret = SolveRec(move, index, newMoves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution
+#ifdef _DEBUG
+				, ++positions
+#endif
+			);
+
 			++index;
 			if (ret)
 			{
@@ -566,12 +588,17 @@ inline bool SolveRecInit(
 		}
 		Moves.emplace_back(temp);
 	}
-
+#ifdef _DEBUG
 	uint64_t positions = 0ULL;
+#endif
 
 	for (auto& move : Moves)
 	{
-		ret = SolveRec(move, index, Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution, positions);
+		ret = SolveRec(move, index, Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution
+#ifdef _DEBUG
+			, positions
+#endif
+		);
 		++index;
 		if (ret) break;
 	}
