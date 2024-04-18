@@ -192,8 +192,19 @@ inline void BuildMoves(std::vector<std::tuple<double, double, double, int, int>>
 			}
 		} while (itNext != RemovableBoard.end());
 
-		if(!temp.empty())
-			Moves.emplace_back(temp);
+		if (!temp.empty())
+		{
+			if (temp.size() == 3)
+			{
+				Moves.emplace_back(std::vector<int>{temp[0], temp[1]});
+				Moves.emplace_back(std::vector<int>{temp[0], temp[2]});
+				Moves.emplace_back(std::vector<int>{temp[1], temp[2]});
+			}
+			else
+			{
+				Moves.emplace_back(temp);
+			}
+		}
 
 		BuildMoves(RemovableBoard, ++itFirst, Moves);
 	}
