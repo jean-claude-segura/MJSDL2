@@ -9,11 +9,13 @@
 
 class DominoIndex
 {
+private:
+	DominoIndex() {}
+
 public:
 	int domino;
 	int index;
 	DominoIndex(int _domino, int _index) : domino (_domino), index(_index) {}
-	DominoIndex() : domino(-1), index(-1) {}
 
 	bool operator==(const DominoIndex& other) const
 	{
@@ -96,10 +98,10 @@ constexpr std::array<Coordinates, 144> InitIndexToCoord()
 		}
 	}
 
-	InitIndexToCoord[140] = { -1., 3.5, 0. };
-	InitIndexToCoord[141] = { 12., 3.5, 0. };
-	InitIndexToCoord[142] = { 13., 3.5, 0. };
-	InitIndexToCoord[143] = { 5.5, 3.5, 4. };
+	InitIndexToCoord[index++] = { -1., 3.5, 0. };
+	InitIndexToCoord[index++] = { 12., 3.5, 0. };
+	InitIndexToCoord[index++] = { 13., 3.5, 0. };
+	InitIndexToCoord[index++] = { 5.5, 3.5, 4. };
 
 	return InitIndexToCoord;
 }
