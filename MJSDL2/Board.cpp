@@ -8,10 +8,10 @@ bool Board::CompLogicalBoardDownLeft(const std::pair<int, int>& left, const std:
 {
 	return
 		(
-			std::get<2>(IndexToCoord[left.second]) <= std::get<2>(IndexToCoord[right.second]) &&
+			IndexToCoord[left.second].z <= IndexToCoord[right.second].z &&
 			(
-				(std::get<2>(IndexToCoord[left.second]) != std::get<2>(IndexToCoord[right.second])) ||
-				(std::get<1>(IndexToCoord[left.second]) >= std::get<1>(IndexToCoord[right.second])) && (std::get<1>(IndexToCoord[left.second]) != std::get<1>(IndexToCoord[right.second]) || std::get<0>(IndexToCoord[left.second]) <= std::get<0>(IndexToCoord[right.second]))
+				(IndexToCoord[left.second].z != IndexToCoord[right.second].z) ||
+				(IndexToCoord[left.second].y >= IndexToCoord[right.second].y) && (IndexToCoord[left.second].y != IndexToCoord[right.second].y || IndexToCoord[left.second].x <= IndexToCoord[right.second].x)
 				)
 			);
 	/*return !(std::get<2>(IndexToCoord[left.second]) > std::get<2>(right) ||
@@ -24,10 +24,10 @@ bool Board::CompLogicalBoardDownRight(const std::pair<int, int>& left, const std
 {
 	return
 		(
-			std::get<2>(IndexToCoord[left.second]) <= std::get<2>(IndexToCoord[right.second]) &&
+			IndexToCoord[left.second].z <= IndexToCoord[right.second].z &&
 			(
-				(std::get<2>(IndexToCoord[left.second]) != std::get<2>(IndexToCoord[right.second])) ||
-				(std::get<1>(IndexToCoord[left.second]) >= std::get<1>(IndexToCoord[right.second])) && (std::get<1>(IndexToCoord[left.second]) != std::get<1>(IndexToCoord[right.second]) || std::get<0>(IndexToCoord[left.second]) > std::get<0>(IndexToCoord[right.second]))
+				(IndexToCoord[left.second].z != IndexToCoord[right.second].z) ||
+				(IndexToCoord[left.second].y >= IndexToCoord[right.second].y) && (IndexToCoord[left.second].y != IndexToCoord[right.second].y || IndexToCoord[left.second].x > IndexToCoord[right.second].x)
 				)
 			);
 }
@@ -35,10 +35,10 @@ bool Board::CompLogicalBoardUpLeft(const std::pair<int, int>& left, const std::p
 {
 	return
 		(
-			std::get<2>(IndexToCoord[left.second]) <= std::get<2>(IndexToCoord[right.second]) &&
+			IndexToCoord[left.second].z <= IndexToCoord[right.second].z &&
 			(
-				(std::get<2>(IndexToCoord[left.second]) != std::get<2>(IndexToCoord[right.second])) ||
-				(std::get<1>(IndexToCoord[left.second]) <= std::get<1>(IndexToCoord[right.second])) && (std::get<1>(IndexToCoord[left.second]) != std::get<1>(IndexToCoord[right.second]) || std::get<0>(IndexToCoord[left.second]) <= std::get<0>(IndexToCoord[right.second]))
+				(IndexToCoord[left.second].z != IndexToCoord[right.second].z) ||
+				(IndexToCoord[left.second].y <= IndexToCoord[right.second].y) && (IndexToCoord[left.second].y != IndexToCoord[right.second].y || IndexToCoord[left.second].x <= IndexToCoord[right.second].x)
 				)
 			);
 }
@@ -47,10 +47,10 @@ bool Board::CompLogicalBoardUpRight(const std::pair<int, int>& left, const std::
 {
 	return
 		(
-			std::get<2>(IndexToCoord[left.second]) <= std::get<2>(IndexToCoord[right.second]) &&
+			IndexToCoord[left.second].z <= IndexToCoord[right.second].z &&
 			(
-				(std::get<2>(IndexToCoord[left.second]) != std::get<2>(IndexToCoord[right.second])) ||
-				(std::get<1>(IndexToCoord[left.second]) <= std::get<1>(IndexToCoord[right.second])) && (std::get<1>(IndexToCoord[left.second]) != std::get<1>(IndexToCoord[right.second]) || std::get<0>(IndexToCoord[left.second]) > std::get<0>(IndexToCoord[right.second]))
+				(IndexToCoord[left.second].z != IndexToCoord[right.second].z) ||
+				(IndexToCoord[left.second].y <= IndexToCoord[right.second].y) && (IndexToCoord[left.second].y != IndexToCoord[right.second].y || IndexToCoord[left.second].x > IndexToCoord[right.second].x)
 				)
 			);
 }
@@ -242,9 +242,9 @@ void Board::RemoveTile(const int index)
 	std::vector<std::pair<int, int>>::iterator it = LogicalBoard.begin();
 	for (; it != LogicalBoard.end() && it->second != index; ++it);
 	auto coord = IndexToCoord[it->second];
-	double x = std::get<0>(coord);
-	double y = std::get<1>(coord);
-	double z = std::get<2>(coord);
+	double x = coord.x;
+	double y = coord.y;
+	double z = coord.z;
 	LogicalBoard.erase(it);
 	mOccupationBoard.erase(coord);
 
@@ -277,16 +277,16 @@ void Board::RemoveTile(const int index)
 	}
 	else
 	{
-		if (x < 11 && mOccupationBoard.contains(std::make_tuple(x + 1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple(x + 1, y, z + 1))))
-			Removable[mOccupationBoard[std::make_tuple(x + 1, y, z)]] = true;
-		if (x > 0 && mOccupationBoard.contains(std::make_tuple(x - 1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple(x - 1, y, z + 1))))
-			Removable[mOccupationBoard[std::make_tuple(x - 1, y, z)]] = true;
-		if (z > 0) // mOccupationBoard[std::make_tuple(x, y, z-1)] DOIT exister.
+		if (x < 11 && mOccupationBoard.contains(Coordinates(x + 1, y, z)) && (z > 3 || !mOccupationBoard.contains(Coordinates(x + 1, y, z + 1))))
+			Removable[mOccupationBoard[Coordinates(x + 1, y, z)]] = true;
+		if (x > 0 && mOccupationBoard.contains(Coordinates(x - 1, y, z)) && (z > 3 || !mOccupationBoard.contains(Coordinates(x - 1, y, z + 1))))
+			Removable[mOccupationBoard[Coordinates(x - 1, y, z)]] = true;
+		if (z > 0) // mOccupationBoard[Coordinates(x, y, z-1)] DOIT exister.
 		{
-			if (x < 11 && !mOccupationBoard.contains(std::make_tuple(x + 1, y, z - 1)))
-				Removable[mOccupationBoard[std::make_tuple(x, y, z - 1)]] = true;
-			if (x > 0 && !mOccupationBoard.contains(std::make_tuple(x - 1, y, z - 1)))
-				Removable[mOccupationBoard[std::make_tuple(x, y, z - 1)]] = true;
+			if (x < 11 && !mOccupationBoard.contains(Coordinates(x + 1, y, z - 1)))
+				Removable[mOccupationBoard[Coordinates(x, y, z - 1)]] = true;
+			if (x > 0 && !mOccupationBoard.contains(Coordinates(x - 1, y, z - 1)))
+				Removable[mOccupationBoard[Coordinates(x, y, z - 1)]] = true;
 		}
 	}
 }

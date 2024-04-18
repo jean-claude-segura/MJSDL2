@@ -794,9 +794,9 @@ void GraphicBoard::RefreshMouseMap()
 		for (auto& tile : plateau.getLogicalBoard())
 		{
 			auto temp = IndexToCoord[tile.second];
-			auto x = std::get<0>(temp);
-			auto y = std::get<1>(temp);
-			auto z = std::get<2>(temp);
+			auto x = temp.x;
+			auto y = temp.y;
+			auto z = temp.z;
 			auto domino = tile.first;
 			auto index = tile.second;
 			if (direction == 3)
@@ -1173,9 +1173,9 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 		for (const auto& tile : plateau.getLogicalBoard())
 		{
 			auto temp = IndexToCoord[tile.second];
-			auto x = std::get<0>(temp);
-			auto y = std::get<1>(temp);
-			auto z = std::get<2>(temp);
+			auto x = temp.x;
+			auto y = temp.y;
+			auto z = temp.z;
 			auto domino = tile.first;
 			auto index = tile.second;
 			if (direction == 3)
@@ -1481,9 +1481,9 @@ void GraphicBoard::Loop()
 							for (const auto& tile : plateau.getLogicalBoard())
 							{
 								auto temp = IndexToCoord[tile.second];
-								auto x = std::get<0>(temp);
-								auto y = std::get<1>(temp);
-								auto z = std::get<2>(temp);
+								auto x = temp.x;
+								auto y = temp.y;
+								auto z = temp.z;
 								auto domino = tile.first;
 								auto index = tile.second;
 

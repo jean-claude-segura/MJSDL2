@@ -7,9 +7,31 @@
 #include <cmath>
 #include <map>
 
-constexpr std::array<std::tuple<double, double, double>, 144> InitIndexToCoord()
+class Coordinates
 {
-	std::array<std::tuple<double, double, double>, 144> InitIndexToCoord;
+public:
+	double x;
+	double y;
+	double z;
+	constexpr Coordinates() { x = 0.; y = 0.; z = 0.; };
+	constexpr Coordinates(double _x, double _y, double _z) : x( _x ), y( _y ), z( _z ) {}
+
+	bool operator==(const Coordinates& other) const
+	{
+		return x == other.x && y == other.y && z == other.z;
+	}
+
+	bool operator<(const Coordinates& other) const
+	{
+		return z < other.z ||
+			(z == other.z && y < other.y) ||
+			(z == other.z && y == other.y && x < other.x);
+	}
+};
+
+constexpr std::array<Coordinates, 144> InitIndexToCoord()
+{
+	std::array<Coordinates, 144> InitIndexToCoord;
 	std::array<std::array<std::array<bool, 5>, 8>, 12> BasePattern;
 	for (int z = 0; z < 5; ++z)
 		for (int y = 0; y < 8; ++y)
@@ -52,20 +74,22 @@ constexpr std::array<std::tuple<double, double, double>, 144> InitIndexToCoord()
 		{
 			for (int x = 0; x < 12; ++x)
 			{
-				if (BasePattern[x][y][z]) InitIndexToCoord[index++] = std::make_tuple(x, y, z);
+				if (BasePattern[x][y][z]) {
+					InitIndexToCoord[index++] = { double(x), double(y), double(z) };
+				}
 			}
 		}
 	}
 
-	InitIndexToCoord[140] = std::make_tuple(-1, 3.5, 0);
-	InitIndexToCoord[141] = std::make_tuple(12, 3.5, 0);
-	InitIndexToCoord[142] = std::make_tuple(13, 3.5, 0);
-	InitIndexToCoord[143] = std::make_tuple(5.5, 3.5, 4);
+	InitIndexToCoord[140] = { -1., 3.5, 0. };
+	InitIndexToCoord[141] = { 12., 3.5, 0. };
+	InitIndexToCoord[142] = { 13., 3.5, 0. };
+	InitIndexToCoord[143] = { 5.5, 3.5, 4. };
 
 	return InitIndexToCoord;
 }
 
-static constexpr std::array<std::tuple<double, double, double>, 144> IndexToCoord = InitIndexToCoord();
+static constexpr std::array<Coordinates, 144> IndexToCoord = InitIndexToCoord();
 
 class Board
 {
@@ -98,7 +122,7 @@ private:
 	std::vector<std::pair<int, int>> History;
 	std::vector<int> WhatsLeft; // Index
 	std::map<int, int> TilesMap; // index -> domino
-	std::map<std::tuple<double, double, double>, int> mOccupationBoard; // (x, y, z) -> index
+	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> index
 	std::vector<std::pair<int, int>> LogicalBoard; // (domino, index)
 	std::array<bool, 144> Removable = {
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
@@ -125,14 +149,14 @@ inline void RemoveTile(
 	std::array<bool, 144>& Removable,
 	std::map<int, int>& TilesMap,
 	std::vector<int>& WhatsLeft,
-	std::map<std::tuple<double, double, double>, int>& mOccupationBoard,
+	std::map<Coordinates, int>& mOccupationBoard,
 	/* *********************************************************************** */
 	std::vector<std::pair<int, int>>& LogicalBoardBack,
 	std::vector<int>& RemovableWasTrue,
 	std::vector<int>& RemovableWasFalse,
 	std::map<int, int>& TilesMapBack,
 	std::vector<int>& WhatsLeftBack,
-	std::map<std::tuple<double, double, double>, int>& mOccupationBoardBack
+	std::map<Coordinates, int>& mOccupationBoardBack
 	)
 {
 	TilesMapBack[index] = TilesMap[index];
@@ -141,9 +165,9 @@ inline void RemoveTile(
 	std::vector<std::pair<int, int>>::iterator it = LogicalBoard.begin();
 	for (; it != LogicalBoard.end() && it->second != index; ++it);
 	auto coord = IndexToCoord[it->second];
-	double x = std::get<0>(coord);
-	double y = std::get<1>(coord);
-	double z = std::get<2>(coord);
+	double x = coord.x;
+	double y = coord.y;
+	double z = coord.z;
 
 	LogicalBoardBack.emplace_back(*it);
 	LogicalBoard.erase(it);
@@ -193,29 +217,29 @@ inline void RemoveTile(
 	}
 	else
 	{
-		if (x < 11 && mOccupationBoard.contains(std::make_tuple(x + 1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple(x + 1, y, z + 1))))
+		if (x < 11 && mOccupationBoard.contains(Coordinates(x + 1, y, z)) && (z > 3 || !mOccupationBoard.contains(Coordinates(x + 1, y, z + 1))))
 		{
-			auto index = mOccupationBoard[std::make_tuple(x + 1, y, z)];
+			auto index = mOccupationBoard[Coordinates(x + 1, y, z)];
 			if (!Removable[index]) RemovableWasFalse.emplace_back(index);
 			Removable[index] = true;
 		}
-		if (x > 0 && mOccupationBoard.contains(std::make_tuple(x - 1, y, z)) && (z > 3 || !mOccupationBoard.contains(std::make_tuple(x - 1, y, z + 1))))
+		if (x > 0 && mOccupationBoard.contains(Coordinates(x - 1, y, z)) && (z > 3 || !mOccupationBoard.contains(Coordinates(x - 1, y, z + 1))))
 		{
-			auto index = mOccupationBoard[std::make_tuple(x - 1, y, z)];
+			auto index = mOccupationBoard[Coordinates(x - 1, y, z)];
 			if (!Removable[index]) RemovableWasFalse.emplace_back(index);
 			Removable[index] = true;
 		}
-		if (z > 0) // mOccupationBoard[std::make_tuple(x, y, z-1)] DOIT exister.
+		if (z > 0) // mOccupationBoard[Coordinates(x, y, z-1)] DOIT exister.
 		{
-			if (x < 11 && !mOccupationBoard.contains(std::make_tuple(x + 1, y, z - 1)))
+			if (x < 11 && !mOccupationBoard.contains(Coordinates(x + 1, y, z - 1)))
 			{
-				auto index = mOccupationBoard[std::make_tuple(x, y, z - 1)];
+				auto index = mOccupationBoard[Coordinates(x, y, z - 1)];
 				if (!Removable[index]) RemovableWasFalse.emplace_back(index);
 				Removable[index] = true;
 			}
-			if (x > 0 && !mOccupationBoard.contains(std::make_tuple(x - 1, y, z - 1)))
+			if (x > 0 && !mOccupationBoard.contains(Coordinates(x - 1, y, z - 1)))
 			{
-				auto index = mOccupationBoard[std::make_tuple(x, y, z - 1)];
+				auto index = mOccupationBoard[Coordinates(x, y, z - 1)];
 				if (!Removable[index]) RemovableWasFalse.emplace_back(index);
 				Removable[index] = true;
 			}
@@ -404,7 +428,7 @@ inline bool SolveRec(
 	std::array<bool, 144> & Removable,
 	std::map<int, int> & TilesMap,
 	std::vector<int> & WhatsLeft,
-	std::map<std::tuple<double, double, double>, int> & mOccupationBoard,
+	std::map<Coordinates, int> & mOccupationBoard,
 	std::vector<std::pair<int, int>>& Solution)
 {
 
@@ -415,7 +439,7 @@ inline bool SolveRec(
 	std::vector<int> RemovableWasFalse;
 	std::map<int, int> TilesMapBack;
 	std::vector<int> WhatsLeftBack;
-	std::map<std::tuple<double, double, double>, int> mOccupationBoardBack;
+	std::map<Coordinates, int> mOccupationBoardBack;
 	bool full = false;
 	for (const auto & move : Move)
 	{
@@ -493,7 +517,7 @@ inline bool SolveRecInit(
 	std::array<bool, 144> Removable,
 	std::map<int, int> TilesMap,
 	std::vector<int> WhatsLeft,
-	std::map<std::tuple<double, double, double>, int> mOccupationBoard,
+	std::map<Coordinates, int> mOccupationBoard,
 	std::vector<std::pair<int, int>>& Solution)
 {
 #ifdef _DEBUG
@@ -501,7 +525,7 @@ inline bool SolveRecInit(
 	std::array<bool, 144> RemovableBack = Removable;
 	std::map<int, int> TilesMapBack = TilesMap;
 	std::vector<int> WhatsLeftBack = WhatsLeft;
-	std::map<std::tuple<double, double, double>, int> mOccupationBoardBack = mOccupationBoard;
+	std::map<Coordinates, int> mOccupationBoardBack = mOccupationBoard;
 #endif
 
 	Solution.clear();
