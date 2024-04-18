@@ -181,8 +181,6 @@ void Board::InitBoard()
 		TilesMap[index] = domino;
 	}
 
-	//SortBoard(true);
-
 	for(int index = 0; index < 144; ++index) Removable[index] = false;
 	Removable[0x0] = true;
 	Removable[0xb] = true;
@@ -350,7 +348,7 @@ bool Board::CompRemovableBoard(const std::pair<int, int>& left, const std::pair<
 
 void Board::SetMoves()
 {
-	std::vector<std::pair<int, int>> RemovableBoard; // (x, y, z, domino, index)
+	std::vector<std::pair<int, int>> RemovableBoard; // (domino, index)
 	for (const auto& pair : LogicalBoard)
 	{
 		if (Removable[pair.second]) RemovableBoard.emplace_back(pair);

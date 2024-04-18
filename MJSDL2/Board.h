@@ -274,7 +274,7 @@ inline void BuildMoves(const std::vector<std::pair<int, int>>& RemovableBoard, s
 
 inline void SetMoves(const std::vector<std::pair<int, int>>& LogicalBoard, const std::array<bool, 144>& Removable, std::vector<std::vector<int>>& Moves)
 {
-	std::vector<std::pair<int, int>> RemovableBoard; // (x, y, z, domino, index)
+	std::vector<std::pair<int, int>> RemovableBoard; // (domino, index)
 	for (const auto& pair : LogicalBoard)
 	{
 		if (Removable[pair.second]) RemovableBoard.emplace_back(pair);
