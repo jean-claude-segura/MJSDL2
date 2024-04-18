@@ -366,8 +366,7 @@ void GraphicBoard::LoadResources()
 	LoadMouseMask();
 
 	LoadTiles();
-	//LoadBackground("./background/10013168.jpg");
-	//LoadBackground("./background/vecteezy_wood-texture-background-wood-pattern-texture_2680573.jpg");
+
 	LoadRandomBackground("./background/");
 	LoadRandomBackgroundVictory("./background-victory/");
 }

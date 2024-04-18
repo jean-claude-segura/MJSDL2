@@ -60,7 +60,6 @@ public:
 	bool draw(uint8_t* fire, bool& bAtLeastOneAlive);
 };
 
-// Original settings from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
 class RANDOMORIGIN : public PARTICLE
 {
 public:
@@ -68,6 +67,7 @@ public:
 	RANDOMORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 };
 
+// Original settings from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
 class CENTEREDEDORIGIN : public PARTICLE
 {
 public:
