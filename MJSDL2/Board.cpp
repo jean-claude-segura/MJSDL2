@@ -351,9 +351,9 @@ bool Board::CompRemovableBoard(const std::pair<int, int>& left, const std::pair<
 void Board::SetMoves()
 {
 	std::vector<std::pair<int, int>> RemovableBoard; // (x, y, z, domino, index)
-	for (const auto& tuple : LogicalBoard)
+	for (const auto& pair : LogicalBoard)
 	{
-		if (Removable[tuple.second]) RemovableBoard.emplace_back(tuple);
+		if (Removable[pair.second]) RemovableBoard.emplace_back(pair);
 	}
 
 	Moves.clear();

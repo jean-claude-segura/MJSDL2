@@ -99,7 +99,7 @@ private:
 	std::vector<int> WhatsLeft; // Index
 	std::map<int, int> TilesMap; // index -> domino
 	std::map<std::tuple<double, double, double>, int> mOccupationBoard; // (x, y, z) -> index
-	std::vector<std::pair<int, int>> LogicalBoard; // (x, y, z, domino, index)
+	std::vector<std::pair<int, int>> LogicalBoard; // (domino, index)
 	std::array<bool, 144> Removable = {
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
@@ -275,9 +275,9 @@ inline void BuildMoves(const std::vector<std::pair<int, int>>& RemovableBoard, s
 inline void SetMoves(const std::vector<std::pair<int, int>>& LogicalBoard, const std::array<bool, 144>& Removable, std::vector<std::vector<int>>& Moves)
 {
 	std::vector<std::pair<int, int>> RemovableBoard; // (x, y, z, domino, index)
-	for (const auto& tuple : LogicalBoard)
+	for (const auto& pair : LogicalBoard)
 	{
-		if (Removable[tuple.second]) RemovableBoard.emplace_back(tuple);
+		if (Removable[pair.second]) RemovableBoard.emplace_back(pair);
 	}
 
 	std::sort(RemovableBoard.begin(), RemovableBoard.end(), [](const std::pair<int, int>& left, const std::pair<int, int>& right)
@@ -316,6 +316,7 @@ inline uint64_t getHash(const std::vector<std::vector<int>>& Moves,
 		++count;
 		alternateindexsum = pair ? item.first : 3 * item.first;
 		alternatetilesum = pair ? item.second : 3 * item.second;
+		pair = ~pair;
 	}
 
 	for (auto& item : Removable) if (item) ++removables;
