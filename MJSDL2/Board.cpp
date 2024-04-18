@@ -4,60 +4,60 @@ Board::Board()
 {
 }
 
-bool Board::CompLogicalBoardDownLeft(const std::pair<int, int>& left, const std::pair<int, int>& right)
+bool Board::CompLogicalBoardDownLeft(const DominoIndex& left, const DominoIndex& right)
 {
 	return
 		(
-			IndexToCoord[left.second].z <= IndexToCoord[right.second].z &&
+			IndexToCoord[left.index].z <= IndexToCoord[right.index].z &&
 			(
-				(IndexToCoord[left.second].z != IndexToCoord[right.second].z) ||
-				(IndexToCoord[left.second].y >= IndexToCoord[right.second].y) && (IndexToCoord[left.second].y != IndexToCoord[right.second].y || IndexToCoord[left.second].x <= IndexToCoord[right.second].x)
+				(IndexToCoord[left.index].z != IndexToCoord[right.index].z) ||
+				(IndexToCoord[left.index].y >= IndexToCoord[right.index].y) && (IndexToCoord[left.index].y != IndexToCoord[right.index].y || IndexToCoord[left.index].x <= IndexToCoord[right.index].x)
 				)
 			);
-	/*return !(std::get<2>(IndexToCoord[left.second]) > std::get<2>(right) ||
-		std::get<2>(IndexToCoord[left.second]) == std::get<2>(right) &&
-		(std::get<1>(IndexToCoord[left.second]) < std::get<1>(right) || std::get<1>(IndexToCoord[left.second]) == std::get<1>(right) && std::get<0>(IndexToCoord[left.second]) > std::get<0>(right)));*/
+	/*return !(std::get<2>(IndexToCoord[left.index]) > std::get<2>(right) ||
+		std::get<2>(IndexToCoord[left.index]) == std::get<2>(right) &&
+		(std::get<1>(IndexToCoord[left.index]) < std::get<1>(right) || std::get<1>(IndexToCoord[left.index]) == std::get<1>(right) && std::get<0>(IndexToCoord[left.index]) > std::get<0>(right)));*/
 }
 
 
-bool Board::CompLogicalBoardDownRight(const std::pair<int, int>& left, const std::pair<int, int>& right)
+bool Board::CompLogicalBoardDownRight(const DominoIndex& left, const DominoIndex& right)
 {
 	return
 		(
-			IndexToCoord[left.second].z <= IndexToCoord[right.second].z &&
+			IndexToCoord[left.index].z <= IndexToCoord[right.index].z &&
 			(
-				(IndexToCoord[left.second].z != IndexToCoord[right.second].z) ||
-				(IndexToCoord[left.second].y >= IndexToCoord[right.second].y) && (IndexToCoord[left.second].y != IndexToCoord[right.second].y || IndexToCoord[left.second].x > IndexToCoord[right.second].x)
+				(IndexToCoord[left.index].z != IndexToCoord[right.index].z) ||
+				(IndexToCoord[left.index].y >= IndexToCoord[right.index].y) && (IndexToCoord[left.index].y != IndexToCoord[right.index].y || IndexToCoord[left.index].x > IndexToCoord[right.index].x)
 				)
 			);
 }
-bool Board::CompLogicalBoardUpLeft(const std::pair<int, int>& left, const std::pair<int, int>& right)
+bool Board::CompLogicalBoardUpLeft(const DominoIndex& left, const DominoIndex& right)
 {
 	return
 		(
-			IndexToCoord[left.second].z <= IndexToCoord[right.second].z &&
+			IndexToCoord[left.index].z <= IndexToCoord[right.index].z &&
 			(
-				(IndexToCoord[left.second].z != IndexToCoord[right.second].z) ||
-				(IndexToCoord[left.second].y <= IndexToCoord[right.second].y) && (IndexToCoord[left.second].y != IndexToCoord[right.second].y || IndexToCoord[left.second].x <= IndexToCoord[right.second].x)
+				(IndexToCoord[left.index].z != IndexToCoord[right.index].z) ||
+				(IndexToCoord[left.index].y <= IndexToCoord[right.index].y) && (IndexToCoord[left.index].y != IndexToCoord[right.index].y || IndexToCoord[left.index].x <= IndexToCoord[right.index].x)
 				)
 			);
 }
 
-bool Board::CompLogicalBoardUpRight(const std::pair<int, int>& left, const std::pair<int, int>& right)
+bool Board::CompLogicalBoardUpRight(const DominoIndex& left, const DominoIndex& right)
 {
 	return
 		(
-			IndexToCoord[left.second].z <= IndexToCoord[right.second].z &&
+			IndexToCoord[left.index].z <= IndexToCoord[right.index].z &&
 			(
-				(IndexToCoord[left.second].z != IndexToCoord[right.second].z) ||
-				(IndexToCoord[left.second].y <= IndexToCoord[right.second].y) && (IndexToCoord[left.second].y != IndexToCoord[right.second].y || IndexToCoord[left.second].x > IndexToCoord[right.second].x)
+				(IndexToCoord[left.index].z != IndexToCoord[right.index].z) ||
+				(IndexToCoord[left.index].y <= IndexToCoord[right.index].y) && (IndexToCoord[left.index].y != IndexToCoord[right.index].y || IndexToCoord[left.index].x > IndexToCoord[right.index].x)
 				)
 			);
 }
 
 void Board::SortBoard(const uint8_t direction)
 {
-	bool (*Comparateur)(const std::pair<int, int>&left, const std::pair<int, int>&right);
+	bool (*Comparateur)(const DominoIndex&left, const DominoIndex&right);
 	switch (direction)
 	{
 	default:
@@ -75,17 +75,17 @@ void Board::SortBoard(const uint8_t direction)
 		break;
 	}
 	std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
-	std::vector< std::pair<int, int>>::iterator it;
+	std::vector< DominoIndex>::iterator it;
 	if (direction == 0 || direction == 3)
 	{
-		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 140; ++it);
+		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 140; ++it);
 		if (it != LogicalBoard.end())
 		{
-			auto temp = std::make_pair(it->first, it->second);
+			auto temp = DominoIndex(it->domino, it->index);
 			LogicalBoard.erase(it);
 			LogicalBoard.insert(LogicalBoard.begin(), temp);
 		}
-		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 141; ++it);
+		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 141; ++it);
 		if (it != LogicalBoard.end())
 		{
 			/*auto t = std::make_tuple(12, 8, 0, 0, 0);
@@ -95,52 +95,52 @@ void Board::SortBoard(const uint8_t direction)
 					return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
 				}
 			);*/
-			auto temp = std::make_pair(it->first, it->second);
+			auto temp = DominoIndex(it->domino, it->index);
 			LogicalBoard.erase(it);
 			LogicalBoard.emplace_back(temp);
 		}
-		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 142; ++it);
+		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 142; ++it);
 		if (it != LogicalBoard.end())
 		{
-			auto temp = std::make_pair(it->first, it->second);
+			auto temp = DominoIndex(it->domino, it->index);
 			LogicalBoard.erase(it);
 			LogicalBoard.emplace_back(temp);
 		}
-		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 143; ++it);
+		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 143; ++it);
 		if (it != LogicalBoard.end())
 		{
-			auto temp = std::make_pair(it->first, it->second);
+			auto temp = DominoIndex(it->domino, it->index);
 			LogicalBoard.erase(it);
 			LogicalBoard.emplace_back(temp);
 		}
 	}
 	else if (direction == 1 || direction == 2)
 		{
-			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 140; ++it);
+			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 140; ++it);
 			if (it != LogicalBoard.end())
 			{
-				auto temp = std::make_pair(it->first, it->second);
+				auto temp = DominoIndex(it->domino, it->index);
 				LogicalBoard.erase(it);
 				LogicalBoard.emplace_back(temp);
 			}
-			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 141; ++it);
+			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 141; ++it);
 			if (it != LogicalBoard.end())
 			{
-				auto temp = std::make_pair(it->first, it->second);
+				auto temp = DominoIndex(it->domino, it->index);
 				LogicalBoard.erase(it);
 				LogicalBoard.insert(LogicalBoard.begin(), temp);
 			}
-			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 142; ++it);
+			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 142; ++it);
 			if (it != LogicalBoard.end())
 			{
-				auto temp = std::make_pair(it->first, it->second);
+				auto temp = DominoIndex(it->domino, it->index);
 				LogicalBoard.erase(it);
 				LogicalBoard.insert(LogicalBoard.begin(), temp);
 			}
-			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 143; ++it);
+			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 143; ++it);
 			if (it != LogicalBoard.end())
 			{
-				auto temp = std::make_pair(it->first, it->second);
+				auto temp = DominoIndex(it->domino, it->index);
 				LogicalBoard.erase(it);
 				LogicalBoard.emplace_back(temp);
 			}
@@ -177,7 +177,7 @@ void Board::InitBoard()
 		int debugdom = tempDominos[domino];
 		--tempDominos[domino];
 		mOccupationBoard[IndexToCoord[index]] = index;
-		LogicalBoard.emplace_back(std::make_pair(domino, index));
+		LogicalBoard.emplace_back(DominoIndex(domino, index));
 		TilesMap[index] = domino;
 	}
 
@@ -227,9 +227,9 @@ void Board::InitBoard()
 	auto it = Moves.begin();
 	if (it != Moves.end())
 	{
-		std::cout << "(" << it->first << ";" << it->second << ")";
+		std::cout << "(" << it->domino << ";" << it->index << ")";
 		for (++it; it != Moves.end(); ++it)
-			std::cout << ", (" << it->first << ";" << it->second << ")";
+			std::cout << ", (" << it->domino << ";" << it->index << ")";
 		std::cout << "." << std::endl;
 	}
 #endif
@@ -239,9 +239,9 @@ void Board::RemoveTile(const int index)
 {
 	TilesMap.erase(index);
 
-	std::vector<std::pair<int, int>>::iterator it = LogicalBoard.begin();
-	for (; it != LogicalBoard.end() && it->second != index; ++it);
-	auto coord = IndexToCoord[it->second];
+	std::vector<DominoIndex>::iterator it = LogicalBoard.begin();
+	for (; it != LogicalBoard.end() && it->index != index; ++it);
+	auto coord = IndexToCoord[it->index];
 	double x = coord.x;
 	double y = coord.y;
 	double z = coord.z;
@@ -310,30 +310,30 @@ bool Board::RemovePairOfTiles(const int first, const int second)
 	return bRetour;
 }
 
-void Board::BuildMoves(std::vector<std::pair<int, int>>& RemovableBoard, std::vector<std::pair<int, int>>::iterator& itFirst, std::vector<std::pair<int, int>>& Moves)
+void Board::BuildMoves(std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::iterator& itFirst, std::vector<DominoIndex>& Moves)
 {
 	if (itFirst != RemovableBoard.end())
 	{
-		auto domino = (*itFirst).first;
+		auto domino = (*itFirst).domino;
 		auto itNext = itFirst;
 		do
 		{
 			++itNext;
 			itNext = std::find_if(itNext, RemovableBoard.end(),
-				[domino](const std::pair<int, int>& in)
+				[domino](const DominoIndex& in)
 				{
 					return
 						(
-							in.first == domino ||
-							(34 <= in.first && in.first < 38 && 34 <= domino && domino < 38) || // Saisons
-							(38 <= in.first && in.first < 42 && 38 <= domino && domino < 42) // Fleurs.
+							in.domino == domino ||
+							(34 <= in.domino && in.domino < 38 && 34 <= domino && domino < 38) || // Saisons
+							(38 <= in.domino && in.domino < 42 && 38 <= domino && domino < 42) // Fleurs.
 							);
 				}
 			);
 			if (itNext != RemovableBoard.end())
 			{
-				int indexFirst = (*itFirst).second;
-				Moves.emplace_back(std::make_pair((*itFirst).second, (*itNext).second));
+				int indexFirst = (*itFirst).index;
+				Moves.emplace_back(DominoIndex((*itFirst).index, (*itNext).index));
 			}
 		} while (itNext != RemovableBoard.end());
 
@@ -341,17 +341,17 @@ void Board::BuildMoves(std::vector<std::pair<int, int>>& RemovableBoard, std::ve
 	}
 }
 
-bool Board::CompRemovableBoard(const std::pair<int, int>& left, const std::pair<int, int>& right)
+bool Board::CompRemovableBoard(const DominoIndex& left, const DominoIndex& right)
 {
-	return left.first < right.first;
+	return left.domino < right.domino;
 }
 
 void Board::SetMoves()
 {
-	std::vector<std::pair<int, int>> RemovableBoard; // (domino, index)
+	std::vector<DominoIndex> RemovableBoard; // (domino, index)
 	for (const auto& pair : LogicalBoard)
 	{
-		if (Removable[pair.second]) RemovableBoard.emplace_back(pair);
+		if (Removable[pair.index]) RemovableBoard.emplace_back(pair);
 	}
 
 	Moves.clear();
@@ -366,7 +366,7 @@ bool Board::Solve()
 	{
 #ifdef _DEBUG
 		for (auto& move : Solution)
-			std::cout << move.first << ";" << move.second << std::endl;
+			std::cout << move.domino << ";" << move.index << std::endl;
 #endif
 		return true;
 	}

@@ -7,6 +7,20 @@
 #include <cmath>
 #include <map>
 
+class DominoIndex
+{
+public:
+	int domino;
+	int index;
+	DominoIndex(int _domino, int _index) : domino (_domino), index(_index) {}
+	DominoIndex() : domino(-1), index(-1) {}
+
+	bool operator==(const DominoIndex& other) const
+	{
+		return domino == other.domino && index == other.index;
+	}
+};
+
 // https://www.ibm.com/docs/en/i/7.5?topic=only-constexpr-constructors-c11
 class Coordinates
 {
@@ -95,11 +109,11 @@ static constexpr std::array<Coordinates, 144> IndexToCoord = InitIndexToCoord();
 class Board
 {
 private:
-	static bool CompLogicalBoardDownLeft(const std::pair<int, int>& left, const std::pair<int, int>& right);
-	static bool CompLogicalBoardUpLeft(const std::pair<int, int>& left, const std::pair<int, int>& right);
-	static bool CompLogicalBoardUpRight(const std::pair<int, int>& left, const std::pair<int, int>& right);
-	static bool CompLogicalBoardDownRight(const std::pair<int, int>& left, const std::pair<int, int>& right);
-	static bool CompRemovableBoard(const std::pair<int, int>& left, const std::pair<int, int>& right);
+	static bool CompLogicalBoardDownLeft(const DominoIndex& left, const DominoIndex& right);
+	static bool CompLogicalBoardUpLeft(const DominoIndex& left, const DominoIndex& right);
+	static bool CompLogicalBoardUpRight(const DominoIndex& left, const DominoIndex& right);
+	static bool CompLogicalBoardDownRight(const DominoIndex& left, const DominoIndex& right);
+	static bool CompRemovableBoard(const DominoIndex& left, const DominoIndex& right);
 
 public:
 	Board();
@@ -109,22 +123,22 @@ public:
 	bool RemovePairOfTiles(const int, const int);
 	const bool IsBlocked() { return Moves.size() == 0; }
 	const int HowManyMovesLeft() { return Moves.size(); }
-	const std::vector<std::pair<int, int>>& GetMovesLeft() { return Moves; }
+	const std::vector<DominoIndex>& GetMovesLeft() { return Moves; }
 	bool IsEmpty() { return WhatsLeft.empty(); }
 	int getNumberOfTilesLeft() { return WhatsLeft.size(); }
 	const std::vector<int>& getWhatsLeft() { return WhatsLeft; }
-	const std::vector<std::pair<int, int>>& getLogicalBoard() { return LogicalBoard; }
+	const std::vector<DominoIndex>& getLogicalBoard() { return LogicalBoard; }
 	void SortBoard(const uint8_t direction);
 	bool Solve();
-	const std::vector<std::pair<int, int>>& GetSolution() { return Solution; }
+	const std::vector<DominoIndex>& GetSolution() { return Solution; }
 
 private:
-	std::vector<std::pair<int, int>> Solution;
-	std::vector<std::pair<int, int>> History;
+	std::vector<DominoIndex> Solution;
+	std::vector<DominoIndex> History;
 	std::vector<int> WhatsLeft; // Index
 	std::map<int, int> TilesMap; // index -> domino
 	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> index
-	std::vector<std::pair<int, int>> LogicalBoard; // (domino, index)
+	std::vector<DominoIndex> LogicalBoard; // (domino, index)
 	std::array<bool, 144> Removable = {
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
 		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
@@ -139,20 +153,20 @@ private:
 		false, false, false, false
 	};
 	void RemoveTile(int);
-	void BuildMoves(std::vector<std::pair<int, int>>& RemovableBoard, std::vector<std::pair<int, int>>::iterator& itFirst, std::vector<std::pair<int, int>>& Moves);
-	std::vector<std::pair<int, int>> Moves;
+	void BuildMoves(std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::iterator& itFirst, std::vector<DominoIndex>& Moves);
+	std::vector<DominoIndex> Moves;
 	void SetMoves();
 };
 
 inline void RemoveTile(
 	const int index,
-	std::vector<std::pair<int, int>>& LogicalBoard,
+	std::vector<DominoIndex>& LogicalBoard,
 	std::array<bool, 144>& Removable,
 	std::map<int, int>& TilesMap,
 	std::vector<int>& WhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard,
 	/* *********************************************************************** */
-	std::vector<std::pair<int, int>>& LogicalBoardBack,
+	std::vector<DominoIndex>& LogicalBoardBack,
 	std::vector<int>& RemovableWasTrue,
 	std::vector<int>& RemovableWasFalse,
 	std::map<int, int>& TilesMapBack,
@@ -163,9 +177,9 @@ inline void RemoveTile(
 	TilesMapBack[index] = TilesMap[index];
 	TilesMap.erase(index);
 
-	std::vector<std::pair<int, int>>::iterator it = LogicalBoard.begin();
-	for (; it != LogicalBoard.end() && it->second != index; ++it);
-	auto coord = IndexToCoord[it->second];
+	std::vector<DominoIndex>::iterator it = LogicalBoard.begin();
+	for (; it != LogicalBoard.end() && it->index != index; ++it);
+	auto coord = IndexToCoord[it->index];
 	double x = coord.x;
 	double y = coord.y;
 	double z = coord.z;
@@ -248,32 +262,32 @@ inline void RemoveTile(
 	}
 }
 
-inline void BuildMoves(const std::vector<std::pair<int, int>>& RemovableBoard, std::vector<std::pair<int, int>>::const_iterator& itFirst, std::vector<std::vector<int>>& Moves)
+inline void BuildMoves(const std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::const_iterator& itFirst, std::vector<std::vector<int>>& Moves)
 {
 	if (itFirst != RemovableBoard.end())
 	{
-		auto domino = (*itFirst).first;
+		auto domino = (*itFirst).domino;
 		auto itNext = itFirst;
 		std::vector<int> temp;
 		do
 		{
 			++itNext;
 			itNext = std::find_if(itNext, RemovableBoard.end(),
-				[domino](const std::pair<int, int>& in)
+				[domino](const DominoIndex& in)
 				{
 					return
 						(
-							in.first == domino ||
-							(34 <= in.first && in.first < 38 && 34 <= domino && domino < 38) || // Saisons
-							(38 <= in.first && in.first < 42 && 38 <= domino && domino < 42) // Fleurs.
+							in.domino == domino ||
+							(34 <= in.domino && in.domino < 38 && 34 <= domino && domino < 38) || // Saisons
+							(38 <= in.domino && in.domino < 42 && 38 <= domino && domino < 42) // Fleurs.
 							);
 				}
 			);
 			if (itNext != RemovableBoard.end())
 			{
 				if (temp.empty())
-					temp.emplace_back(itFirst->second);
-				temp.emplace_back(itNext->second);
+					temp.emplace_back(itFirst->index);
+				temp.emplace_back(itNext->index);
 				++itFirst;
 			}
 		} while (itNext != RemovableBoard.end());
@@ -297,17 +311,17 @@ inline void BuildMoves(const std::vector<std::pair<int, int>>& RemovableBoard, s
 	}
 }
 
-inline void SetMoves(const std::vector<std::pair<int, int>>& LogicalBoard, const std::array<bool, 144>& Removable, std::vector<std::vector<int>>& Moves)
+inline void SetMoves(const std::vector<DominoIndex>& LogicalBoard, const std::array<bool, 144>& Removable, std::vector<std::vector<int>>& Moves)
 {
-	std::vector<std::pair<int, int>> RemovableBoard; // (domino, index)
+	std::vector<DominoIndex> RemovableBoard; // (domino, index)
 	for (const auto& pair : LogicalBoard)
 	{
-		if (Removable[pair.second]) RemovableBoard.emplace_back(pair);
+		if (Removable[pair.index]) RemovableBoard.emplace_back(pair);
 	}
 
-	std::sort(RemovableBoard.begin(), RemovableBoard.end(), [](const std::pair<int, int>& left, const std::pair<int, int>& right)
+	std::sort(RemovableBoard.begin(), RemovableBoard.end(), [](const DominoIndex& left, const DominoIndex& right)
 		{
-			return left.first < right.first;
+			return left.domino < right.domino;
 		});
 	auto itFirst = RemovableBoard.begin();
 	Moves.clear();
@@ -425,17 +439,17 @@ inline bool SolveRec(
 	const std::vector<int>& Move,
 	int _index,
 	const std::vector<std::vector<int>> & Moves,
-	std::vector<std::pair<int, int>> & LogicalBoard,
+	std::vector<DominoIndex> & LogicalBoard,
 	std::array<bool, 144> & Removable,
 	std::map<int, int> & TilesMap,
 	std::vector<int> & WhatsLeft,
 	std::map<Coordinates, int> & mOccupationBoard,
-	std::vector<std::pair<int, int>>& Solution)
+	std::vector<DominoIndex>& Solution)
 {
 
 	std::vector<std::vector<int>> newMoves;
 
-	std::vector<std::pair<int, int>> LogicalBoardBack;
+	std::vector<DominoIndex> LogicalBoardBack;
 	std::vector<int> RemovableWasTrue;
 	std::vector<int> RemovableWasFalse;
 	std::map<int, int> TilesMapBack;
@@ -451,11 +465,11 @@ inline bool SolveRec(
 			WhatsLeft,
 			mOccupationBoard, LogicalBoardBack, RemovableWasTrue, RemovableWasFalse, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 	}
-	Solution.emplace_back(std::make_pair(Move[0], Move[1]));
+	Solution.emplace_back(DominoIndex(Move[0], Move[1]));
 	if (Move.size() == 4)
 	{
 		full = true;
-		Solution.emplace_back(std::make_pair(Move[2], Move[3]));
+		Solution.emplace_back(DominoIndex(Move[2], Move[3]));
 	}
 
 	SetMoves(LogicalBoard, Removable, newMoves);
@@ -513,16 +527,16 @@ inline bool SolveRec(
 
 // Just to work on a copy.
 inline bool SolveRecInit(
-	std::vector<std::pair<int, int>> oldMoves,
-	std::vector<std::pair<int, int>> LogicalBoard,
+	std::vector<DominoIndex> oldMoves,
+	std::vector<DominoIndex> LogicalBoard,
 	std::array<bool, 144> Removable,
 	std::map<int, int> TilesMap,
 	std::vector<int> WhatsLeft,
 	std::map<Coordinates, int> mOccupationBoard,
-	std::vector<std::pair<int, int>>& Solution)
+	std::vector<DominoIndex>& Solution)
 {
 #ifdef _DEBUG
-	std::vector<std::pair<int, int>> LogicalBoardBack = LogicalBoard;
+	std::vector<DominoIndex> LogicalBoardBack = LogicalBoard;
 	std::array<bool, 144> RemovableBack = Removable;
 	std::map<int, int> TilesMapBack = TilesMap;
 	std::vector<int> WhatsLeftBack = WhatsLeft;
@@ -541,12 +555,12 @@ inline bool SolveRecInit(
 	for(int _index = 0; _index < oldMoves.size();)
 	{
 		std::vector<int> temp;
-		temp.emplace_back(oldMoves[_index].first);
-		temp.emplace_back(oldMoves[_index].second);
-		if (oldMoves.size() >= (_index + 6) && oldMoves[_index].first == oldMoves[_index + 1].first && oldMoves[_index].first == oldMoves[_index + 2].first)
+		temp.emplace_back(oldMoves[_index].domino);
+		temp.emplace_back(oldMoves[_index].index);
+		if (oldMoves.size() >= (_index + 6) && oldMoves[_index].domino == oldMoves[_index + 1].domino && oldMoves[_index].domino == oldMoves[_index + 2].domino)
 		{
-			temp.emplace_back(oldMoves[_index + 5].first);
-			temp.emplace_back(oldMoves[_index + 5].second);
+			temp.emplace_back(oldMoves[_index + 5].domino);
+			temp.emplace_back(oldMoves[_index + 5].index);
 			_index += 6;
 		}
 		else

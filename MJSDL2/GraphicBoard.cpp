@@ -434,15 +434,15 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 					selected = -1;
 					Refresh(false);
 
-					clicked[move.first] = true;
-					clicked[move.second] = true;
+					clicked[move.domino] = true;
+					clicked[move.index] = true;
 
 					Refresh(false);
 
-					clicked[move.first] = false;
-					clicked[move.second] = false;
+					clicked[move.domino] = false;
+					clicked[move.index] = false;
 
-					plateau.RemovePairOfTiles(move.first, move.second);
+					plateau.RemovePairOfTiles(move.domino, move.index);
 
 					Refresh(false);
 				}
@@ -459,15 +459,15 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 					selected = -1;
 					Refresh(false);
 
-					clicked[itNextMove->first] = true;
-					clicked[itNextMove->second] = true;
+					clicked[itNextMove->domino] = true;
+					clicked[itNextMove->index] = true;
 
 					Refresh(false);
 
-					clicked[itNextMove->first] = false;
-					clicked[itNextMove->second] = false;
+					clicked[itNextMove->domino] = false;
+					clicked[itNextMove->index] = false;
 
-					plateau.RemovePairOfTiles(itNextMove->first, itNextMove->second);
+					plateau.RemovePairOfTiles(itNextMove->domino, itNextMove->index);
 
 					Refresh(false);
 
@@ -494,7 +494,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		{
 			if (!plateau.GetMovesLeft().empty() && itPrevMove != plateau.GetMovesLeft().end())
 			{
-				if (plateau.RemovePairOfTiles(itPrevMove->first, itPrevMove->second))
+				if (plateau.RemovePairOfTiles(itPrevMove->domino, itPrevMove->index))
 				{
 					Refresh(true);
 					itNextMove = plateau.GetMovesLeft().begin();
@@ -506,9 +506,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 					auto it = plateau.GetMovesLeft().begin();
 					if (it != plateau.GetMovesLeft().end())
 					{
-						std::cout << "(" << it->first << ";" << it->second << ")";
+						std::cout << "(" << it->domino << ";" << it->index << ")";
 						for (++it; it != plateau.GetMovesLeft().end(); ++it)
-							std::cout << ", (" << it->first << ";" << it->second << ")";
+							std::cout << ", (" << it->domino << ";" << it->index << ")";
 						std::cout << "." << std::endl;
 					}
 #endif
@@ -525,11 +525,11 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 					clicked[selected] = false;
 				selected = -1;
 				Refresh(false);
-				clicked[itNextMove->first] = true;
-				clicked[itNextMove->second] = true;
+				clicked[itNextMove->domino] = true;
+				clicked[itNextMove->index] = true;
 				Refresh(false);
-				clicked[itNextMove->first] = false;
-				clicked[itNextMove->second] = false;
+				clicked[itNextMove->domino] = false;
+				clicked[itNextMove->index] = false;
 				itPrevMove = itNextMove;
 				++itNextMove;
 			}
@@ -619,9 +619,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 	auto it = plateau.GetMovesLeft().begin();
 	if (it != plateau.GetMovesLeft().end())
 	{
-		std::cout << "(" << it->first << ";" << it->second << ")";
+		std::cout << "(" << it->domino << ";" << it->index << ")";
 		for (++it; it != plateau.GetMovesLeft().end(); ++it)
-			std::cout << ", (" << it->first << ";" << it->second << ")";
+			std::cout << ", (" << it->domino << ";" << it->index << ")";
 		std::cout << "." << std::endl;
 	}
 #endif
@@ -670,9 +670,9 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 							auto it = plateau.GetMovesLeft().begin();
 							if (it != plateau.GetMovesLeft().end())
 							{
-								std::cout << "(" << it->first << ";" << it->second << ")";
+								std::cout << "(" << it->domino << ";" << it->index << ")";
 								for (++it; it != plateau.GetMovesLeft().end(); ++it)
-									std::cout << ", (" << it->first << ";" << it->second << ")";
+									std::cout << ", (" << it->domino << ";" << it->index << ")";
 								std::cout << "." << std::endl;
 							}
 #endif
@@ -793,12 +793,12 @@ void GraphicBoard::RefreshMouseMap()
 
 		for (auto& tile : plateau.getLogicalBoard())
 		{
-			auto temp = IndexToCoord[tile.second];
+			auto temp = IndexToCoord[tile.index];
 			auto x = temp.x;
 			auto y = temp.y;
 			auto z = temp.z;
-			auto domino = tile.first;
-			auto index = tile.second;
+			auto domino = tile.domino;
+			auto index = tile.index;
 			if (direction == 3)
 			{
 				// Down - Left
@@ -1172,12 +1172,12 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 
 		for (const auto& tile : plateau.getLogicalBoard())
 		{
-			auto temp = IndexToCoord[tile.second];
+			auto temp = IndexToCoord[tile.index];
 			auto x = temp.x;
 			auto y = temp.y;
 			auto z = temp.z;
-			auto domino = tile.first;
-			auto index = tile.second;
+			auto domino = tile.domino;
+			auto index = tile.index;
 			if (direction == 3)
 			{
 				// Down - Left
@@ -1480,12 +1480,12 @@ void GraphicBoard::Loop()
 							std::vector<int> relevantTiles;
 							for (const auto& tile : plateau.getLogicalBoard())
 							{
-								auto temp = IndexToCoord[tile.second];
+								auto temp = IndexToCoord[tile.index];
 								auto x = temp.x;
 								auto y = temp.y;
 								auto z = temp.z;
-								auto domino = tile.first;
-								auto index = tile.second;
+								auto domino = tile.domino;
+								auto index = tile.index;
 
 								if (
 									(
@@ -1520,9 +1520,9 @@ void GraphicBoard::Loop()
 									auto it = plateau.GetMovesLeft().begin();
 									if (it != plateau.GetMovesLeft().end())
 									{
-										std::cout << "(" << it->first << ";" << it->second << ")";
+										std::cout << "(" << it->domino << ";" << it->index << ")";
 										for (++it; it != plateau.GetMovesLeft().end(); ++it)
-											std::cout << ", (" << it->first << ";" << it->second << ")";
+											std::cout << ", (" << it->domino << ";" << it->index << ")";
 										std::cout << "." << std::endl;
 									}
 #endif
