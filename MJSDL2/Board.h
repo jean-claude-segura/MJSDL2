@@ -125,18 +125,18 @@ public:
 	bool RemovePairOfTiles(const int, const int);
 	const bool IsBlocked() { return Moves.size() == 0; }
 	const int HowManyMovesLeft() { return Moves.size(); }
-	const std::vector<DominoIndex>& GetMovesLeft() { return Moves; }
+	const std::vector<std::pair<int, int>>& GetMovesLeft() { return Moves; }
 	bool IsEmpty() { return WhatsLeft.empty(); }
 	int getNumberOfTilesLeft() { return WhatsLeft.size(); }
 	const std::vector<int>& getWhatsLeft() { return WhatsLeft; }
 	const std::vector<DominoIndex>& getLogicalBoard() { return LogicalBoard; }
 	void SortBoard(const uint8_t direction);
 	bool Solve();
-	const std::vector<DominoIndex>& GetSolution() { return Solution; }
+	const std::vector<std::pair<int, int>>& GetSolution() { return Solution; }
 
 private:
-	std::vector<DominoIndex> Solution;
-	std::vector<DominoIndex> History;
+	std::vector<std::pair<int, int>> Solution;
+	std::vector<std::pair<int, int>> History;
 	std::vector<int> WhatsLeft; // Index
 	std::map<int, int> TilesMap; // index -> domino
 	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> index
@@ -155,8 +155,8 @@ private:
 		false, false, false, false
 	};
 	void RemoveTile(int);
-	void BuildMoves(std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::iterator& itFirst, std::vector<DominoIndex>& Moves);
-	std::vector<DominoIndex> Moves;
+	void BuildMoves(std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::iterator& itFirst, std::vector<std::pair<int, int>>& Moves);
+	std::vector<std::pair<int, int>> Moves;
 	void SetMoves();
 };
 
@@ -450,7 +450,7 @@ inline bool SolveRec(
 	std::map<int, int> & TilesMap,
 	std::vector<int> & WhatsLeft,
 	std::map<Coordinates, int> & mOccupationBoard,
-	std::vector<DominoIndex>& Solution
+	std::vector<std::pair<int, int>>& Solution
 #ifdef _DEBUG
 	, uint64_t& positions
 #endif
@@ -475,11 +475,11 @@ inline bool SolveRec(
 			WhatsLeft,
 			mOccupationBoard, LogicalBoardBack, RemovableWasTrue, RemovableWasFalse, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 	}
-	Solution.emplace_back(DominoIndex(Move[0], Move[1]));
+	Solution.emplace_back(std::make_pair(Move[0], Move[1]));
 	if (Move.size() == 4)
 	{
 		full = true;
-		Solution.emplace_back(DominoIndex(Move[2], Move[3]));
+		Solution.emplace_back(std::make_pair(Move[2], Move[3]));
 	}
 
 	SetMoves(LogicalBoard, Removable, newMoves);
@@ -546,13 +546,13 @@ inline bool SolveRec(
 
 // Just to work on a copy.
 inline bool SolveRecInit(
-	std::vector<DominoIndex> oldMoves,
+	std::vector<std::pair<int, int>> oldMoves,
 	std::vector<DominoIndex> LogicalBoard,
 	std::array<bool, 144> Removable,
 	std::map<int, int> TilesMap,
 	std::vector<int> WhatsLeft,
 	std::map<Coordinates, int> mOccupationBoard,
-	std::vector<DominoIndex>& Solution)
+	std::vector<std::pair<int, int>>& Solution)
 {
 #ifdef _DEBUG
 	std::vector<DominoIndex> LogicalBoardBack = LogicalBoard;
@@ -574,12 +574,12 @@ inline bool SolveRecInit(
 	for(int _index = 0; _index < oldMoves.size();)
 	{
 		std::vector<int> temp;
-		temp.emplace_back(oldMoves[_index].domino);
-		temp.emplace_back(oldMoves[_index].index);
-		if (oldMoves.size() >= (_index + 6) && oldMoves[_index].domino == oldMoves[_index + 1].domino && oldMoves[_index].domino == oldMoves[_index + 2].domino)
+		temp.emplace_back(oldMoves[_index].first);
+		temp.emplace_back(oldMoves[_index].second);
+		if (oldMoves.size() >= (_index + 6) && oldMoves[_index].first == oldMoves[_index + 1].first && oldMoves[_index].first == oldMoves[_index + 2].first)
 		{
-			temp.emplace_back(oldMoves[_index + 5].domino);
-			temp.emplace_back(oldMoves[_index + 5].index);
+			temp.emplace_back(oldMoves[_index + 5].first);
+			temp.emplace_back(oldMoves[_index + 5].second);
 			_index += 6;
 		}
 		else

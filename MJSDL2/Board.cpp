@@ -227,9 +227,9 @@ void Board::InitBoard()
 	auto it = Moves.begin();
 	if (it != Moves.end())
 	{
-		std::cout << "(" << it->domino << ";" << it->index << ")";
+		std::cout << "(" << it->first << ";" << it->second << ")";
 		for (++it; it != Moves.end(); ++it)
-			std::cout << ", (" << it->domino << ";" << it->index << ")";
+			std::cout << ", (" << it->first << ";" << it->second << ")";
 		std::cout << "." << std::endl;
 	}
 #endif
@@ -310,7 +310,7 @@ bool Board::RemovePairOfTiles(const int first, const int second)
 	return bRetour;
 }
 
-void Board::BuildMoves(std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::iterator& itFirst, std::vector<DominoIndex>& Moves)
+void Board::BuildMoves(std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::iterator& itFirst, std::vector<std::pair<int, int>>& Moves)
 {
 	if (itFirst != RemovableBoard.end())
 	{
@@ -333,7 +333,7 @@ void Board::BuildMoves(std::vector<DominoIndex>& RemovableBoard, std::vector<Dom
 			if (itNext != RemovableBoard.end())
 			{
 				int indexFirst = (*itFirst).index;
-				Moves.emplace_back(DominoIndex((*itFirst).index, (*itNext).index));
+				Moves.emplace_back(std::pair((*itFirst).index, (*itNext).index));
 			}
 		} while (itNext != RemovableBoard.end());
 
@@ -366,7 +366,7 @@ bool Board::Solve()
 	{
 #ifdef _DEBUG
 		for (auto& move : Solution)
-			std::cout << move.domino << ";" << move.index << std::endl;
+			std::cout << move.first << ";" << move.second << std::endl;
 #endif
 		return true;
 	}

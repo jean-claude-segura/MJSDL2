@@ -434,15 +434,15 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 					selected = -1;
 					Refresh(false);
 
-					clicked[move.domino] = true;
-					clicked[move.index] = true;
+					clicked[move.first] = true;
+					clicked[move.second] = true;
 
 					Refresh(false);
 
-					clicked[move.domino] = false;
-					clicked[move.index] = false;
+					clicked[move.first] = false;
+					clicked[move.second] = false;
 
-					plateau.RemovePairOfTiles(move.domino, move.index);
+					plateau.RemovePairOfTiles(move.first, move.second);
 
 					Refresh(false);
 				}
@@ -459,15 +459,15 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 					selected = -1;
 					Refresh(false);
 
-					clicked[itNextMove->domino] = true;
-					clicked[itNextMove->index] = true;
+					clicked[itNextMove->first] = true;
+					clicked[itNextMove->second] = true;
 
 					Refresh(false);
 
-					clicked[itNextMove->domino] = false;
-					clicked[itNextMove->index] = false;
+					clicked[itNextMove->first] = false;
+					clicked[itNextMove->second] = false;
 
-					plateau.RemovePairOfTiles(itNextMove->domino, itNextMove->index);
+					plateau.RemovePairOfTiles(itNextMove->first, itNextMove->second);
 
 					Refresh(false);
 
@@ -494,7 +494,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		{
 			if (!plateau.GetMovesLeft().empty() && itPrevMove != plateau.GetMovesLeft().end())
 			{
-				if (plateau.RemovePairOfTiles(itPrevMove->domino, itPrevMove->index))
+				if (plateau.RemovePairOfTiles(itPrevMove->first, itPrevMove->second))
 				{
 					Refresh(true);
 					itNextMove = plateau.GetMovesLeft().begin();
@@ -506,9 +506,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 					auto it = plateau.GetMovesLeft().begin();
 					if (it != plateau.GetMovesLeft().end())
 					{
-						std::cout << "(" << it->domino << ";" << it->index << ")";
+						std::cout << "(" << it->first << ";" << it->second << ")";
 						for (++it; it != plateau.GetMovesLeft().end(); ++it)
-							std::cout << ", (" << it->domino << ";" << it->index << ")";
+							std::cout << ", (" << it->first << ";" << it->second << ")";
 						std::cout << "." << std::endl;
 					}
 #endif
@@ -525,11 +525,11 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 					clicked[selected] = false;
 				selected = -1;
 				Refresh(false);
-				clicked[itNextMove->domino] = true;
-				clicked[itNextMove->index] = true;
+				clicked[itNextMove->first] = true;
+				clicked[itNextMove->second] = true;
 				Refresh(false);
-				clicked[itNextMove->domino] = false;
-				clicked[itNextMove->index] = false;
+				clicked[itNextMove->first] = false;
+				clicked[itNextMove->second] = false;
 				itPrevMove = itNextMove;
 				++itNextMove;
 			}
@@ -619,9 +619,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 	auto it = plateau.GetMovesLeft().begin();
 	if (it != plateau.GetMovesLeft().end())
 	{
-		std::cout << "(" << it->domino << ";" << it->index << ")";
+		std::cout << "(" << it->first << ";" << it->second << ")";
 		for (++it; it != plateau.GetMovesLeft().end(); ++it)
-			std::cout << ", (" << it->domino << ";" << it->index << ")";
+			std::cout << ", (" << it->first << ";" << it->second << ")";
 		std::cout << "." << std::endl;
 	}
 #endif
@@ -670,9 +670,9 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 							auto it = plateau.GetMovesLeft().begin();
 							if (it != plateau.GetMovesLeft().end())
 							{
-								std::cout << "(" << it->domino << ";" << it->index << ")";
+								std::cout << "(" << it->first << ";" << it->second << ")";
 								for (++it; it != plateau.GetMovesLeft().end(); ++it)
-									std::cout << ", (" << it->domino << ";" << it->index << ")";
+									std::cout << ", (" << it->first << ";" << it->second << ")";
 								std::cout << "." << std::endl;
 							}
 #endif
@@ -1520,9 +1520,9 @@ void GraphicBoard::Loop()
 									auto it = plateau.GetMovesLeft().begin();
 									if (it != plateau.GetMovesLeft().end())
 									{
-										std::cout << "(" << it->domino << ";" << it->index << ")";
+										std::cout << "(" << it->first << ";" << it->second << ")";
 										for (++it; it != plateau.GetMovesLeft().end(); ++it)
-											std::cout << ", (" << it->domino << ";" << it->index << ")";
+											std::cout << ", (" << it->first << ";" << it->second << ")";
 										std::cout << "." << std::endl;
 									}
 #endif

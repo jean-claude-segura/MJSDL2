@@ -131,8 +131,8 @@ private:
 		false, false, false, false
 	};
 	int selected;
-	std::vector<DominoIndex>::const_iterator itNextMove;
-	std::vector<DominoIndex>::const_iterator itPrevMove;
+	std::vector<std::pair<int, int>>::const_iterator itNextMove;
+	std::vector<std::pair<int, int>>::const_iterator itPrevMove;
 	uint8_t direction;
 	SDL_Event exitEvent;
 };
