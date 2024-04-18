@@ -443,8 +443,6 @@ inline bool stopNow( const std::map<int, int>& TilesMap
 
 inline bool SolveRec(
 	const std::vector<int>& Move,
-	int _index,
-	const std::vector<std::vector<int>> & Moves,
 	std::vector<DominoIndex> & LogicalBoard,
 	std::array<bool, 144> & Removable,
 	std::map<int, int> & TilesMap,
@@ -484,54 +482,36 @@ inline bool SolveRec(
 
 	SetMoves(LogicalBoard, Removable, newMoves);
 
-	if (LogicalBoard.empty())
+	auto ret = LogicalBoard.empty();
+	if (!ret)
 	{
-		/**/
-		for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
-		for (auto& item : RemovableWasTrue) Removable[item] = true;
-		for (auto& item : RemovableWasFalse) Removable[item] = false;
-		for (auto& item : TilesMapBack) TilesMap[item.first] = item.second;
-		for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
-		for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
-		/**/
-
-		return true;
-	}
-
-	if (!stopNow(TilesMap
-#ifdef _DEBUG
-		, positions
-#endif
-	))
-	{
-		int index = 0;
-		for (auto& move : newMoves)
+		if (!newMoves.empty())
 		{
-			auto ret = SolveRec(move, index, newMoves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution
+			if (!stopNow(TilesMap
 #ifdef _DEBUG
-				, ++positions
+				, positions
 #endif
-			);
-
-			++index;
-			if (ret)
+			))
 			{
-				/**/
-				for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
-				for (auto& item : RemovableWasTrue) Removable[item] = true;
-				for (auto& item : RemovableWasFalse) Removable[item] = false;
-				for (auto& item : TilesMapBack) TilesMap[item.first] = item.second;
-				for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
-				for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
-				/**/
+				for (auto& move : newMoves)
+				{
+					ret = SolveRec(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution
+#ifdef _DEBUG
+						, ++positions
+#endif
+					);
 
-				return true;
+					if (ret) break;
+				}
 			}
 		}
+		if (!ret)
+		{
+			if (full)
+				Solution.pop_back();
+			Solution.pop_back();
+		}
 	}
-	if(full)
-		Solution.pop_back();
-	Solution.pop_back();
 	/**/
 	for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
 	for (auto& item : RemovableWasTrue) Removable[item] = true;
@@ -541,7 +521,7 @@ inline bool SolveRec(
 	for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
 	/**/
 
-	return false;
+	return ret;
 }
 
 // Just to work on a copy.
@@ -567,24 +547,23 @@ inline bool SolveRecInit(
 	// And the start position is always different.
 	hashtable.clear();
 	bool ret = false;
-	int index = 0;
 
 	// New move container to remove the tiles 2 at once or 4 at once.
 	std::vector<std::vector<int>> Moves;
-	for(int _index = 0; _index < oldMoves.size();)
+	for(int index = 0; index < oldMoves.size();)
 	{
 		std::vector<int> temp;
-		temp.emplace_back(oldMoves[_index].first);
-		temp.emplace_back(oldMoves[_index].second);
-		if (oldMoves.size() >= (_index + 6) && oldMoves[_index].first == oldMoves[_index + 1].first && oldMoves[_index].first == oldMoves[_index + 2].first)
+		temp.emplace_back(oldMoves[index].first);
+		temp.emplace_back(oldMoves[index].second);
+		if (oldMoves.size() >= (index + 6) && oldMoves[index].first == oldMoves[index + 1].first && oldMoves[index].first == oldMoves[index + 2].first)
 		{
-			temp.emplace_back(oldMoves[_index + 5].first);
-			temp.emplace_back(oldMoves[_index + 5].second);
-			_index += 6;
+			temp.emplace_back(oldMoves[index + 5].first);
+			temp.emplace_back(oldMoves[index + 5].second);
+			index += 6;
 		}
 		else
 		{
-			++_index;
+			++index;
 		}
 		Moves.emplace_back(temp);
 	}
@@ -594,12 +573,11 @@ inline bool SolveRecInit(
 
 	for (auto& move : Moves)
 	{
-		ret = SolveRec(move, index, Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution
+		ret = SolveRec(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution
 #ifdef _DEBUG
 			, positions
 #endif
 		);
-		++index;
 		if (ret) break;
 	}
 
