@@ -7,6 +7,7 @@
 #include <cmath>
 #include <map>
 
+// https://www.ibm.com/docs/en/i/7.5?topic=only-constexpr-constructors-c11
 class Coordinates
 {
 public:
