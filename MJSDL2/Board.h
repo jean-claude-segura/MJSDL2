@@ -124,6 +124,7 @@ public:
 	const bool getRemovableFromIndex(const int index) { return Removable[index]; }
 	bool RemovePairOfTiles(const int, const int);
 	const bool IsBlocked() { return Moves.size() == 0; }
+	const int HowManyMovesLeft() { return Moves.size(); }
 	const std::vector<DominoIndex>& GetMovesLeft() { return Moves; }
 	bool IsEmpty() { return WhatsLeft.empty(); }
 	int getNumberOfTilesLeft() { return WhatsLeft.size(); }
