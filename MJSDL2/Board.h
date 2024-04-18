@@ -441,6 +441,45 @@ inline bool stopNow( const std::map<int, int>& TilesMap
 	}
 }
 
+inline uint8_t SolveRecScoot(
+	const std::vector<int>& Move,
+	std::vector<DominoIndex>& LogicalBoard,
+	std::array<bool, 144>& Removable,
+	std::map<int, int>& TilesMap,
+	std::vector<int>& WhatsLeft,
+	std::map<Coordinates, int>& mOccupationBoard)
+{
+	std::vector<std::vector<int>> newMoves;
+
+	std::vector<DominoIndex> LogicalBoardBack;
+	std::vector<int> RemovableWasTrue;
+	std::vector<int> RemovableWasFalse;
+	std::map<int, int> TilesMapBack;
+	std::vector<int> WhatsLeftBack;
+	std::map<Coordinates, int> mOccupationBoardBack;
+	bool full = false;
+	for (const auto& move : Move)
+	{
+		RemoveTile(move,
+			LogicalBoard,
+			Removable,
+			TilesMap,
+			WhatsLeft,
+			mOccupationBoard, LogicalBoardBack, RemovableWasTrue, RemovableWasFalse, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
+	}
+
+	SetMoves(LogicalBoard, Removable, newMoves);
+
+	for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
+	for (auto& item : RemovableWasTrue) Removable[item] = true;
+	for (auto& item : RemovableWasFalse) Removable[item] = false;
+	for (auto& item : TilesMapBack) TilesMap[item.first] = item.second;
+	for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
+	for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
+
+	return newMoves.size();
+}
+
 inline bool SolveRec(
 	const std::vector<int>& Move,
 	std::vector<DominoIndex> & LogicalBoard,
@@ -493,9 +532,22 @@ inline bool SolveRec(
 #endif
 			))
 			{
+				// Scooting step :
+				std::vector<std::pair<std::vector<int>, int>> sortedMoves;
 				for (auto& move : newMoves)
 				{
-					ret = SolveRec(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution
+					auto eval = SolveRecScoot(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard);
+					sortedMoves.emplace_back(std::make_pair(move, eval));
+				}
+				std::sort(sortedMoves.begin(), sortedMoves.end(),
+					[](const std::pair<std::vector<int>, int>& left, const std::pair<std::vector<int>, int>& right)
+					{
+						return left.second > right.second || ( left.second == right.second && left.first.size() > right.first.size());
+					});
+
+				for (auto& move : sortedMoves)
+				{
+					ret = SolveRec(move.first, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution
 #ifdef _DEBUG
 						, ++positions
 #endif
@@ -567,13 +619,27 @@ inline bool SolveRecInit(
 		}
 		Moves.emplace_back(temp);
 	}
+
+	// Scooting step :
+	std::vector<std::pair<std::vector<int>, int>> sortedMoves;
+	for (auto& move : Moves)
+	{
+		auto eval = SolveRecScoot(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard);
+		sortedMoves.emplace_back(std::make_pair(move, eval));
+	}
+	std::sort(sortedMoves.begin(), sortedMoves.end(),
+		[](const std::pair<std::vector<int>, int>& left, const std::pair<std::vector<int>, int>& right)
+		{
+			return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
+		});
+
 #ifdef _DEBUG
 	uint64_t positions = 0ULL;
 #endif
 
-	for (auto& move : Moves)
+	for (auto& move : sortedMoves)
 	{
-		ret = SolveRec(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution
+		ret = SolveRec(move.first, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution
 #ifdef _DEBUG
 			, positions
 #endif

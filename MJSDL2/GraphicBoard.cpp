@@ -424,7 +424,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 	case RESTART:
 		if (right)
 		{
-			if (false) //plateau.Solve())
+			if (plateau.Solve())
 			{
 				for (const auto & move : plateau.GetSolution())
 				{
