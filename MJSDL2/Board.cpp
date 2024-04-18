@@ -78,14 +78,14 @@ void Board::SortBoard(const uint8_t direction)
 	std::vector< std::pair<int, int>>::iterator it;
 	if (direction == 0 || direction == 3)
 	{
-		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && (*it).second != 140; ++it);
+		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 140; ++it);
 		if (it != LogicalBoard.end())
 		{
-			auto temp = std::make_pair((*it).first, (*it).second);
+			auto temp = std::make_pair(it->first, it->second);
 			LogicalBoard.erase(it);
 			LogicalBoard.insert(LogicalBoard.begin(), temp);
 		}
-		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && (*it).second != 141; ++it);
+		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 141; ++it);
 		if (it != LogicalBoard.end())
 		{
 			/*auto t = std::make_tuple(12, 8, 0, 0, 0);
@@ -95,52 +95,52 @@ void Board::SortBoard(const uint8_t direction)
 					return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
 				}
 			);*/
-			auto temp = std::make_pair((*it).first, (*it).second);
+			auto temp = std::make_pair(it->first, it->second);
 			LogicalBoard.erase(it);
 			LogicalBoard.emplace_back(temp);
 		}
-		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && (*it).second != 142; ++it);
+		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 142; ++it);
 		if (it != LogicalBoard.end())
 		{
-			auto temp = std::make_pair((*it).first, (*it).second);
+			auto temp = std::make_pair(it->first, it->second);
 			LogicalBoard.erase(it);
 			LogicalBoard.emplace_back(temp);
 		}
-		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && (*it).second != 143; ++it);
+		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 143; ++it);
 		if (it != LogicalBoard.end())
 		{
-			auto temp = std::make_pair((*it).first, (*it).second);
+			auto temp = std::make_pair(it->first, it->second);
 			LogicalBoard.erase(it);
 			LogicalBoard.emplace_back(temp);
 		}
 	}
 	else if (direction == 1 || direction == 2)
 		{
-			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && (*it).second != 140; ++it);
+			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 140; ++it);
 			if (it != LogicalBoard.end())
 			{
-				auto temp = std::make_pair((*it).first, (*it).second);
+				auto temp = std::make_pair(it->first, it->second);
 				LogicalBoard.erase(it);
 				LogicalBoard.emplace_back(temp);
 			}
-			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && (*it).second != 141; ++it);
+			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 141; ++it);
 			if (it != LogicalBoard.end())
 			{
-				auto temp = std::make_pair((*it).first, (*it).second);
+				auto temp = std::make_pair(it->first, it->second);
 				LogicalBoard.erase(it);
 				LogicalBoard.insert(LogicalBoard.begin(), temp);
 			}
-			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && (*it).second != 142; ++it);
+			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 142; ++it);
 			if (it != LogicalBoard.end())
 			{
-				auto temp = std::make_pair((*it).first, (*it).second);
+				auto temp = std::make_pair(it->first, it->second);
 				LogicalBoard.erase(it);
 				LogicalBoard.insert(LogicalBoard.begin(), temp);
 			}
-			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && (*it).second != 143; ++it);
+			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->second != 143; ++it);
 			if (it != LogicalBoard.end())
 			{
-				auto temp = std::make_pair((*it).first, (*it).second);
+				auto temp = std::make_pair(it->first, it->second);
 				LogicalBoard.erase(it);
 				LogicalBoard.emplace_back(temp);
 			}
@@ -242,7 +242,7 @@ void Board::RemoveTile(const int index)
 	TilesMap.erase(index);
 
 	std::vector<std::pair<int, int>>::iterator it = LogicalBoard.begin();
-	for (; it != LogicalBoard.end() && (*it).second != index; ++it);
+	for (; it != LogicalBoard.end() && it->second != index; ++it);
 	auto coord = IndexToCoord[it->second];
 	double x = std::get<0>(coord);
 	double y = std::get<1>(coord);

@@ -139,7 +139,7 @@ inline void RemoveTile(
 	TilesMap.erase(index);
 
 	std::vector<std::pair<int, int>>::iterator it = LogicalBoard.begin();
-	for (; it != LogicalBoard.end() && (*it).second != index; ++it);
+	for (; it != LogicalBoard.end() && it->second != index; ++it);
 	auto coord = IndexToCoord[it->second];
 	double x = std::get<0>(coord);
 	double y = std::get<1>(coord);
