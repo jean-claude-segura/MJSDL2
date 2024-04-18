@@ -793,11 +793,12 @@ void GraphicBoard::RefreshMouseMap()
 
 		for (auto& tile : plateau.getLogicalBoard())
 		{
-			auto x = std::get<0>(tile);
-			auto y = std::get<1>(tile);
-			auto z = std::get<2>(tile);
-			auto domino = std::get<3>(tile);
-			auto index = std::get<4>(tile);
+			auto temp = IndexToCoord[tile.second];
+			auto x = std::get<0>(temp);
+			auto y = std::get<1>(temp);
+			auto z = std::get<2>(temp);
+			auto domino = tile.first;
+			auto index = tile.second;
 			if (direction == 3)
 			{
 				// Down - Left
@@ -1171,11 +1172,12 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 
 		for (const auto& tile : plateau.getLogicalBoard())
 		{
-			auto x = std::get<0>(tile);
-			auto y = std::get<1>(tile);
-			auto z = std::get<2>(tile);
-			auto domino = std::get<3>(tile);
-			auto index = std::get<4>(tile);
+			auto temp = IndexToCoord[tile.second];
+			auto x = std::get<0>(temp);
+			auto y = std::get<1>(temp);
+			auto z = std::get<2>(temp);
+			auto domino = tile.first;
+			auto index = tile.second;
 			if (direction == 3)
 			{
 				// Down - Left
@@ -1478,11 +1480,12 @@ void GraphicBoard::Loop()
 							std::vector<int> relevantTiles;
 							for (const auto& tile : plateau.getLogicalBoard())
 							{
-								auto x = std::get<0>(tile);
-								auto y = std::get<1>(tile);
-								auto z = std::get<2>(tile);
-								auto domino = std::get<3>(tile);
-								auto index = std::get<4>(tile);
+								auto temp = IndexToCoord[tile.second];
+								auto x = std::get<0>(temp);
+								auto y = std::get<1>(temp);
+								auto z = std::get<2>(temp);
+								auto domino = tile.first;
+								auto index = tile.second;
 
 								if (
 									(
