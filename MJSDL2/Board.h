@@ -331,55 +331,56 @@ inline void SetMoves(const std::vector<DominoIndex>& LogicalBoard, const std::ar
 }
 
 static std::map<uint64_t, std::array<uint64_t, 144 / 8>> hashtable;
-static std::vector<std::array<uint64_t, 144 / 8>> vBoardDescription;
 
-// Pseudo-hash.
-// Collision rate to check.
-inline uint64_t getHash(const std::vector<std::vector<int>>& Moves,
-	const std::array<bool, 144>& Removable,
-	const std::map<int, int>& TilesMap
-	)
+#define FNV_offset_basis 0xcbf29ce484222325ULL
+#define FNV_prime 0x100000001b3ULL
+
+// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+inline uint64_t getFNV1(const std::map<int, int>& TilesMap)
 {
-	// 64 56 48 40 32 24 16 8
-	uint64_t indexsum = 0ULL; // 14 : 14 + 8 + 6 + 8 + 13
-	uint64_t tilesum = 0ULL; // 14 : 8 + 6 + 8 + 13
-	uint64_t removables = 0ULL; // 8 : 6 + 8 + 13
-	uint64_t nmoves = 0ULL; // 6 (max 40 moves) : 8 + 13
-	uint64_t count = 0ULL; // 8 : 14
+	uint64_t tileTab[144];
+	memset(tileTab, 44, 144 * sizeof(char));
 
-	uint64_t alternateindexsum = 0ULL;
-	uint64_t alternatetilesum = 0ULL;
-	int pair = true;
 	for (auto& item : TilesMap)
 	{
-		indexsum += item.first;
-		tilesum += item.second;
-		++count;
-		alternateindexsum = pair ? item.first : 3 * item.first;
-		alternatetilesum = pair ? item.second : 3 * item.second;
-		pair = ~pair;
+		tileTab[item.first] = item.second == 0 ? 43ULL : uint64_t(item.second);
 	}
 
-	for (auto& item : Removable) if (item) ++removables;
+	uint64_t hash = FNV_offset_basis;
 
-	nmoves = Moves.size(); // 7
+	for(int i = 0; i < 144; ++i)
+	{
+		hash *= FNV_prime;
+		hash ^= tileTab[i];
+	}
 
-	auto rIndex = alternateindexsum % 10; // 7
-	auto rTile = alternatetilesum % 10; // 7
-	rIndex = rIndex == 0 ? 0 : 10 - rIndex;
-	rTile = rTile == 0 ? 0 : 10 - rTile;
+	return hash;
+}
 
-	uint64_t hash = indexsum << (14 + 8 + 6 + 8 + 14) | tilesum << (8 + 6 + 8 + 14) | removables << (6 + 8 + 14) | nmoves << (8 + 14) | count << (14) | rIndex << 7 | rTile;
+// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+inline uint64_t getFNV1a(const std::map<int, int>& TilesMap)
+{
+	uint64_t tileTab[144];
+	memset(tileTab, 44, 144 * sizeof(char));
+
+	for (auto& item : TilesMap)
+	{
+		tileTab[item.first] = item.second == 0 ? 43ULL : uint64_t(item.second);
+	}
+
+	uint64_t hash = FNV_offset_basis;
+	for (int i = 0; i < 144; ++i)
+	{
+		hash ^= tileTab[i];
+		hash *= FNV_prime;
+	}
 	
 	return hash;
 }
 
-inline bool stopNow(std::vector<std::vector<int>>& Moves,
-	const std::array<bool, 144>& Removable,
-	const std::map<int, int>& TilesMap
-)
+inline bool stopNow( const std::map<int, int>& TilesMap, uint64_t& positions )
 {
-	auto hash = getHash(Moves, Removable, TilesMap);
+	auto hash = getFNV1a(TilesMap);
 
 	uint64_t tileTab[144];
 	memset(tileTab, 0, 144 * sizeof(uint64_t));
@@ -414,17 +415,10 @@ inline bool stopNow(std::vector<std::vector<int>>& Moves,
 			if (boardDescriptionInHashtable[i] != boardDescription[i])
 			{
 #ifdef _DEBUG
-				std::cout << "Collision de hash" << std::endl;
+				std::cout << "Collision de hash, " << positions << std::endl;
 #endif
-				if (vBoardDescription.end() == std::find(vBoardDescription.begin(), vBoardDescription.end(), boardDescription))
-				{
-					vBoardDescription.emplace_back(boardDescription);
-					return false;
-				}
-				else
-				{
-					return true;
-				}
+				hashtable[hash] = boardDescription;
+				return false;
 			}
 		}
 		return true;
@@ -446,7 +440,8 @@ inline bool SolveRec(
 	std::map<int, int> & TilesMap,
 	std::vector<int> & WhatsLeft,
 	std::map<Coordinates, int> & mOccupationBoard,
-	std::vector<DominoIndex>& Solution)
+	std::vector<DominoIndex>& Solution,
+	uint64_t& positions)
 {
 
 	std::vector<std::vector<int>> newMoves;
@@ -490,12 +485,12 @@ inline bool SolveRec(
 		return true;
 	}
 
-	if (!stopNow(newMoves, Removable, TilesMap))
+	if (!stopNow(TilesMap, positions))
 	{
 		int index = 0;
 		for (auto& move : newMoves)
 		{
-			auto ret = SolveRec(move, index, newMoves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution);
+			auto ret = SolveRec(move, index, newMoves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution, ++positions);
 			++index;
 			if (ret)
 			{
@@ -571,9 +566,12 @@ inline bool SolveRecInit(
 		}
 		Moves.emplace_back(temp);
 	}
+
+	uint64_t positions = 0ULL;
+
 	for (auto& move : Moves)
 	{
-		ret = SolveRec(move, index, Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution);
+		ret = SolveRec(move, index, Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution, positions);
 		++index;
 		if (ret) break;
 	}
