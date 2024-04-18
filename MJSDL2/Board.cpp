@@ -149,10 +149,17 @@ void Board::SortBoard(const uint8_t direction)
 
 void Board::InitBoard()
 {
+#ifdef _DEBUG
+	// 5, 7, 12, 18
+	static int seed = 17;
+	std::mt19937 e1(++seed);
+	std::cout << "******************************************* " << seed << " *******************************************" << std::endl;
+	std::uniform_int_distribution<> uniform_dist(0, 41);
+#else
 	std::random_device r;
 	std::default_random_engine e1(r());
 	std::uniform_int_distribution<int> uniform_dist(0, 41);
-
+#endif
 	LogicalBoard.clear();
 	TilesMap.clear();
 	mOccupationBoard.clear();
