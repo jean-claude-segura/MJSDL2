@@ -1,8 +1,5 @@
 #include "GraphicBoard.h"
 #include <windows.h>
-#ifndef _DEBUG
-#include <windows.h>
-#endif
 int main()
 {
 	try
@@ -12,6 +9,8 @@ int main()
 		std::cin.tie(NULL); 
 #ifndef _DEBUG
 		ShowWindow(GetConsoleWindow(), SW_HIDE);
+#else
+		ShowWindow(GetConsoleWindow(), SW_SHOW);
 #endif
 		GraphicBoard plateau;
 		plateau.Loop();

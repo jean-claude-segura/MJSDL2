@@ -15,7 +15,7 @@ private:
 public:
 	int domino;
 	int index;
-	DominoIndex(int _domino, int _index) : domino (_domino), index(_index) {}
+	DominoIndex(int _domino, int _index) : domino(_domino), index(_index) {}
 
 	bool operator==(const DominoIndex& other) const
 	{
@@ -31,7 +31,7 @@ public:
 	double y;
 	double z;
 	constexpr Coordinates() { x = 0.; y = 0.; z = 0.; };
-	constexpr Coordinates(double _x, double _y, double _z) : x( _x ), y( _y ), z( _z ) {}
+	constexpr Coordinates(double _x, double _y, double _z) : x(_x), y(_y), z(_z) {}
 
 	bool operator==(const Coordinates& other) const
 	{
@@ -174,7 +174,7 @@ inline void RemoveTile(
 	std::map<int, int>& TilesMapBack,
 	std::vector<int>& WhatsLeftBack,
 	std::map<Coordinates, int>& mOccupationBoardBack
-	)
+)
 {
 	TilesMapBack[index] = TilesMap[index];
 	TilesMap.erase(index);
@@ -198,7 +198,7 @@ inline void RemoveTile(
 		WhatsLeft.erase(itWL);
 	}
 
-	if(Removable[index]) RemovableWasTrue.emplace_back(index);
+	if (Removable[index]) RemovableWasTrue.emplace_back(index);
 	Removable[index] = false;
 
 	if (index == 0x8F)
@@ -262,6 +262,65 @@ inline void RemoveTile(
 			}
 		}
 	}
+}
+
+inline int BuildEvalMoves(const std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::const_iterator& itFirst)
+{
+	int moveEval = 0;
+	if (itFirst != RemovableBoard.end())
+	{
+		auto domino = (*itFirst).domino;
+		auto itNext = itFirst;
+		bool bEmpty = true;
+		do
+		{
+			++itNext;
+			itNext = std::find_if(itNext, RemovableBoard.end(),
+				[domino](const DominoIndex& in)
+				{
+					return
+						(
+							in.domino == domino ||
+							(34 <= in.domino && in.domino < 38 && 34 <= domino && domino < 38) || // Saisons
+							(38 <= in.domino && in.domino < 42 && 38 <= domino && domino < 42) // Fleurs.
+							);
+				}
+			);
+			if (itNext != RemovableBoard.end())
+			{
+				if (bEmpty)
+				{
+					++moveEval;
+					bEmpty = false;
+				}
+				++moveEval;
+				++itFirst;
+			}
+		} while (itNext != RemovableBoard.end());
+
+		moveEval += BuildEvalMoves(RemovableBoard, ++itFirst);
+	}
+	return moveEval;
+}
+
+inline int EvalMoves(const std::vector<DominoIndex>& LogicalBoard, const std::array<bool, 144>& Removable)
+{
+	std::vector<DominoIndex> RemovableBoard; // (domino, index)
+	for (const auto& pair : LogicalBoard)
+	{
+		if (Removable[pair.index]) RemovableBoard.emplace_back(pair);
+	}
+
+	if (Removable.size() == LogicalBoard.size())
+		return 0xFFFF;
+
+	std::sort(RemovableBoard.begin(), RemovableBoard.end(), [](const DominoIndex& left, const DominoIndex& right)
+		{
+			return left.domino < right.domino;
+		});
+	auto itFirst = RemovableBoard.begin();
+
+	return BuildEvalMoves(RemovableBoard, itFirst);
 }
 
 inline void BuildMoves(const std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::const_iterator& itFirst, std::vector<std::vector<int>>& Moves)
@@ -348,7 +407,7 @@ inline uint64_t getFNV1(const std::map<int, int>& TilesMap)
 
 	uint64_t hash = FNV_offset_basis;
 
-	for(int i = 0; i < 144; ++i)
+	for (int i = 0; i < 144; ++i)
 	{
 		hash *= FNV_prime;
 		hash ^= tileTab[i];
@@ -374,11 +433,11 @@ inline uint64_t getFNV1a(const std::map<int, int>& TilesMap)
 		hash ^= tileTab[i];
 		hash *= FNV_prime;
 	}
-	
+
 	return hash;
 }
 
-inline bool stopNow( const std::map<int, int>& TilesMap 
+inline bool stopNow(const std::map<int, int>& TilesMap
 #ifdef _DEBUG
 	, uint64_t& positions
 #endif
@@ -449,8 +508,6 @@ inline uint8_t SolveRecScoot(
 	std::vector<int>& WhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard)
 {
-	std::vector<std::vector<int>> newMoves;
-
 	std::vector<DominoIndex> LogicalBoardBack;
 	std::vector<int> RemovableWasTrue;
 	std::vector<int> RemovableWasFalse;
@@ -468,7 +525,7 @@ inline uint8_t SolveRecScoot(
 			mOccupationBoard, LogicalBoardBack, RemovableWasTrue, RemovableWasFalse, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
 	}
 
-	SetMoves(LogicalBoard, Removable, newMoves);
+	auto moveEval = EvalMoves(LogicalBoard, Removable);
 
 	for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
 	for (auto& item : RemovableWasTrue) Removable[item] = true;
@@ -477,23 +534,22 @@ inline uint8_t SolveRecScoot(
 	for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
 
-	return newMoves.size();
+	return moveEval;
 }
 
 inline bool SolveRec(
 	const std::vector<int>& Move,
-	std::vector<DominoIndex> & LogicalBoard,
-	std::array<bool, 144> & Removable,
-	std::map<int, int> & TilesMap,
-	std::vector<int> & WhatsLeft,
-	std::map<Coordinates, int> & mOccupationBoard,
+	std::vector<DominoIndex>& LogicalBoard,
+	std::array<bool, 144>& Removable,
+	std::map<int, int>& TilesMap,
+	std::vector<int>& WhatsLeft,
+	std::map<Coordinates, int>& mOccupationBoard,
 	std::vector<std::pair<int, int>>& Solution
 #ifdef _DEBUG
 	, uint64_t& positions
 #endif
 )
 {
-
 	std::vector<std::vector<int>> newMoves;
 
 	std::vector<DominoIndex> LogicalBoardBack;
@@ -503,7 +559,7 @@ inline bool SolveRec(
 	std::vector<int> WhatsLeftBack;
 	std::map<Coordinates, int> mOccupationBoardBack;
 	bool full = false;
-	for (const auto & move : Move)
+	for (const auto& move : Move)
 	{
 		RemoveTile(move,
 			LogicalBoard,
@@ -542,7 +598,7 @@ inline bool SolveRec(
 				std::sort(sortedMoves.begin(), sortedMoves.end(),
 					[](const std::pair<std::vector<int>, int>& left, const std::pair<std::vector<int>, int>& right)
 					{
-						return left.second > right.second || ( left.second == right.second && left.first.size() > right.first.size());
+						return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
 					});
 
 				for (auto& move : sortedMoves)
@@ -576,6 +632,28 @@ inline bool SolveRec(
 	return ret;
 }
 
+// New move container to remove the tiles 2 at once or 4 at once.
+inline void ConvertMovesToVector(std::vector<std::pair<int, int>>& oldMoves, std::vector<std::vector<int>>& Moves)
+{
+	for (int index = 0; index < oldMoves.size();)
+	{
+		std::vector<int> temp;
+		temp.emplace_back(oldMoves[index].first);
+		temp.emplace_back(oldMoves[index].second);
+		if (oldMoves.size() >= (index + 6) && oldMoves[index].first == oldMoves[index + 1].first && oldMoves[index].first == oldMoves[index + 2].first)
+		{
+			temp.emplace_back(oldMoves[index + 5].first);
+			temp.emplace_back(oldMoves[index + 5].second);
+			index += 6;
+		}
+		else
+		{
+			++index;
+		}
+		Moves.emplace_back(temp);
+	}
+}
+
 // Just to work on a copy.
 inline bool SolveRecInit(
 	std::vector<std::pair<int, int>> oldMoves,
@@ -602,23 +680,7 @@ inline bool SolveRecInit(
 
 	// New move container to remove the tiles 2 at once or 4 at once.
 	std::vector<std::vector<int>> Moves;
-	for(int index = 0; index < oldMoves.size();)
-	{
-		std::vector<int> temp;
-		temp.emplace_back(oldMoves[index].first);
-		temp.emplace_back(oldMoves[index].second);
-		if (oldMoves.size() >= (index + 6) && oldMoves[index].first == oldMoves[index + 1].first && oldMoves[index].first == oldMoves[index + 2].first)
-		{
-			temp.emplace_back(oldMoves[index + 5].first);
-			temp.emplace_back(oldMoves[index + 5].second);
-			index += 6;
-		}
-		else
-		{
-			++index;
-		}
-		Moves.emplace_back(temp);
-	}
+	ConvertMovesToVector(oldMoves, Moves);
 
 	// Scooting step :
 	std::vector<std::pair<std::vector<int>, int>> sortedMoves;
@@ -654,7 +716,7 @@ inline bool SolveRecInit(
 	bool WhatsLeftOk = WhatsLeftBack.size() == WhatsLeft.size();
 	bool mOccupationBoardOk = mOccupationBoardBack.size() == mOccupationBoard.size();
 	for (auto& item : LogicalBoardBack) LogicalBoardOk &= LogicalBoard.end() != std::find(LogicalBoard.begin(), LogicalBoard.end(), item);
-	for (int i = 0;  i < RemovableBack.size(); ++i) RemovableOk &= Removable[i] == RemovableBack[i];
+	for (int i = 0; i < RemovableBack.size(); ++i) RemovableOk &= Removable[i] == RemovableBack[i];
 	for (auto& item : TilesMapBack) TilesMapOk &= TilesMap.contains(item.first) && TilesMap[item.first] == item.second;
 	for (auto& item : WhatsLeftBack) WhatsLeftOk &= WhatsLeftBack.end() != std::find(WhatsLeftBack.begin(), WhatsLeftBack.end(), item);
 	for (auto& item : mOccupationBoardBack)  mOccupationBoardOk &= mOccupationBoard.contains(item.first) && mOccupationBoard[item.first] == item.second;
