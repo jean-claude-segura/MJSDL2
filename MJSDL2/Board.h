@@ -669,10 +669,20 @@ inline bool isCenterBlocked(int index, std::map<int, int>& TilesMap)
 }
 
 /*
-A  AB
-A  BA
-A  AB
-A  BA
+	A  AB
+	A  BA
+	A  AB
+	A  BA
+	
+	Out : AA/BB
+	(n+1) AB
+	(n+0) BA
+
+	0x02 -> 0x51 first square
+	0x00 -> 0x53 first floor
+	0x54 -> 0x77 second floor
+	0x77 -> 0x87 third floor
+	0x88 -> 0x8b fourth floor
 */
 inline bool CheckIfBlocked(std::map<int, int>& TilesMap)
 {
