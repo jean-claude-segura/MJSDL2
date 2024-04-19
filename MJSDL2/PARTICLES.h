@@ -18,13 +18,29 @@ class WATERFALL;
 
 class PARTICLES
 {
+public:
+	template <class T>
+	static inline T user_uniform_int_distribution(T min, T max)
+	{
+		static std::random_device r;
+		static std::default_random_engine e1(r());
+		return std::uniform_int_distribution<T>{ min, max }(e1);
+	}
+
+	template <class T>
+	static inline T user_uniform_real_distribution(T min, T max)
+	{
+		static std::random_device r;
+		static std::default_random_engine e1(r());
+		return std::uniform_real_distribution<T>{ min, max }(e1);
+	}
+
 private:
 	uint8_t NUMBER_OF_PARTICLES;
 	int32_t SCREEN_WIDTH;
 	int32_t SCREEN_HEIGHT;
 	uint8_t Remaining;
 	std::vector<std::unique_ptr<PARTICLE>> particles;
-	std::default_random_engine e1;
 
 public:
 	PARTICLES(const int _SCREEN_WIDTH, const int _SCREEN_HEIGHT);
@@ -67,7 +83,7 @@ class RANDOMORIGIN : public PARTICLE
 {
 public:
 	// Starts from random pos.
-	RANDOMORIGIN(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+	RANDOMORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 };
 
 // Original settings from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
@@ -75,14 +91,14 @@ class CENTEREDEDORIGIN : public PARTICLE
 {
 public:
 	// Starts from the middle of the screen
-	CENTEREDEDORIGIN(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+	CENTEREDEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 };
 
 class FORCEDORIGIN : public PARTICLE
 {
 public:
 	// Starts from (xOrg; yOrg)
-	FORCEDORIGIN(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
+	FORCEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
 };
 
 class CIRCULARPOS : public PARTICLE
@@ -92,7 +108,7 @@ private:
 public:
 	// Starts from (xOrg; yOrg)
 	// Every particle with the same (xOrg; yOrg) will be at the same distance from it (On a circle with the radius specified centered from there)
-	CIRCULARPOS(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double _radius);
+	CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double _radius);
 };
 
 class CIRCULARDIR : public PARTICLE
@@ -100,7 +116,7 @@ class CIRCULARDIR : public PARTICLE
 public:
 	// Starts from (xOrg; yOrg)
 	// Every particle with the same (xOrg; yOrg) will run away from there at same speed
-	CIRCULARDIR(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
+	CIRCULARDIR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
 };
 
 class TRAIL : public PARTICLE
@@ -108,9 +124,9 @@ class TRAIL : public PARTICLE
 public:
 	// Starts from the bottom of the screen.
 	// Will die when starting to fall down.
-	TRAIL(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
+	TRAIL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT);
 
-	void init(std::default_random_engine& e1);
+	void init();
 
 	const int32_t getXPos() { return xpos; }
 	const int32_t getYPos() { return ypos; }
@@ -125,7 +141,7 @@ public:
 	// Starts from (xOrg; yOrg)
 	// Every particle with the same (xOrg; yOrg) will run away from there at same speed
 	// Will never fall.
-	RADIAL(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
+	RADIAL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
 protected:
 	const bool setDeath();
 };
@@ -137,7 +153,7 @@ public:
 	// Every particle with the same (xOrg; yOrg) will run away from there at same speed
 	// Will never fall.
 	// Will die after 30 frames.
-	CIRCLE(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
+	CIRCLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
 private:
 	uint8_t radius;
 protected:
@@ -151,7 +167,7 @@ public:
 	// Every particle with the same (xOrg; yOrg) will run away from there at same speed
 	// Will never fall.
 	// Will fall after 30 frames.
-	WATERFALL(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
+	WATERFALL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
 private:
 	uint8_t radius;
 protected:

@@ -884,7 +884,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 	std::uniform_int_distribution<int> uniform_int_dist_angle(0., 360.);
 
 	PARTICLES particles(SCREEN_WIDTH, SCREEN_HEIGHT);
-	TRAIL trail(e1, SCREEN_WIDTH, SCREEN_HEIGHT);
+	TRAIL trail(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
@@ -923,7 +923,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 
 		if (!bAtLeastOneAlive)
 		{
-			trail.init(e1);
+			trail.init();
 			GenerateAnyHSLColourFirePalette(palette, size, uniform_int_dist_angle(e1), uniform_int_dist_angle(e1), Alpha);
 			for (int i = 0; i < size; ++i)
 				if (palette[i] == Alpha << 24) palette[i] = 0;
@@ -1084,7 +1084,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	int i = 0;
 	{
 		vparticles.emplace_back(PARTICLES(SCREEN_WIDTH, SCREEN_HEIGHT));
-		vtrails.emplace_back(TRAIL(e1, SCREEN_WIDTH, SCREEN_HEIGHT));
+		vtrails.emplace_back(TRAIL(SCREEN_WIDTH, SCREEN_HEIGHT));
 		bAtLeastOneAlive[i] = false;
 		bTrailAlive[i] = false;
 		palette[i] = NULL;
@@ -1124,7 +1124,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 				int i = number_of_fires - 1;
 				{
 					vparticles.emplace_back(PARTICLES(SCREEN_WIDTH, SCREEN_HEIGHT));
-					vtrails.emplace_back(TRAIL(e1, SCREEN_WIDTH, SCREEN_HEIGHT));
+					vtrails.emplace_back(TRAIL(SCREEN_WIDTH, SCREEN_HEIGHT));
 					bAtLeastOneAlive[i] = false;
 					bTrailAlive[i] = false;
 					palette[i] = NULL;
@@ -1132,7 +1132,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 					fire[i] = new Uint8[SCREEN_WIDTH * SCREEN_HEIGHT];
 					memset(fire[i], 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
 
-					vtrails[i].init(e1);
+					vtrails[i].init();
 					if (palette[i] != NULL)
 						delete[] palette[i];
 					palette[i] = new Uint32[size];
@@ -1155,10 +1155,10 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 #endif
 			}
 		}
-		else if (elapsed_seconds.count() < 1. / 30.)
+		/*else if (elapsed_seconds.count() < 1. / 26.)
 		{
 			continue;
-		}
+		}*/
 
 		start = std::chrono::steady_clock::now();
 
@@ -1166,7 +1166,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 		{
 			if (!bAtLeastOneAlive[i])
 			{
-				vtrails[i].init(e1);
+				vtrails[i].init();
 				if (palette[i] != NULL)
 					delete[] palette[i];
 				palette[i] = new Uint32[size];
