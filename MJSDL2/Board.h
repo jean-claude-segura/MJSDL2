@@ -168,15 +168,15 @@ inline void RemoveTile(
 	std::vector<int>& WhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard,
 	/* *********************************************************************** */
-	std::vector<DominoIndex>& LogicalBoardBack,
+	std::vector<DominoIndex>& LogicalBoardRemoved,
 	std::vector<int>& RemovableWasTrue,
 	std::vector<int>& RemovableWasFalse,
-	std::map<int, int>& TilesMapBack,
-	std::vector<int>& WhatsLeftBack,
-	std::map<Coordinates, int>& mOccupationBoardBack
+	std::map<int, int>& TilesMapRemoved,
+	std::vector<int>& WhatsLeftRemoved,
+	std::map<Coordinates, int>& mOccupationBoardRemoved
 )
 {
-	TilesMapBack[index] = TilesMap[index];
+	TilesMapRemoved[index] = TilesMap[index];
 	TilesMap.erase(index);
 
 	std::vector<DominoIndex>::iterator it = LogicalBoard.begin();
@@ -186,15 +186,15 @@ inline void RemoveTile(
 	double y = coord.y;
 	double z = coord.z;
 
-	LogicalBoardBack.emplace_back(*it);
+	LogicalBoardRemoved.emplace_back(*it);
 	LogicalBoard.erase(it);
-	mOccupationBoardBack[coord] = index;
+	mOccupationBoardRemoved[coord] = index;
 	mOccupationBoard.erase(coord);
 
 	auto itWL = std::find(WhatsLeft.begin(), WhatsLeft.end(), index);
 	if (itWL != WhatsLeft.end())
 	{
-		WhatsLeftBack.emplace_back(*itWL);
+		WhatsLeftRemoved.emplace_back(*itWL);
 		WhatsLeft.erase(itWL);
 	}
 
@@ -507,12 +507,12 @@ inline uint8_t SolveRecScoot(
 	std::vector<int>& WhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard)
 {
-	std::vector<DominoIndex> LogicalBoardBack;
+	std::vector<DominoIndex> LogicalBoardRemoved;
 	std::vector<int> RemovableWasTrue;
 	std::vector<int> RemovableWasFalse;
-	std::map<int, int> TilesMapBack;
-	std::vector<int> WhatsLeftBack;
-	std::map<Coordinates, int> mOccupationBoardBack;
+	std::map<int, int> TilesMapRemoved;
+	std::vector<int> WhatsLeftRemoved;
+	std::map<Coordinates, int> mOccupationBoardRemoved;
 	bool full = false;
 	for (const auto& move : Move)
 	{
@@ -521,17 +521,17 @@ inline uint8_t SolveRecScoot(
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard, LogicalBoardBack, RemovableWasTrue, RemovableWasFalse, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
+			mOccupationBoard, LogicalBoardRemoved, RemovableWasTrue, RemovableWasFalse, TilesMapRemoved, WhatsLeftRemoved, mOccupationBoardRemoved);
 	}
 
 	auto moveEval = EvalMoves(LogicalBoard, Removable);
 
-	for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
+	for (auto& item : LogicalBoardRemoved) LogicalBoard.emplace_back(item);
 	for (auto& item : RemovableWasTrue) Removable[item] = true;
 	for (auto& item : RemovableWasFalse) Removable[item] = false;
-	for (auto& item : TilesMapBack) TilesMap[item.first] = item.second;
-	for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
-	for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
+	for (auto& item : TilesMapRemoved) TilesMap[item.first] = item.second;
+	for (auto& item : WhatsLeftRemoved) WhatsLeft.emplace_back(item);
+	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 
 	return moveEval;
 }
@@ -551,12 +551,12 @@ inline bool SolveRec(
 {
 	std::vector<std::vector<int>> newMoves;
 
-	std::vector<DominoIndex> LogicalBoardBack;
+	std::vector<DominoIndex> LogicalBoardRemoved;
 	std::vector<int> RemovableWasTrue;
 	std::vector<int> RemovableWasFalse;
-	std::map<int, int> TilesMapBack;
-	std::vector<int> WhatsLeftBack;
-	std::map<Coordinates, int> mOccupationBoardBack;
+	std::map<int, int> TilesMapRemoved;
+	std::vector<int> WhatsLeftRemoved;
+	std::map<Coordinates, int> mOccupationBoardRemoved;
 	bool full = false;
 	for (const auto& move : Move)
 	{
@@ -565,7 +565,7 @@ inline bool SolveRec(
 			Removable,
 			TilesMap,
 			WhatsLeft,
-			mOccupationBoard, LogicalBoardBack, RemovableWasTrue, RemovableWasFalse, TilesMapBack, WhatsLeftBack, mOccupationBoardBack);
+			mOccupationBoard, LogicalBoardRemoved, RemovableWasTrue, RemovableWasFalse, TilesMapRemoved, WhatsLeftRemoved, mOccupationBoardRemoved);
 	}
 	Solution.emplace_back(std::make_pair(Move[0], Move[1]));
 	if (Move.size() == 4)
@@ -620,12 +620,12 @@ inline bool SolveRec(
 		}
 	}
 	/**/
-	for (auto& item : LogicalBoardBack) LogicalBoard.emplace_back(item);
+	for (auto& item : LogicalBoardRemoved) LogicalBoard.emplace_back(item);
 	for (auto& item : RemovableWasTrue) Removable[item] = true;
 	for (auto& item : RemovableWasFalse) Removable[item] = false;
-	for (auto& item : TilesMapBack) TilesMap[item.first] = item.second;
-	for (auto& item : WhatsLeftBack) WhatsLeft.emplace_back(item);
-	for (auto& item : mOccupationBoardBack) mOccupationBoard[item.first] = item.second;
+	for (auto& item : TilesMapRemoved) TilesMap[item.first] = item.second;
+	for (auto& item : WhatsLeftRemoved) WhatsLeft.emplace_back(item);
+	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 	/**/
 
 	return ret;
@@ -728,11 +728,11 @@ inline bool SolveRecInit(
 	std::vector<std::pair<int, int>>& Solution)
 {
 #ifdef _DEBUG
-	std::vector<DominoIndex> LogicalBoardBack = LogicalBoard;
-	std::array<bool, 144> RemovableBack = Removable;
-	std::map<int, int> TilesMapBack = TilesMap;
-	std::vector<int> WhatsLeftBack = WhatsLeft;
-	std::map<Coordinates, int> mOccupationBoardBack = mOccupationBoard;
+	std::vector<DominoIndex> LogicalBoardRefForDebug = LogicalBoard;
+	std::array<bool, 144> RemovableRefForDebug = Removable;
+	std::map<int, int> TilesMapRefForDebug = TilesMap;
+	std::vector<int> WhatsLeftRefForDebug = WhatsLeft;
+	std::map<Coordinates, int> mOccupationBoardRefForDebug = mOccupationBoard;
 #endif
 
 	Solution.clear();
@@ -777,16 +777,16 @@ inline bool SolveRecInit(
 	}
 
 #ifdef _DEBUG
-	bool LogicalBoardOk = LogicalBoardBack.size() == LogicalBoard.size();
-	bool RemovableOk = RemovableBack.size() == Removable.size();
-	bool TilesMapOk = TilesMapBack.size() == TilesMap.size();
-	bool WhatsLeftOk = WhatsLeftBack.size() == WhatsLeft.size();
-	bool mOccupationBoardOk = mOccupationBoardBack.size() == mOccupationBoard.size();
-	for (auto& item : LogicalBoardBack) LogicalBoardOk &= LogicalBoard.end() != std::find(LogicalBoard.begin(), LogicalBoard.end(), item);
-	for (int i = 0; i < RemovableBack.size(); ++i) RemovableOk &= Removable[i] == RemovableBack[i];
-	for (auto& item : TilesMapBack) TilesMapOk &= TilesMap.contains(item.first) && TilesMap[item.first] == item.second;
-	for (auto& item : WhatsLeftBack) WhatsLeftOk &= WhatsLeftBack.end() != std::find(WhatsLeftBack.begin(), WhatsLeftBack.end(), item);
-	for (auto& item : mOccupationBoardBack)  mOccupationBoardOk &= mOccupationBoard.contains(item.first) && mOccupationBoard[item.first] == item.second;
+	bool LogicalBoardOk = LogicalBoardRefForDebug.size() == LogicalBoard.size();
+	bool RemovableOk = RemovableRefForDebug.size() == Removable.size();
+	bool TilesMapOk = TilesMapRefForDebug.size() == TilesMap.size();
+	bool WhatsLeftOk = WhatsLeftRefForDebug.size() == WhatsLeft.size();
+	bool mOccupationBoardOk = mOccupationBoardRefForDebug.size() == mOccupationBoard.size();
+	for (auto& item : LogicalBoardRefForDebug) LogicalBoardOk &= LogicalBoard.end() != std::find(LogicalBoard.begin(), LogicalBoard.end(), item);
+	for (int i = 0; i < RemovableRefForDebug.size(); ++i) RemovableOk &= Removable[i] == RemovableRefForDebug[i];
+	for (auto& item : TilesMapRefForDebug) TilesMapOk &= TilesMap.contains(item.first) && TilesMap[item.first] == item.second;
+	for (auto& item : WhatsLeftRefForDebug) WhatsLeftOk &= WhatsLeftRefForDebug.end() != std::find(WhatsLeftRefForDebug.begin(), WhatsLeftRefForDebug.end(), item);
+	for (auto& item : mOccupationBoardRefForDebug)  mOccupationBoardOk &= mOccupationBoard.contains(item.first) && mOccupationBoard[item.first] == item.second;
 
 	std::cout << LogicalBoardOk << std::endl;
 	std::cout << RemovableOk << std::endl;
