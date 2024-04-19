@@ -1,4 +1,5 @@
 #include "Board.h"
+#include "Brute_force.h"
 
 Board::Board()
 {

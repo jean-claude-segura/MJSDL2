@@ -153,6 +153,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Board.h" />
+    <ClInclude Include="Brute_force.h" />
     <ClInclude Include="GraphicBoard.h" />
     <ClInclude Include="PARTICLES.h" />
     <ClInclude Include="SDL_Tools.h" />
