@@ -150,10 +150,10 @@ void Board::SortBoard(const uint8_t direction)
 void Board::InitBoard()
 {
 #ifdef _DEBUG
-	// 5, 7, 12, 18
-	static int seed = 17;
-	std::mt19937 e1(++seed);
-	std::cout << "******************************************* " << seed << " *******************************************" << std::endl;
+	// 5, 7, 12, 18, 49, 55, 61
+	static int seed = 0;
+	std::mt19937 e1(seed++);
+	std::cout << "******************************************* " << seed - 1 << " *******************************************" << std::endl;
 	std::uniform_int_distribution<> uniform_dist(0, 41);
 #else
 	std::random_device r;
@@ -369,7 +369,7 @@ void Board::SetMoves()
 
 bool Board::Solve()
 {
-	if (SolveRecInit(Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution))
+	if (SolveRecInit(*this, Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution))
 	{
 #ifdef _DEBUG
 		for (auto& move : Solution)

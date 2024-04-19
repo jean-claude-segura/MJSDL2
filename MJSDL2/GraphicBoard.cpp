@@ -448,7 +448,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 
 				RefreshMouseMap();
 			}
-			else
+			/*else
 			{
 				while (!plateau.GetMovesLeft().empty())
 				{
@@ -475,7 +475,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 				}
 
 				RefreshMouseMap();
-			}
+			}*/
 		}
 		else
 		{

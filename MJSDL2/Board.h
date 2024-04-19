@@ -717,8 +717,51 @@ inline void ConvertMovesToVector(std::vector<std::pair<int, int>>& oldMoves, std
 	}
 }
 
+inline bool tryRandom(Board plateau, std::vector<std::pair<int, int>>& Solution)
+{
+	while (!plateau.GetMovesLeft().empty())
+	{
+		auto itNextMove = plateau.GetMovesLeft().begin();
+		Solution.emplace_back(*itNextMove);
+		plateau.RemovePairOfTiles(itNextMove->first, itNextMove->second);
+	}
+	return plateau.IsEmpty();
+}
+
+inline bool tryRandomHeuristics(Board plateau, std::vector<std::pair<int, int>>& Solution)
+{
+	while (!plateau.GetMovesLeft().empty())
+	{
+		std::vector<std::pair<int, int>>::const_iterator itNextMove;
+		int index = 0x8F;
+		itNextMove = std::find_if(plateau.GetMovesLeft().begin(), plateau.GetMovesLeft().end(), [index](const std::pair<int, int>& move) { return move.first == index || move.second == index; });
+		if (itNextMove == plateau.GetMovesLeft().end())
+		{
+			int index = 0x8C;
+			itNextMove = std::find_if(plateau.GetMovesLeft().begin(), plateau.GetMovesLeft().end(), [index](const std::pair<int, int>& move) { return move.first == index || move.second == index; });
+			if (itNextMove == plateau.GetMovesLeft().end())
+			{
+				int index = 0x8E;
+				itNextMove = std::find_if(plateau.GetMovesLeft().begin(), plateau.GetMovesLeft().end(), [index](const std::pair<int, int>& move) { return move.first == index || move.second == index; });
+				if (itNextMove == plateau.GetMovesLeft().end())
+				{
+					int index = 0x8D;
+					itNextMove = std::find_if(plateau.GetMovesLeft().begin(), plateau.GetMovesLeft().end(), [index](const std::pair<int, int>& move) { return move.first == index || move.second == index; });
+				}
+			}
+		}
+		if (itNextMove == plateau.GetMovesLeft().end())
+		{
+			itNextMove = plateau.GetMovesLeft().begin();
+		}
+		Solution.emplace_back(*itNextMove);
+		plateau.RemovePairOfTiles(itNextMove->first, itNextMove->second);
+	}
+	return plateau.IsEmpty();
+}
+
 // Just to work on a copy.
-inline bool SolveRecInit(
+inline bool SolveRecInit(const Board& plateau,
 	std::vector<std::pair<int, int>> oldMoves,
 	std::vector<DominoIndex> LogicalBoard,
 	std::array<bool, 144> Removable,
@@ -736,7 +779,23 @@ inline bool SolveRecInit(
 #endif
 
 	Solution.clear();
-
+	if (tryRandom(plateau, Solution))
+	{
+#ifdef _DEBUG
+		std::cout << "Solution 1" << std::endl;
+#endif
+		//return true;
+	}
+	Solution.clear();
+	if (tryRandomHeuristics(plateau, Solution))
+	{
+#ifdef _DEBUG
+		std::cout << "Solution 2" << std::endl;
+#endif
+		return true;
+	}
+	Solution.clear();
+	//return false;
 	if (CheckIfBlocked(TilesMap))
 		return false;
 
