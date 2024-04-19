@@ -133,6 +133,7 @@ public:
 	void SortBoard(const uint8_t direction);
 	bool Solve();
 	const std::vector<std::pair<int, int>>& GetSolution() { return Solution; }
+	const std::vector<std::pair<int, int>>& GetHistory() { return History; }
 
 private:
 	std::vector<std::pair<int, int>> Solution;

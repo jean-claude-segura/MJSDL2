@@ -313,6 +313,7 @@ bool Board::RemovePairOfTiles(const int first, const int second)
 		RemoveTile(second);
 		SetMoves();
 		bRetour = true;
+		History.emplace_back(std::pair(first, second));
 	}
 	return bRetour;
 }

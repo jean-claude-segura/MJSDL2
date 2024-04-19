@@ -2,6 +2,8 @@
 
 PARTICLES::PARTICLES(const int _SCREEN_WIDTH, const int _SCREEN_HEIGHT) : SCREEN_WIDTH(_SCREEN_WIDTH), SCREEN_HEIGHT(_SCREEN_HEIGHT)
 {
+	std::random_device r;
+	e1 = std::default_random_engine(r());
 	NUMBER_OF_PARTICLES = 0;
 	Remaining = 0;
 }
@@ -28,79 +30,79 @@ void PARTICLES::init(uint8_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, co
 	default:
 	case TYPE_RANDOMORIGIN:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-			particles.emplace_back(std::make_unique<RANDOMORIGIN>(RANDOMORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT }));
+			particles.emplace_back(std::make_unique<RANDOMORIGIN>(RANDOMORIGIN{ e1, SCREEN_WIDTH, SCREEN_HEIGHT }));
 		break;
 	case TYPE_CENTEREDEDORIGIN:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-			particles.emplace_back(std::make_unique<CENTEREDEDORIGIN>(CENTEREDEDORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT }));
+			particles.emplace_back(std::make_unique<CENTEREDEDORIGIN>(CENTEREDEDORIGIN{ e1, SCREEN_WIDTH, SCREEN_HEIGHT }));
 		break;
 	case TYPE_FORCEDORIGIN:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-			particles.emplace_back(std::make_unique<FORCEDORIGIN>(FORCEDORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+			particles.emplace_back(std::make_unique<FORCEDORIGIN>(FORCEDORIGIN{ e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 		break;
 	case TYPE_CIRCULARPOS:
 	{
-		const double radius = (int)(50.0 * (rand() / (RAND_MAX + 1.0))) + 30;
+		const double radius = std::uniform_real_distribution<double>{ 0., 50. }(e1)+30.;
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-			particles.emplace_back(std::make_unique<CIRCULARPOS>(CIRCULARPOS{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
+			particles.emplace_back(std::make_unique<CIRCULARPOS>(CIRCULARPOS{ e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
 		break;
 	}
 	case TYPE_CIRCULARDIR:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-			particles.emplace_back(std::make_unique<CIRCULARDIR>(CIRCULARDIR{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+			particles.emplace_back(std::make_unique<CIRCULARDIR>(CIRCULARDIR{ e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 		break;
 	case TYPE_TRAIL:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-			particles.emplace_back(std::make_unique<TRAIL>(TRAIL{ SCREEN_WIDTH, SCREEN_HEIGHT }));
+			particles.emplace_back(std::make_unique<TRAIL>(TRAIL{ e1, SCREEN_WIDTH, SCREEN_HEIGHT }));
 		break;
 	case TYPE_RADIAL:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-			particles.emplace_back(std::make_unique<RADIAL>(RADIAL{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+			particles.emplace_back(std::make_unique<RADIAL>(RADIAL{ e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 		break;
 	case TYPE_CIRCLE:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-			particles.emplace_back(std::make_unique<CIRCLE>(CIRCLE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+			particles.emplace_back(std::make_unique<CIRCLE>(CIRCLE{ e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 		break;
 	case TYPE_WATERFALL:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
-			particles.emplace_back(std::make_unique<WATERFALL>(WATERFALL{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+			particles.emplace_back(std::make_unique<WATERFALL>(WATERFALL{ e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 		break;
 	case TYPE_THISISMADNESS:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
 		{
-			auto next = (int)(TYPE_THISISMADNESS * (rand() / (RAND_MAX + 1.0)));
+			auto next = std::uniform_int_distribution<int>{ 0, int(TYPE_WATERFALL) }(e1);
 			switch (next)
 			{
 			default:
 			case TYPE_RANDOMORIGIN:
-					particles.emplace_back(std::make_unique<RANDOMORIGIN>(RANDOMORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT }));
+				particles.emplace_back(std::make_unique<RANDOMORIGIN>(RANDOMORIGIN{ e1, SCREEN_WIDTH, SCREEN_HEIGHT }));
 				break;
 			case TYPE_CENTEREDEDORIGIN:
-					particles.emplace_back(std::make_unique<CENTEREDEDORIGIN>(CENTEREDEDORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT }));
+				particles.emplace_back(std::make_unique<CENTEREDEDORIGIN>(CENTEREDEDORIGIN{ e1, SCREEN_WIDTH, SCREEN_HEIGHT }));
 				break;
 			case TYPE_FORCEDORIGIN:
-					particles.emplace_back(std::make_unique<FORCEDORIGIN>(FORCEDORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+				particles.emplace_back(std::make_unique<FORCEDORIGIN>(FORCEDORIGIN{ e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 				break;
 			case TYPE_CIRCULARPOS:
 			{
-				const double radius = (int)(50.0 * (rand() / (RAND_MAX + 1.0))) + 30;
-					particles.emplace_back(std::make_unique<CIRCULARPOS>(CIRCULARPOS{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
+				const double radius = std::uniform_real_distribution<double>{ 0., 50. }(e1)+30.;
+				particles.emplace_back(std::make_unique<CIRCULARPOS>(CIRCULARPOS{ e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
 				break;
 			}
 			case TYPE_CIRCULARDIR:
-					particles.emplace_back(std::make_unique<CIRCULARDIR>(CIRCULARDIR{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+				particles.emplace_back(std::make_unique<CIRCULARDIR>(CIRCULARDIR{ e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 				break;
 			case TYPE_TRAIL:
-					particles.emplace_back(std::make_unique<TRAIL>(TRAIL{ SCREEN_WIDTH, SCREEN_HEIGHT }));
+				particles.emplace_back(std::make_unique<TRAIL>(TRAIL{ e1, SCREEN_WIDTH, SCREEN_HEIGHT }));
 				break;
 			case TYPE_RADIAL:
-					particles.emplace_back(std::make_unique<RADIAL>(RADIAL{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+				particles.emplace_back(std::make_unique<RADIAL>(RADIAL{ e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 				break;
 			case TYPE_CIRCLE:
-				particles.emplace_back(std::make_unique<CIRCLE>(CIRCLE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+				particles.emplace_back(std::make_unique<CIRCLE>(CIRCLE{ e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 				break;
 			case TYPE_WATERFALL:
-				particles.emplace_back(std::make_unique<WATERFALL>(WATERFALL{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+				particles.emplace_back(std::make_unique<WATERFALL>(WATERFALL{ e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 				break;
 			}
 		}
@@ -195,57 +197,57 @@ const bool PARTICLE::setDeath()
 	return false;
 }
 
-RANDOMORIGIN::RANDOMORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+RANDOMORIGIN::RANDOMORIGIN(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	const int xOrg = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0)));
-	const int yOrg = (int)(SCREEN_HEIGHT * (rand() / (RAND_MAX + 1.0)));
+	const int xOrg = std::uniform_int_distribution<int32_t>{ 0, SCREEN_WIDTH }(e1);
+	const int yOrg = std::uniform_int_distribution<int32_t>{ 0, SCREEN_HEIGHT }(e1);
 
-	xpos = xOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	ypos = yOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	xpos = xOrg - 20 + std::uniform_int_distribution<int32_t>{ 0, 40 }(e1);
+	ypos = yOrg - 20 + std::uniform_int_distribution<int32_t>{ 0, 40 }(e1);
+	xdir = -10 + std::uniform_int_distribution<int32_t>{ 0, 20 }(e1);
+	ydir = -17 + std::uniform_int_distribution<int32_t>{ 0, 19 }(e1);
 }
 
 // Original settings from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
-CENTEREDEDORIGIN::CENTEREDEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+CENTEREDEDORIGIN::CENTEREDEDORIGIN(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	/* randomly init particle, generate it in the center of the screen */
-	xpos = (SCREEN_WIDTH >> 1) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	ypos = (SCREEN_HEIGHT >> 1) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	xpos = (SCREEN_WIDTH >> 1) - 20 + std::uniform_int_distribution<int32_t>{ 0, 40 }(e1);
+	ypos = (SCREEN_HEIGHT >> 1) - 20 + std::uniform_int_distribution<int32_t>{ 0, 40 }(e1);
+	xdir = -10 + std::uniform_int_distribution<int32_t>{ 0, 20 }(e1);
+	ydir = -17 + std::uniform_int_distribution<int32_t>{ 0, 19 }(e1);
 }
 
-FORCEDORIGIN::FORCEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+FORCEDORIGIN::FORCEDORIGIN(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	xpos = xOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	ypos = yOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	xpos = xOrg - 20 + std::uniform_int_distribution<int32_t>{ 0, 40 }(e1);
+	ypos = yOrg - 20 + std::uniform_int_distribution<int32_t>{ 0, 40 }(e1);
+	xdir = -10 + std::uniform_int_distribution<int32_t>{ 0, 20 }(e1);
+	ydir = -17 + std::uniform_int_distribution<int32_t>{ 0, 19 }(e1);
 }
 
-CIRCULARPOS::CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double _radius) : radius(_radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+CIRCULARPOS::CIRCULARPOS(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double _radius) : radius(_radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	double angle = std::numbers::pi * 2 * (rand() / (RAND_MAX + 1.0));
+	double angle = std::uniform_real_distribution<double>{ 0, std::numbers::pi * 2. }(e1);
 	xpos = xOrg + std::cos(angle) * radius; // X est le cosinus de l'angle.
 	ypos = yOrg + std::sin(angle) * radius; // Y est le sinus de l'angle.
-	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	xdir = -10 + std::uniform_int_distribution<int32_t>{ 0, 20 }(e1);
+	ydir = -17 + std::uniform_int_distribution<int32_t>{ 0, 19 }(e1);
 }
 
-CIRCULARDIR::CIRCULARDIR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+CIRCULARDIR::CIRCULARDIR(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	double angle = std::numbers::pi * 2 * (rand() / (RAND_MAX + 1.0));
-	xpos = xOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	ypos = yOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+	double angle = std::uniform_real_distribution<double>{ 0, std::numbers::pi * 2. }(e1);
+	xpos = xOrg - 20 + std::uniform_int_distribution<int32_t>{ 0, 40 }(e1);
+	ypos = yOrg - 20 + std::uniform_int_distribution<int32_t>{ 0, 40 }(e1);
 	xdir = std::cos(angle) * 10;
 	ydir = std::sin(angle) * 10;
 }
 
-TRAIL::TRAIL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+TRAIL::TRAIL(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	int32_t ydirbase = -32;
-	auto ydirdecbase = 12.;
+	int32_t ydirdecbase = 12;
 	if (SCREEN_HEIGHT >= 1080)
 	{
 		ydirbase = -46;
@@ -256,13 +258,14 @@ TRAIL::TRAIL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_
 		ydirbase = -65;
 		ydirdecbase = 25;
 	}
-	xpos = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0))) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+
+	xpos = std::uniform_int_distribution<int32_t>{ 0, SCREEN_WIDTH }(e1) - 20 + std::uniform_int_distribution<int32_t>{ 0, 40 }(e1);
 	ypos = SCREEN_HEIGHT - 4;
-	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = ydirbase + (int)(ydirdecbase * (rand() / (RAND_MAX + 1.0))); // -32 -20
+	xdir = -10 + std::uniform_int_distribution<int32_t>{ 0, 20 }(e1);
+	ydir = ydirbase + std::uniform_int_distribution<int32_t>{ 0, ydirdecbase }(e1); // -32 -20
 }
 
-void TRAIL::init()
+void TRAIL::init(std::default_random_engine& e1)
 {
 	// 540 : ( 32 / 20 / 12) +14 +8
 	//  *2    +14   +8   +6
@@ -270,7 +273,7 @@ void TRAIL::init()
 	//  *2    +19 / +12  +7
 	// 2160 :  65 / 40 / 25
 	int32_t ydirbase = -32;
-	auto ydirdecbase = 12.;
+	int32_t ydirdecbase = 12;
 	if (SCREEN_HEIGHT >= 1080)
 	{
 		ydirbase = -46;
@@ -281,10 +284,10 @@ void TRAIL::init()
 		ydirbase = -65;
 		ydirdecbase = 25;
 	}
-	xpos = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0))) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+	xpos = std::uniform_int_distribution<int32_t>{ 0, SCREEN_WIDTH }(e1) - 20 + std::uniform_int_distribution<int32_t>{ 0, 40 }(e1);
 	ypos = SCREEN_HEIGHT - 4;
-	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = ydirbase + (int)(ydirdecbase * (rand() / (RAND_MAX + 1.0))); // -32 -20
+	xdir = -10 + std::uniform_int_distribution<int32_t>{ 0, 20 }(e1);
+	ydir = ydirbase + std::uniform_int_distribution<int32_t>{ 0, ydirdecbase }(e1); // -32 -20
 	colorindex = 255;
 	dead = false;
 }
@@ -329,7 +332,7 @@ const bool TRAIL::setDeath()
 	return false;
 }
 
-RADIAL::RADIAL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : CIRCULARDIR(SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
+RADIAL::RADIAL(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : CIRCULARDIR(e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
 {
 }
 
@@ -376,7 +379,7 @@ const bool RADIAL::setDeath()
 	return false;
 }
 
-CIRCLE::CIRCLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : RADIAL(SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
+CIRCLE::CIRCLE(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : RADIAL(e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
 {
 	radius = 30;
 }
@@ -427,7 +430,7 @@ const bool CIRCLE::setDeath()
 	return false;
 }
 
-WATERFALL::WATERFALL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : RADIAL(SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
+WATERFALL::WATERFALL(std::default_random_engine& e1, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : RADIAL(e1, SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
 {
 	radius = 30;
 }
