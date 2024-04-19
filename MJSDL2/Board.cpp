@@ -150,16 +150,15 @@ void Board::SortBoard(const uint8_t direction)
 void Board::InitBoard()
 {
 #ifdef _DEBUG
-	// 5, 7, 12, 18, 49, 55, 61
+	// 1, 5, 7, 12, 18, 19, 24, 25, 27, 31, 34, 36, 44, 49, 50, 55, 61, 62, 64, 66
 	static int seed = 0;
 	std::mt19937 e1(seed++);
 	std::cout << "******************************************* " << seed - 1 << " *******************************************" << std::endl;
-	std::uniform_int_distribution<> uniform_dist(0, 41);
 #else
 	std::random_device r;
 	std::default_random_engine e1(r());
-	std::uniform_int_distribution<int> uniform_dist(0, 41);
 #endif
+	std::uniform_int_distribution<int> uniform_dist(0, 41);
 	LogicalBoard.clear();
 	TilesMap.clear();
 	mOccupationBoard.clear();

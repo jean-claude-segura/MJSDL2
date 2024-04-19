@@ -746,7 +746,7 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 
 	std::random_device r;
 	std::default_random_engine e1(r());
-	std::uniform_int_distribution<int> uniform_int_dist_angle(0., 360.);
+	std::uniform_int_distribution<int> uniform_int_dist_angle(0, 360);
 
 	int size = 256;
 	size = (size >> 1) << 1;
@@ -881,7 +881,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 
 	std::random_device r;
 	std::default_random_engine e1(r());
-	std::uniform_int_distribution<int> uniform_int_dist_angle(0., 360.);
+	std::uniform_int_distribution<int> uniform_int_dist_angle(0, 360);
 
 	PARTICLES particles(SCREEN_WIDTH, SCREEN_HEIGHT);
 	TRAIL trail(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -1078,7 +1078,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 
 	std::random_device r;
 	std::default_random_engine e1(r());
-	std::uniform_int_distribution<int> uniform_int_dist_angle(0., 360.);
+	std::uniform_int_distribution<int> uniform_int_dist_angle(0, 360);
 
 	//for (Uint8 i = 0; i < max_number_of_fires; ++i)
 	int i = 0;
@@ -1189,7 +1189,6 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 					//vparticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_THISISMADNESS, vtrails[i].getXPos(), vtrails[i].getYPos());
 					//vparticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_CIRCLE, vtrails[i].getXPos(), vtrails[i].getYPos());
 				}
-
 			}
 			else
 			{

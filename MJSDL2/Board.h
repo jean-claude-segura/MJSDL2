@@ -135,6 +135,10 @@ public:
 	const std::vector<std::pair<int, int>>& GetSolution() { return Solution; }
 	const std::vector<std::pair<int, int>>& GetHistory() { return History; }
 
+	const std::map<int, int> & getTilesMap() { return TilesMap; }
+	const std::array<bool, 144> & getRemovable() { return Removable; }
+	const std::map<Coordinates, int> & getOccupationBoard() { return mOccupationBoard; }
+
 private:
 	std::vector<std::pair<int, int>> Solution;
 	std::vector<std::pair<int, int>> History;
@@ -500,7 +504,7 @@ inline bool stopNow(const std::map<int, int>& TilesMap
 	}
 }
 
-inline uint8_t SolveRecScoot(
+inline uint8_t BruteForceOrderingEval(
 	const std::vector<int>& Move,
 	std::vector<DominoIndex>& LogicalBoard,
 	std::array<bool, 144>& Removable,
@@ -592,7 +596,7 @@ inline bool SolveRec(
 				std::vector<std::pair<std::vector<int>, int>> sortedMoves;
 				for (auto& move : newMoves)
 				{
-					auto eval = SolveRecScoot(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard);
+					auto eval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard);
 					sortedMoves.emplace_back(std::make_pair(move, eval));
 				}
 				std::sort(sortedMoves.begin(), sortedMoves.end(),
@@ -697,7 +701,7 @@ inline bool CheckIfBlocked(std::map<int, int>& TilesMap)
 }
 
 // New move container to remove the tiles 2 at once or 4 at once.
-inline void ConvertMovesToVector(std::vector<std::pair<int, int>>& oldMoves, std::vector<std::vector<int>>& Moves)
+inline void ConvertMovesToVector(const std::vector<std::pair<int, int>>& oldMoves, std::vector<std::vector<int>>& Moves)
 {
 	for (int index = 0; index < oldMoves.size();)
 	{
@@ -718,7 +722,7 @@ inline void ConvertMovesToVector(std::vector<std::pair<int, int>>& oldMoves, std
 	}
 }
 
-inline bool tryRandom(Board plateau, std::vector<std::pair<int, int>>& Solution)
+inline bool tryAlwaysFirst(Board plateau, std::vector<std::pair<int, int>>& Solution)
 {
 	while (!plateau.GetMovesLeft().empty())
 	{
@@ -761,6 +765,162 @@ inline bool tryRandomHeuristics(Board plateau, std::vector<std::pair<int, int>>&
 	return plateau.IsEmpty();
 }
 
+inline uint8_t EvalMoveGreedy(
+	const std::vector<int>& Move,
+	std::vector<DominoIndex>& LogicalBoard,
+	std::array<bool, 144>& Removable,
+	std::map<int, int>& TilesMap,
+	std::vector<int>& WhatsLeft,
+	std::map<Coordinates, int>& mOccupationBoard)
+{
+	std::vector<DominoIndex> LogicalBoardRemoved;
+	std::vector<int> RemovableWasTrue;
+	std::vector<int> RemovableWasFalse;
+	std::map<int, int> TilesMapRemoved;
+	std::vector<int> WhatsLeftRemoved;
+	std::map<Coordinates, int> mOccupationBoardRemoved;
+
+	for (const auto& move : Move)
+	{
+		RemoveTile(move,
+			LogicalBoard,
+			Removable,
+			TilesMap,
+			WhatsLeft,
+			mOccupationBoard, LogicalBoardRemoved, RemovableWasTrue, RemovableWasFalse, TilesMapRemoved, WhatsLeftRemoved, mOccupationBoardRemoved);
+	}
+
+	int removables = 0;
+	for (const auto removable : Removable)
+		++removables;
+
+	for (auto& item : LogicalBoardRemoved) LogicalBoard.emplace_back(item);
+	for (auto& item : RemovableWasTrue) Removable[item] = true;
+	for (auto& item : RemovableWasFalse) Removable[item] = false;
+	for (auto& item : TilesMapRemoved) TilesMap[item.first] = item.second;
+	for (auto& item : WhatsLeftRemoved) WhatsLeft.emplace_back(item);
+	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
+
+	return removables;
+}
+
+inline bool tryGreedy(Board plateau, std::vector<std::pair<int, int>>& Solution)
+{
+	// New move container to remove the tiles 2 at once or 4 at once.
+	std::vector<std::vector<int>> Moves;
+	ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+
+	while (!Moves.empty())
+	{
+		// Scooting step :
+		std::vector<std::pair<std::vector<int>, int>> sortedMoves;
+		auto LogicalBoard = plateau.getLogicalBoard();
+		auto Removable = plateau.getRemovable();
+		auto TilesMap = plateau.getTilesMap();
+		auto WhatsLeft = plateau.getWhatsLeft();
+		auto OccupationBoard = plateau.getOccupationBoard();
+		for (auto& move : Moves)
+		{
+			auto eval = EvalMoveGreedy(move, LogicalBoard, Removable, TilesMap, WhatsLeft, OccupationBoard);
+			sortedMoves.emplace_back(std::make_pair(move, eval));
+		}
+
+		std::sort(sortedMoves.begin(), sortedMoves.end(),
+			[](const std::pair<std::vector<int>, int>& left, const std::pair<std::vector<int>, int>& right)
+			{
+				return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
+			});
+
+		auto Move = sortedMoves.begin()->first;
+		if (Move.size() == 2)
+		{
+			plateau.RemovePairOfTiles(Move[0], Move[1]);
+			Solution.emplace_back(std::make_pair(Move[0], Move[1]));
+		}
+		if (Move.size() == 4)
+		{
+			plateau.RemovePairOfTiles(Move[2], Move[3]);
+			Solution.emplace_back(std::make_pair(Move[2], Move[3]));
+		}
+
+		Moves.clear();
+		ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+	}
+	return plateau.IsEmpty();
+}
+
+inline bool tryPseudoMultipleFirst(Board plateau, std::vector<std::pair<int, int>>& Solution)
+{
+	// New move container to remove the tiles 2 at once or 4 at once.
+	std::vector<std::vector<int>> Moves;
+	ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+
+	while (!Moves.empty())
+	{
+		std::sort(Moves.begin(), Moves.end(), [](const std::vector<int> & left, const std::vector<int> & right) {return left.size() > right.size(); });
+		auto Move = *Moves.begin();
+		if (Move.size() == 2)
+		{
+			plateau.RemovePairOfTiles(Move[0], Move[1]);
+			Solution.emplace_back(std::make_pair(Move[0], Move[1]));
+		}
+		if (Move.size() == 4)
+		{
+			plateau.RemovePairOfTiles(Move[2], Move[3]);
+			Solution.emplace_back(std::make_pair(Move[2], Move[3]));
+		}
+
+		Moves.clear();
+		ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+	}
+	return plateau.IsEmpty();
+}
+
+inline bool tryBruteForceOrdering(Board plateau, std::vector<std::pair<int, int>>& Solution)
+{
+	// New move container to remove the tiles 2 at once or 4 at once.
+	std::vector<std::vector<int>> Moves;
+	ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+
+	while (!Moves.empty())
+	{
+		// Scooting step :
+		std::vector<std::pair<std::vector<int>, int>> sortedMoves;
+		auto LogicalBoard = plateau.getLogicalBoard();
+		auto Removable = plateau.getRemovable();
+		auto TilesMap = plateau.getTilesMap();
+		auto WhatsLeft = plateau.getWhatsLeft();
+		auto OccupationBoard = plateau.getOccupationBoard();
+		for (auto& move : Moves)
+		{
+			auto eval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, OccupationBoard);
+			sortedMoves.emplace_back(std::make_pair(move, eval));
+		}
+
+		std::sort(sortedMoves.begin(), sortedMoves.end(),
+			[](const std::pair<std::vector<int>, int>& left, const std::pair<std::vector<int>, int>& right)
+			{
+				return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
+			});
+
+		auto Move = sortedMoves.begin()->first;
+		if (Move.size() == 2)
+		{
+			plateau.RemovePairOfTiles(Move[0], Move[1]);
+			Solution.emplace_back(std::make_pair(Move[0], Move[1]));
+		}
+		if (Move.size() == 4)
+		{
+			plateau.RemovePairOfTiles(Move[2], Move[3]);
+			Solution.emplace_back(std::make_pair(Move[2], Move[3]));
+		}
+
+		Moves.clear();
+		ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+	}
+	return plateau.IsEmpty();
+}
+
 // Just to work on a copy.
 inline bool SolveRecInit(const Board& plateau,
 	std::vector<std::pair<int, int>> oldMoves,
@@ -779,24 +939,50 @@ inline bool SolveRecInit(const Board& plateau,
 	std::map<Coordinates, int> mOccupationBoardRefForDebug = mOccupationBoard;
 #endif
 
+
+	std::vector<std::pair<bool (*)(Board plateau, std::vector<std::pair<int, int>>& Solution), std::string>> vTries;
+
+	vTries.push_back({ tryAlwaysFirst, "tryAlwaysFirst" });
+	vTries.push_back({ tryRandomHeuristics, "tryRandomHeuristics" });
+	vTries.push_back({ tryGreedy, "tryGreedy" });
+	vTries.push_back({ tryPseudoMultipleFirst, "tryPseudoMultipleFirst" });
+	vTries.push_back({ tryBruteForceOrdering, "tryBruteForceOrdering" });
+
 	Solution.clear();
-	if (tryRandom(plateau, Solution))
-	{
+	std::vector<std::pair<int, int>> SolutionTemp;
+
 #ifdef _DEBUG
-		std::cout << "Solution 1" << std::endl;
-#endif
-		//return true;
-	}
-	Solution.clear();
-	if (tryRandomHeuristics(plateau, Solution))
+	for (const auto & func : vTries)
 	{
-#ifdef _DEBUG
-		std::cout << "Solution 2" << std::endl;
-#endif
-		return true;
+		if (func.first(plateau, SolutionTemp))
+		{
+			Solution.clear();
+			Solution = SolutionTemp;
+			std::cout << "Solution : " << func.second << std::endl;
+		}
+		SolutionTemp.clear();
 	}
-	Solution.clear();
-	//return false;
+#else
+	for (const auto& func : vTries)
+	{
+		if (func.first(plateau, SolutionTemp))
+		{
+			Solution.clear();
+			Solution = SolutionTemp;
+			return true;
+		}
+		if (Solution.size() < SolutionTemp.size())
+		{
+			Solution.clear();
+			Solution = SolutionTemp;
+		}
+		SolutionTemp.clear();
+	}
+#endif
+#ifndef _DEBUG
+	return true;
+#endif
+	return true;
 	if (CheckIfBlocked(TilesMap))
 		return false;
 
@@ -810,7 +996,7 @@ inline bool SolveRecInit(const Board& plateau,
 	std::vector<std::pair<std::vector<int>, int>> sortedMoves;
 	for (auto& move : Moves)
 	{
-		auto eval = SolveRecScoot(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard);
+		auto eval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard);
 		sortedMoves.emplace_back(std::make_pair(move, eval));
 	}
 	std::sort(sortedMoves.begin(), sortedMoves.end(),

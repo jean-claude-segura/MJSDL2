@@ -19,6 +19,7 @@ class WATERFALL;
 class PARTICLES
 {
 public:
+	//https://cplusplus.com/reference/random/
 	template <class T>
 	static inline T user_uniform_int_distribution(T min, T max)
 	{

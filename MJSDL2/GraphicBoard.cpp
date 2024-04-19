@@ -424,7 +424,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 	case RESTART:
 		if (right)
 		{
-			if (false)//plateau.Solve())
+			if (plateau.Solve())
 			{
 				for (const auto & move : plateau.GetSolution())
 				{
@@ -448,34 +448,6 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 
 				RefreshMouseMap();
 			}
-			/*else
-			{
-				while (!plateau.GetMovesLeft().empty())
-				{
-					itNextMove = plateau.GetMovesLeft().begin();
-					if (0 <= selected && selected < 143)
-						clicked[selected] = false;
-					selected = -1;
-					Refresh(false);
-
-					clicked[itNextMove->first] = true;
-					clicked[itNextMove->second] = true;
-
-					Refresh(false);
-
-					clicked[itNextMove->first] = false;
-					clicked[itNextMove->second] = false;
-
-					plateau.RemovePairOfTiles(itNextMove->first, itNextMove->second);
-
-					Refresh(false);
-
-					itNextMove = plateau.GetMovesLeft().begin();
-					itPrevMove = plateau.GetMovesLeft().end();
-				}
-
-				RefreshMouseMap();
-			}*/
 		}
 		else
 		{
