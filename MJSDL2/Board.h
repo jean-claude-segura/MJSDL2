@@ -740,9 +740,6 @@ inline bool SolveRecInit(
 	if (CheckIfBlocked(TilesMap))
 		return false;
 
-	// Transposition table must be cleared. The hash just means the positions has been seen at least once before. It doesn't mean it was in a lost game.
-	// And the start position is always different.
-	hashtable.clear();
 	bool ret = false;
 
 	// New move container to remove the tiles 2 at once or 4 at once.
@@ -794,6 +791,10 @@ inline bool SolveRecInit(
 	std::cout << WhatsLeftOk << std::endl;
 	std::cout << mOccupationBoardOk << std::endl;
 #endif
+
+	// Transposition table must be cleared. The hash just means the positions has been seen at least once before. It doesn't mean it was in a lost game.
+	// And the start position is always different.
+	hashtable.clear();
 
 	return ret;
 }
