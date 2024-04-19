@@ -443,7 +443,6 @@ inline bool stopNow(const std::map<int, int>& TilesMap
 #endif
 )
 {
-
 	uint64_t tileTab[144];
 	memset(tileTab, 0, 144 * sizeof(uint64_t));
 
@@ -632,6 +631,60 @@ inline bool SolveRec(
 	return ret;
 }
 
+/*
+A
+A
+A
+A
+*/
+inline bool isCenterBlocked(int index, std::map<int, int>& TilesMap)
+{
+	int dominos[4];
+	int dec1 = ((index - 0x88) >> 1) << 1;
+	int dec2 = dec1 << 1;
+	dominos[0] = TilesMap[index];
+	dominos[1] = TilesMap[index - 0x0B - dec1];
+	dominos[2] = TilesMap[index - 0x1B - dec2];
+	dominos[3] = TilesMap[index - 0x3F - dec2];
+	
+	if (dominos[0] == dominos[1] && dominos[0] == dominos[2] && dominos[0] == dominos[3])
+		return true;
+	// Saisons :
+	if (
+		(34 <= dominos[0] && dominos[0] < 38) &&
+		(34 <= dominos[1] && dominos[1] < 38) &&
+		(34 <= dominos[2] && dominos[2] < 38) &&
+		(34 <= dominos[3] && dominos[3] < 38)
+		)
+		return true;
+	// Fleurs :
+	if (
+		(38 <= dominos[0] && dominos[0] < 42) &&
+		(38 <= dominos[1] && dominos[1] < 42) &&
+		(38 <= dominos[2] && dominos[2] < 42) &&
+		(38 <= dominos[3] && dominos[3] < 42)
+		)
+		return true;
+	return false;
+}
+
+/*
+A  AB
+A  BA
+A  AB
+A  BA
+*/
+inline bool CheckIfBlocked(std::map<int, int>& TilesMap)
+{
+	// Index -> domino
+	if (TilesMap.contains(0x88) && isCenterBlocked(0x88, TilesMap)) return true;
+	if (TilesMap.contains(0x89) && isCenterBlocked(0x89, TilesMap)) return true;
+	if (TilesMap.contains(0x8A) && isCenterBlocked(0x8A, TilesMap)) return true;
+	if (TilesMap.contains(0x8B) && isCenterBlocked(0x8B, TilesMap)) return true;
+	if (TilesMap.contains(0x8F));
+	return false;
+}
+
 // New move container to remove the tiles 2 at once or 4 at once.
 inline void ConvertMovesToVector(std::vector<std::pair<int, int>>& oldMoves, std::vector<std::vector<int>>& Moves)
 {
@@ -673,7 +726,11 @@ inline bool SolveRecInit(
 #endif
 
 	Solution.clear();
-	// Must be cleared. The hash just means the positions has been seen at least once before. It doesn't mean it was in a lost game.
+
+	if (CheckIfBlocked(TilesMap))
+		return false;
+
+	// Transposition table must be cleared. The hash just means the positions has been seen at least once before. It doesn't mean it was in a lost game.
 	// And the start position is always different.
 	hashtable.clear();
 	bool ret = false;
