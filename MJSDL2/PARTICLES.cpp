@@ -40,7 +40,7 @@ void PARTICLES::init(uint8_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, co
 		break;
 	case TYPE_CIRCULARPOS:
 	{
-		const double radius = (int)(50.0 * (rand() / (RAND_MAX + 1.0))) + 30;
+		const double radius = user_uniform_real_distribution<double>( 0., 50. )+30.;
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
 			particles.emplace_back(std::make_unique<CIRCULARPOS>(CIRCULARPOS{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
 		break;
@@ -68,33 +68,33 @@ void PARTICLES::init(uint8_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, co
 	case TYPE_THISISMADNESS:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
 		{
-			auto next = (int)(TYPE_THISISMADNESS * (rand() / (RAND_MAX + 1.0)));
+			auto next = user_uniform_int_distribution<int>( 0, int(TYPE_WATERFALL) );
 			switch (next)
 			{
 			default:
 			case TYPE_RANDOMORIGIN:
-					particles.emplace_back(std::make_unique<RANDOMORIGIN>(RANDOMORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT }));
+				particles.emplace_back(std::make_unique<RANDOMORIGIN>(RANDOMORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT }));
 				break;
 			case TYPE_CENTEREDEDORIGIN:
-					particles.emplace_back(std::make_unique<CENTEREDEDORIGIN>(CENTEREDEDORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT }));
+				particles.emplace_back(std::make_unique<CENTEREDEDORIGIN>(CENTEREDEDORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT }));
 				break;
 			case TYPE_FORCEDORIGIN:
-					particles.emplace_back(std::make_unique<FORCEDORIGIN>(FORCEDORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+				particles.emplace_back(std::make_unique<FORCEDORIGIN>(FORCEDORIGIN{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 				break;
 			case TYPE_CIRCULARPOS:
 			{
-				const double radius = (int)(50.0 * (rand() / (RAND_MAX + 1.0))) + 30;
-					particles.emplace_back(std::make_unique<CIRCULARPOS>(CIRCULARPOS{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
+				const double radius = user_uniform_real_distribution<double>( 0., 50. )+30.;
+				particles.emplace_back(std::make_unique<CIRCULARPOS>(CIRCULARPOS{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
 				break;
 			}
 			case TYPE_CIRCULARDIR:
-					particles.emplace_back(std::make_unique<CIRCULARDIR>(CIRCULARDIR{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+				particles.emplace_back(std::make_unique<CIRCULARDIR>(CIRCULARDIR{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 				break;
 			case TYPE_TRAIL:
-					particles.emplace_back(std::make_unique<TRAIL>(TRAIL{ SCREEN_WIDTH, SCREEN_HEIGHT }));
+				particles.emplace_back(std::make_unique<TRAIL>(TRAIL{ SCREEN_WIDTH, SCREEN_HEIGHT }));
 				break;
 			case TYPE_RADIAL:
-					particles.emplace_back(std::make_unique<RADIAL>(RADIAL{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+				particles.emplace_back(std::make_unique<RADIAL>(RADIAL{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 				break;
 			case TYPE_CIRCLE:
 				particles.emplace_back(std::make_unique<CIRCLE>(CIRCLE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
@@ -197,47 +197,47 @@ const bool PARTICLE::setDeath()
 
 RANDOMORIGIN::RANDOMORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	const int xOrg = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0)));
-	const int yOrg = (int)(SCREEN_HEIGHT * (rand() / (RAND_MAX + 1.0)));
+	const int xOrg = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH );
+	const int yOrg = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_HEIGHT );
 
-	xpos = xOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	ypos = yOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	xpos = xOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	ypos = yOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	xdir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
+	ydir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
 }
 
 // Original settings from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
 CENTEREDEDORIGIN::CENTEREDEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	/* randomly init particle, generate it in the center of the screen */
-	xpos = (SCREEN_WIDTH >> 1) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	ypos = (SCREEN_HEIGHT >> 1) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	xpos = (SCREEN_WIDTH >> 1) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	ypos = (SCREEN_HEIGHT >> 1) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	xdir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
+	ydir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
 }
 
 FORCEDORIGIN::FORCEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	xpos = xOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	ypos = yOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	xpos = xOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	ypos = yOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	xdir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
+	ydir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
 }
 
 CIRCULARPOS::CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double _radius) : radius(_radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	double angle = std::numbers::pi * 2 * (rand() / (RAND_MAX + 1.0));
+	double angle = PARTICLES::user_uniform_real_distribution<double>( 0, std::numbers::pi * 2. );
 	xpos = xOrg + std::cos(angle) * radius; // X est le cosinus de l'angle.
 	ypos = yOrg + std::sin(angle) * radius; // Y est le sinus de l'angle.
-	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = -17 + (int)(19.0 * (rand() / (RAND_MAX + 1.0)));
+	xdir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
+	ydir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
 }
 
 CIRCULARDIR::CIRCULARDIR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	double angle = std::numbers::pi * 2 * (rand() / (RAND_MAX + 1.0));
-	xpos = xOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
-	ypos = yOrg - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+	double angle = PARTICLES::user_uniform_real_distribution<double>( 0, std::numbers::pi * 2. );
+	xpos = xOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	ypos = yOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
 	xdir = std::cos(angle) * 10;
 	ydir = std::sin(angle) * 10;
 }
@@ -245,7 +245,7 @@ CIRCULARDIR::CIRCULARDIR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const 
 TRAIL::TRAIL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	int32_t ydirbase = -32;
-	auto ydirdecbase = 12.;
+	int32_t ydirdecbase = 12;
 	if (SCREEN_HEIGHT >= 1080)
 	{
 		ydirbase = -46;
@@ -256,10 +256,11 @@ TRAIL::TRAIL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_
 		ydirbase = -65;
 		ydirdecbase = 25;
 	}
-	xpos = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0))) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+
+	xpos = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH ) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
 	ypos = SCREEN_HEIGHT - 4;
-	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = ydirbase + (int)(ydirdecbase * (rand() / (RAND_MAX + 1.0))); // -32 -20
+	xdir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
+	ydir = ydirbase + PARTICLES::user_uniform_int_distribution<int32_t>( 0, ydirdecbase ); // -32 -20
 }
 
 void TRAIL::init()
@@ -270,7 +271,7 @@ void TRAIL::init()
 	//  *2    +19 / +12  +7
 	// 2160 :  65 / 40 / 25
 	int32_t ydirbase = -32;
-	auto ydirdecbase = 12.;
+	int32_t ydirdecbase = 12;
 	if (SCREEN_HEIGHT >= 1080)
 	{
 		ydirbase = -46;
@@ -281,10 +282,10 @@ void TRAIL::init()
 		ydirbase = -65;
 		ydirdecbase = 25;
 	}
-	xpos = (int)(SCREEN_WIDTH * (rand() / (RAND_MAX + 1.0))) - 20 + (int)(40.0 * (rand() / (RAND_MAX + 1.0)));
+	xpos = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH ) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
 	ypos = SCREEN_HEIGHT - 4;
-	xdir = -10 + (int)(20.0 * (rand() / (RAND_MAX + 1.0)));
-	ydir = ydirbase + (int)(ydirdecbase * (rand() / (RAND_MAX + 1.0))); // -32 -20
+	xdir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
+	ydir = ydirbase + PARTICLES::user_uniform_int_distribution<int32_t>( 0, ydirdecbase ); // -32 -20
 	colorindex = 255;
 	dead = false;
 }

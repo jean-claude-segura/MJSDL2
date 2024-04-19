@@ -3,6 +3,7 @@
 #include <memory>
 #include <numbers>
 #include "Tools.h"
+#include <random>
 
 class PARTICLE;
 class RANDOMORIGIN;
@@ -17,12 +18,30 @@ class WATERFALL;
 
 class PARTICLES
 {
+public:
+	template <class T>
+	static inline T user_uniform_int_distribution(T min, T max)
+	{
+		static std::random_device r;
+		static std::default_random_engine e1(r());
+		return std::uniform_int_distribution<T>{ min, max }(e1);
+	}
+
+	template <class T>
+	static inline T user_uniform_real_distribution(T min, T max)
+	{
+		static std::random_device r;
+		static std::default_random_engine e1(r());
+		return std::uniform_real_distribution<T>{ min, max }(e1);
+	}
+
 private:
 	uint8_t NUMBER_OF_PARTICLES;
 	int32_t SCREEN_WIDTH;
 	int32_t SCREEN_HEIGHT;
 	uint8_t Remaining;
 	std::vector<std::unique_ptr<PARTICLE>> particles;
+
 public:
 	PARTICLES(const int _SCREEN_WIDTH, const int _SCREEN_HEIGHT);
 
