@@ -5,19 +5,19 @@ inline void RemoveTile(
 	const int index,
 	std::vector<DominoIndex>& LogicalBoard,
 	std::array<bool, 144>& Removable,
-	std::map<int, int>& TilesMap,
+	std::map<int, Domino>& TilesMap,
 	std::vector<int>& WhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard,
 	/* *********************************************************************** */
 	std::vector<DominoIndex>& LogicalBoardRemoved,
 	std::vector<int>& RemovableWasTrue,
 	std::vector<int>& RemovableWasFalse,
-	std::map<int, int>& TilesMapRemoved,
+	std::map<int, Domino>& TilesMapRemoved,
 	std::vector<int>& WhatsLeftRemoved,
 	std::map<Coordinates, int>& mOccupationBoardRemoved
 )
 {
-	TilesMapRemoved[index] = TilesMap[index];
+	TilesMapRemoved.emplace(index, TilesMap.find(index)->second);
 	TilesMap.erase(index);
 
 	std::vector<DominoIndex>::iterator it = LogicalBoard.begin();
@@ -119,12 +119,7 @@ inline int BuildEvalMoves(const std::vector<DominoIndex>& RemovableBoard, std::v
 			itNext = std::find_if(itNext, RemovableBoard.end(),
 				[domino](const DominoIndex& in)
 				{
-					return
-						(
-							in.domino == domino ||
-							(34 <= in.domino && in.domino < 38 && 34 <= domino && domino < 38) || // Saisons
-							(38 <= in.domino && in.domino < 42 && 38 <= domino && domino < 42) // Fleurs.
-							);
+					return in.domino.appairage == domino.appairage;
 				}
 			);
 			if (itNext != RemovableBoard.end())
@@ -177,12 +172,7 @@ inline void BuildMoves(const std::vector<DominoIndex>& RemovableBoard, std::vect
 			itNext = std::find_if(itNext, RemovableBoard.end(),
 				[domino](const DominoIndex& in)
 				{
-					return
-						(
-							in.domino == domino ||
-							(34 <= in.domino && in.domino < 38 && 34 <= domino && domino < 38) || // Saisons
-							(38 <= in.domino && in.domino < 42 && 38 <= domino && domino < 42) // Fleurs.
-							);
+					return in.domino.appairage == domino.appairage;
 				}
 			);
 			if (itNext != RemovableBoard.end())
@@ -236,14 +226,14 @@ static std::map<uint64_t, std::array<uint64_t, 144 / 8>> hashtable;
 #define FNV_prime 0x100000001b3ULL
 
 // https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
-inline uint64_t getFNV1(const std::map<int, int>& TilesMap)
+inline uint64_t getFNV1(const std::map<int, Domino>& TilesMap)
 {
 	uint64_t tileTab[144];
 	memset(tileTab, 44, 144 * sizeof(uint64_t));
 
 	for (auto& item : TilesMap)
 	{
-		tileTab[item.first] = uint64_t(item.second);
+		tileTab[item.first] = uint64_t(item.second.rang);
 	}
 
 	uint64_t hash = FNV_offset_basis;
@@ -258,14 +248,14 @@ inline uint64_t getFNV1(const std::map<int, int>& TilesMap)
 }
 
 // https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
-inline uint64_t getFNV1a(const std::map<int, int>& TilesMap)
+inline uint64_t getFNV1a(const std::map<int, Domino>& TilesMap)
 {
 	uint64_t tileTab[144];
 	memset(tileTab, 44, 144 * sizeof(uint64_t));
 
 	for (auto& item : TilesMap)
 	{
-		tileTab[item.first] = uint64_t(item.second);
+		tileTab[item.first] = uint64_t(item.second.rang);
 	}
 
 	uint64_t hash = FNV_offset_basis;
@@ -278,7 +268,7 @@ inline uint64_t getFNV1a(const std::map<int, int>& TilesMap)
 	return hash;
 }
 
-inline bool stopNow(const std::map<int, int>& TilesMap
+inline bool stopNow(const std::map<int, Domino>& TilesMap
 #ifdef _DEBUG
 	, uint64_t& positions
 #endif
@@ -289,7 +279,7 @@ inline bool stopNow(const std::map<int, int>& TilesMap
 
 	for (auto& item : TilesMap)
 	{
-		tileTab[item.first] = uint64_t(item.second);
+		tileTab[item.first] = uint64_t(item.second.rang);
 	}
 
 	std::array<uint64_t, 144 / 8> boardDescription;
@@ -344,14 +334,14 @@ inline uint8_t BruteForceOrderingEval(
 	const std::vector<int>& Move,
 	std::vector<DominoIndex>& LogicalBoard,
 	std::array<bool, 144>& Removable,
-	std::map<int, int>& TilesMap,
+	std::map<int, Domino>& TilesMap,
 	std::vector<int>& WhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard)
 {
 	std::vector<DominoIndex> LogicalBoardRemoved;
 	std::vector<int> RemovableWasTrue;
 	std::vector<int> RemovableWasFalse;
-	std::map<int, int> TilesMapRemoved;
+	std::map<int, Domino> TilesMapRemoved;
 	std::vector<int> WhatsLeftRemoved;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 	bool full = false;
@@ -370,7 +360,7 @@ inline uint8_t BruteForceOrderingEval(
 	for (auto& item : LogicalBoardRemoved) LogicalBoard.emplace_back(item);
 	for (auto& item : RemovableWasTrue) Removable[item] = true;
 	for (auto& item : RemovableWasFalse) Removable[item] = false;
-	for (auto& item : TilesMapRemoved) TilesMap[item.first] = item.second;
+	for (auto& item : TilesMapRemoved) TilesMap.emplace(item.first, item.second);
 	for (auto& item : WhatsLeftRemoved) WhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 
@@ -381,7 +371,7 @@ inline bool SolveRec(
 	const std::vector<int>& Move,
 	std::vector<DominoIndex>& LogicalBoard,
 	std::array<bool, 144>& Removable,
-	std::map<int, int>& TilesMap,
+	std::map<int, Domino>& TilesMap,
 	std::vector<int>& WhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard,
 	std::vector<std::pair<int, int>>& Solution
@@ -395,7 +385,7 @@ inline bool SolveRec(
 	std::vector<DominoIndex> LogicalBoardRemoved;
 	std::vector<int> RemovableWasTrue;
 	std::vector<int> RemovableWasFalse;
-	std::map<int, int> TilesMapRemoved;
+	std::map<int, Domino> TilesMapRemoved;
 	std::vector<int> WhatsLeftRemoved;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 	bool full = false;
@@ -464,7 +454,7 @@ inline bool SolveRec(
 	for (auto& item : LogicalBoardRemoved) LogicalBoard.emplace_back(item);
 	for (auto& item : RemovableWasTrue) Removable[item] = true;
 	for (auto& item : RemovableWasFalse) Removable[item] = false;
-	for (auto& item : TilesMapRemoved) TilesMap[item.first] = item.second;
+	for (auto& item : TilesMapRemoved) TilesMap.emplace(item.first, item.second);
 	for (auto& item : WhatsLeftRemoved) WhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 	/**/
@@ -478,35 +468,17 @@ A
 A
 A
 */
-inline bool isCenterBlocked(int index, std::map<int, int>& TilesMap)
+inline bool isCenterBlocked(int index, std::map<int, Domino>& TilesMap)
 {
-	int dominos[4];
+	std::vector<Domino> dominos;
 	int dec1 = ((index - 0x88) >> 1) << 1;
 	int dec2 = dec1 << 1;
-	dominos[0] = TilesMap[index];
-	dominos[1] = TilesMap[index - 0x0B - dec1];
-	dominos[2] = TilesMap[index - 0x1B - dec2];
-	dominos[3] = TilesMap[index - 0x3F - dec2];
+	dominos.emplace_back(TilesMap.find(index)->second);
+	dominos.emplace_back(TilesMap.find(index - 0x0B - dec1)->second);
+	dominos.emplace_back(TilesMap.find(index - 0x1B - dec2)->second);
+	dominos.emplace_back(TilesMap.find(index - 0x3F - dec2)->second);
 
-	if (dominos[0] == dominos[1] && dominos[0] == dominos[2] && dominos[0] == dominos[3])
-		return true;
-	// Saisons :
-	if (
-		(34 <= dominos[0] && dominos[0] < 38) &&
-		(34 <= dominos[1] && dominos[1] < 38) &&
-		(34 <= dominos[2] && dominos[2] < 38) &&
-		(34 <= dominos[3] && dominos[3] < 38)
-		)
-		return true;
-	// Fleurs :
-	if (
-		(38 <= dominos[0] && dominos[0] < 42) &&
-		(38 <= dominos[1] && dominos[1] < 42) &&
-		(38 <= dominos[2] && dominos[2] < 42) &&
-		(38 <= dominos[3] && dominos[3] < 42)
-		)
-		return true;
-	return false;
+	return (dominos[0].appairage == dominos[1].appairage && dominos[0].appairage == dominos[2].appairage && dominos[0].appairage == dominos[3].appairage);
 }
 
 /*
@@ -525,7 +497,7 @@ inline bool isCenterBlocked(int index, std::map<int, int>& TilesMap)
 	0x77 -> 0x87 third floor
 	0x88 -> 0x8b fourth floor
 */
-inline bool CheckIfBlocked(std::map<int, int>& TilesMap)
+inline bool CheckIfBlocked(std::map<int, Domino>& TilesMap)
 {
 	// Index -> domino
 	if (TilesMap.contains(0x88) && isCenterBlocked(0x88, TilesMap)) return true;
@@ -605,14 +577,14 @@ inline uint8_t EvalMoveGreedy(
 	const std::vector<int>& Move,
 	std::vector<DominoIndex>& LogicalBoard,
 	std::array<bool, 144>& Removable,
-	std::map<int, int>& TilesMap,
+	std::map<int, Domino>& TilesMap,
 	std::vector<int>& WhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard)
 {
 	std::vector<DominoIndex> LogicalBoardRemoved;
 	std::vector<int> RemovableWasTrue;
 	std::vector<int> RemovableWasFalse;
-	std::map<int, int> TilesMapRemoved;
+	std::map<int, Domino> TilesMapRemoved;
 	std::vector<int> WhatsLeftRemoved;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 
@@ -633,7 +605,7 @@ inline uint8_t EvalMoveGreedy(
 	for (auto& item : LogicalBoardRemoved) LogicalBoard.emplace_back(item);
 	for (auto& item : RemovableWasTrue) Removable[item] = true;
 	for (auto& item : RemovableWasFalse) Removable[item] = false;
-	for (auto& item : TilesMapRemoved) TilesMap[item.first] = item.second;
+	for (auto& item : TilesMapRemoved) TilesMap.emplace(item.first, item.second);
 	for (auto& item : WhatsLeftRemoved) WhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 
@@ -762,7 +734,7 @@ inline bool SolveRecInit(const Board& plateau,
 	std::vector<std::pair<int, int>> oldMoves,
 	std::vector<DominoIndex> LogicalBoard,
 	std::array<bool, 144> Removable,
-	std::map<int, int> TilesMap,
+	std::map<int, Domino> TilesMap,
 	std::vector<int> WhatsLeft,
 	std::map<Coordinates, int> mOccupationBoard,
 	std::vector<std::pair<int, int>>& Solution)
@@ -770,7 +742,7 @@ inline bool SolveRecInit(const Board& plateau,
 #ifdef _DEBUG
 	std::vector<DominoIndex> LogicalBoardRefForDebug = LogicalBoard;
 	std::array<bool, 144> RemovableRefForDebug = Removable;
-	std::map<int, int> TilesMapRefForDebug = TilesMap;
+	std::map<int, Domino> TilesMapRefForDebug = TilesMap;
 	std::vector<int> WhatsLeftRefForDebug = WhatsLeft;
 	std::map<Coordinates, int> mOccupationBoardRefForDebug = mOccupationBoard;
 #endif
@@ -863,7 +835,7 @@ inline bool SolveRecInit(const Board& plateau,
 	bool mOccupationBoardOk = mOccupationBoardRefForDebug.size() == mOccupationBoard.size();
 	for (auto& item : LogicalBoardRefForDebug) LogicalBoardOk &= LogicalBoard.end() != std::find(LogicalBoard.begin(), LogicalBoard.end(), item);
 	for (int i = 0; i < RemovableRefForDebug.size(); ++i) RemovableOk &= Removable[i] == RemovableRefForDebug[i];
-	for (auto& item : TilesMapRefForDebug) TilesMapOk &= TilesMap.contains(item.first) && TilesMap[item.first] == item.second;
+	for (auto& item : TilesMapRefForDebug) TilesMapOk &= TilesMap.contains(item.first) && TilesMap.find(item.first)->second == item.second;
 	for (auto& item : WhatsLeftRefForDebug) WhatsLeftOk &= WhatsLeftRefForDebug.end() != std::find(WhatsLeftRefForDebug.begin(), WhatsLeftRefForDebug.end(), item);
 	for (auto& item : mOccupationBoardRefForDebug)  mOccupationBoardOk &= mOccupationBoard.contains(item.first) && mOccupationBoard[item.first] == item.second;
 

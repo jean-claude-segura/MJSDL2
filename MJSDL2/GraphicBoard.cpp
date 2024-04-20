@@ -619,7 +619,7 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 						clicked[index] = true;
 						Refresh(false);
 #ifdef _DEBUG
-						std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index) << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
+						std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index).rang << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
 					}
 					else
@@ -636,7 +636,7 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 							clicked[index] = false;
 #ifdef _DEBUG
 							std::cout << std::dec << plateau.getNumberOfTilesLeft() << " tile" << (plateau.getNumberOfTilesLeft() > 1 ? "s" : "") << " left." << std::endl;
-							std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index) << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
+							std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index).rang << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 							std::cout << std::dec << plateau.HowManyMovesLeft() << " move" << (plateau.HowManyMovesLeft() > 1 ? "s" : "") << " left." << std::endl;
 							auto it = plateau.GetMovesLeft().begin();
 							if (it != plateau.GetMovesLeft().end())
@@ -652,7 +652,7 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 						{
 							clicked[index] = false;
 #ifdef _DEBUG
-							std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index) << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
+							std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index).rang << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
 						}
 					}
@@ -665,14 +665,14 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 					selected = -1;
 					Refresh(false);
 #ifdef _DEBUG
-					std::cout << "Tile" << std::dec << plateau.getDominoFromIndex(index) << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " unclicked." << std::endl;
+					std::cout << "Tile" << std::dec << plateau.getDominoFromIndex(index).rang << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " unclicked." << std::endl;
 #endif					
 				}
 			}
 			else
 			{
 #ifdef _DEBUG
-				std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index) << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
+				std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index).rang << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
 			}
 		}
@@ -1153,16 +1153,16 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 			{
 				// Down - Left
 				SDL_Point size;
-				SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+				SDL_QueryTexture(dominos[domino.rang], NULL, NULL, &size.x, &size.y);
 				coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
 				coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
 				coordonnees.w = size.x;
 				coordonnees.h = size.y;
 
 				if (clicked[index])
-					SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, dominos[domino], Inverted), NULL, &coordonnees);
+					SDL_RenderCopy(renderer, SDL_InvertTexture(renderer, dominos[domino.rang], Inverted), NULL, &coordonnees);
 				else
-					SDL_RenderCopy(renderer, dominos[domino], NULL, &coordonnees);
+					SDL_RenderCopy(renderer, dominos[domino.rang], NULL, &coordonnees);
 			}
 			else if (direction == 0)
 			{
@@ -1170,7 +1170,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 				SDL_Point org;
 				org.x = x * (sizeMask.x - 40) - z * 40 + tWidth;
 				org.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
-				RenderCopy(x, y, z, domino, index, org, SDL_Point{ 0, -38 }, 0, SDL_FLIP_VERTICAL);
+				RenderCopy(x, y, z, domino.rang, index, org, SDL_Point{ 0, -38 }, 0, SDL_FLIP_VERTICAL);
 			}
 			else if (direction == 1)
 			{
@@ -1178,7 +1178,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 				SDL_Point org;
 				org.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
 				org.y = y * (sizeMask.y - 40) - z * 40 + tHeight;
-				RenderCopy(x, y, z, domino, index, org, SDL_Point{ 33, -38 }, 180, SDL_FLIP_NONE);
+				RenderCopy(x, y, z, domino.rang, index, org, SDL_Point{ 33, -38 }, 180, SDL_FLIP_NONE);
 			}
 			else
 			{
@@ -1186,7 +1186,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 				SDL_Point org;
 				org.x = x * (sizeMask.x - 40) + z * 40 + tWidth;
 				org.y = y * (sizeMask.y - 40) + z * 40 + tHeight;
-				RenderCopy(x, y, z, domino, index, org, SDL_Point{ 33, 0 }, 0, SDL_FLIP_HORIZONTAL);
+				RenderCopy(x, y, z, domino.rang, index, org, SDL_Point{ 33, 0 }, 0, SDL_FLIP_HORIZONTAL);
 			}
 		}
 	}
@@ -1338,7 +1338,7 @@ void GraphicBoard::WhatsLeft()
 
 	for (auto& index : plateau.getWhatsLeft())
 	{
-		int domino = plateau.getDominoFromIndex(index);
+		int domino = plateau.getDominoFromIndex(index).rang;
 		int x = (domino >> 3);
 		int y = (domino & 0b111);
 		++board[y][x];
@@ -1447,7 +1447,7 @@ void GraphicBoard::Loop()
 							if (0 <= selected && selected < 143)
 								clicked[selected] = false;
 							selected = -1;
-							int autoselected = plateau.getDominoFromIndex(index);
+							auto autoselected = plateau.getDominoFromIndex(index);
 							std::vector<int> relevantTiles;
 							for (const auto& tile : plateau.getLogicalBoard())
 							{
@@ -1458,12 +1458,7 @@ void GraphicBoard::Loop()
 								auto domino = tile.domino;
 								auto index = tile.index;
 
-								if (
-									(
-										domino == autoselected ||
-										(34 <= domino && domino < 38 && 34 <= autoselected && autoselected < 38) || // Saisons
-										(38 <= domino && domino < 42 && 38 <= autoselected && autoselected < 42) // Fleurs.
-										) &&
+								if (domino.appairage == autoselected.appairage &&
 									plateau.getRemovableFromIndex(index))
 								{
 									clicked[index] = true;

@@ -7,20 +7,67 @@
 #include <cmath>
 #include <map>
 
+class Domino
+{
+private:
+	Domino() : rang(-1), appairage(-1) {}
+public:
+
+	const int rang;
+	const int appairage;
+	Domino(const int _domino) : rang(_domino), appairage(34 <= _domino && _domino < 38 ? 34 : 38 <= _domino && _domino < 42 ? 38 : _domino) {}
+
+	// Copy constructor
+	Domino(const Domino& _domino) : rang(_domino.rang), appairage(_domino.appairage) {}
+
+	// Move constructor
+	Domino(Domino&& _domino) : rang(_domino.rang), appairage(_domino.appairage) {}
+
+	// Assignment operator
+	// Damn sort on LogicalBoard was messing with the values...
+	Domino& operator=(Domino&& other)
+	{
+		*const_cast<int*> (&rang) = other.rang;
+		*const_cast<int*> (&appairage) = other.appairage;
+		return *this;
+	}
+
+	//Domino(const int _domino, const int _appairage) : rang(_domino), appairage(_appairage) {}
+
+	bool operator==(const Domino& other) const
+	{
+		return rang == other.rang && appairage == other.appairage;
+	}
+
+	Domino operator=(const Domino& other) const
+	{
+		return Domino(other);
+	}
+
+	bool operator<(const Domino& other) const
+	{
+		return rang < other.rang || rang == other.rang && appairage < other.appairage;
+	}
+}; 
+
 class DominoIndex
 {
 private:
-	DominoIndex() {}
-
+	DominoIndex() : domino(Domino(-1)), index(-1) {}
 public:
-	int domino;
+	Domino domino;
 	int index;
-	DominoIndex(int _domino, int _index) : domino(_domino), index(_index) {}
+	DominoIndex(const Domino & _domino, int _index) : domino(Domino(_domino)), index(_index) {}
 
 	bool operator==(const DominoIndex& other) const
 	{
 		return domino == other.domino && index == other.index;
 	}
+
+	// copy constructor
+	//DominoIndex(const DominoIndex& dominoindex) : domino(Domino(dominoindex.domino)), index(dominoindex.index) {}
+	// Move constructor
+	//DominoIndex(DominoIndex&& dominoindex) : domino(Domino(dominoindex.domino)), index(dominoindex.index) {}
 };
 
 // https://www.ibm.com/docs/en/i/7.5?topic=only-constexpr-constructors-c11
@@ -120,7 +167,7 @@ private:
 public:
 	Board();
 	void InitBoard();
-	const int getDominoFromIndex(const int index) { return TilesMap[index]; }
+	const Domino getDominoFromIndex(const int index) { return TilesMap.find(index)->second; }
 	const bool getRemovableFromIndex(const int index) { return Removable[index]; }
 	bool RemovePairOfTiles(const int, const int);
 	const bool IsBlocked() { return Moves.size() == 0; }
@@ -135,7 +182,8 @@ public:
 	const std::vector<std::pair<int, int>>& GetSolution() { return Solution; }
 	const std::vector<std::pair<int, int>>& GetHistory() { return History; }
 
-	const std::map<int, int> & getTilesMap() { return TilesMap; }
+	// For the brute force.
+	const std::map<int, Domino> & getTilesMap() { return TilesMap; }
 	const std::array<bool, 144> & getRemovable() { return Removable; }
 	const std::map<Coordinates, int> & getOccupationBoard() { return mOccupationBoard; }
 
@@ -143,7 +191,7 @@ private:
 	std::vector<std::pair<int, int>> Solution;
 	std::vector<std::pair<int, int>> History;
 	std::vector<int> WhatsLeft; // Index
-	std::map<int, int> TilesMap; // index -> domino
+	std::map<int, Domino> TilesMap; // index -> domino
 	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> index
 	std::vector<DominoIndex> LogicalBoard; // (domino, index)
 	std::array<bool, 144> Removable = {

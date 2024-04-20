@@ -185,7 +185,7 @@ void Board::InitBoard()
 		--tempDominos[domino];
 		mOccupationBoard[IndexToCoord[index]] = index;
 		LogicalBoard.emplace_back(DominoIndex(domino, index));
-		TilesMap[index] = domino;
+		TilesMap.emplace(index, Domino(domino));
 	}
 
 	for(int index = 0; index < 144; ++index) Removable[index] = false;
@@ -301,13 +301,9 @@ void Board::RemoveTile(const int index)
 bool Board::RemovePairOfTiles(const int first, const int second)
 {
 	bool bRetour = false;
-	auto left = TilesMap[first];
-	auto right = TilesMap[second];
-	if (
-		left == right ||
-		(34 <= left && left < 38 && 34 <= right && right < 38) || // Saisons
-		(38 <= left && left < 42 && 38 <= right && right < 42) // Fleurs.
-		)
+	auto left = TilesMap.find(first)->second;
+	auto right = TilesMap.find(second)->second;
+	if (left.appairage == right.appairage)
 	{
 		RemoveTile(first);
 		RemoveTile(second);
@@ -330,12 +326,7 @@ void Board::BuildMoves(std::vector<DominoIndex>& RemovableBoard, std::vector<Dom
 			itNext = std::find_if(itNext, RemovableBoard.end(),
 				[domino](const DominoIndex& in)
 				{
-					return
-						(
-							in.domino == domino ||
-							(34 <= in.domino && in.domino < 38 && 34 <= domino && domino < 38) || // Saisons
-							(38 <= in.domino && in.domino < 42 && 38 <= domino && domino < 42) // Fleurs.
-							);
+					return in.domino.appairage == domino.appairage;
 				}
 			);
 			if (itNext != RemovableBoard.end())
