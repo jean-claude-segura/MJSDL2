@@ -759,25 +759,17 @@ inline bool SolveRecInit(const Board& plateau,
 	Solution.clear();
 	std::vector<std::pair<int, int>> SolutionTemp;
 
+	for (const auto& func : vTries)
+	{
+		if (func.first(plateau, SolutionTemp))
+		{
+			Solution.clear();
+			Solution = SolutionTemp;
 #ifdef _DEBUG
-	for (const auto& func : vTries)
-	{
-		if (func.first(plateau, SolutionTemp))
-		{
-			Solution.clear();
-			Solution = SolutionTemp;
 			std::cout << "Solution : " << func.second << std::endl;
-		}
-		SolutionTemp.clear();
-	}
 #else
-	for (const auto& func : vTries)
-	{
-		if (func.first(plateau, SolutionTemp))
-		{
-			Solution.clear();
-			Solution = SolutionTemp;
 			return true;
+#endif
 		}
 		if (Solution.size() < SolutionTemp.size())
 		{
@@ -786,11 +778,15 @@ inline bool SolveRecInit(const Board& plateau,
 		}
 		SolutionTemp.clear();
 	}
-#endif
 #ifndef _DEBUG
 	return true;
 #endif
+#ifdef _DEBUG
+	for (auto& move : Solution)
+		std::cout << move.first << ";" << move.second << std::endl;
+#endif
 	return true;
+	Solution.clear();
 	if (CheckIfBlocked(TilesMap))
 		return false;
 
