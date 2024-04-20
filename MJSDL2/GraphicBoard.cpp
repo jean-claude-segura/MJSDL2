@@ -148,7 +148,7 @@ void GraphicBoard::Init()
 	itNextMove = plateau.GetMovesLeft().begin();
 	itPrevMove = plateau.GetMovesLeft().end();
 
-	Refresh(true);
+	Refresh(true, true);
 }
 
 void GraphicBoard::LoadFaceMask()
@@ -456,7 +456,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			itNextMove = plateau.GetMovesLeft().begin();
 			itPrevMove = plateau.GetMovesLeft().end();
 			LoadTiles();
-			Refresh(true);
+			Refresh(true, true);
 		}
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
@@ -1111,7 +1111,52 @@ inline void GraphicBoard::RenderCopy(const double x, const double y, const doubl
 		SDL_RenderCopy(renderer, dominoscache[flip][domino], NULL, &coordonnees);
 }
 
-void GraphicBoard::Refresh(const bool refreshMouseMap)
+void GraphicBoard::DisplayInterface()
+{
+	// Interface :
+	// Ouest :
+	SDL_Point size;
+	SDL_QueryTexture(RestartBtn, NULL, NULL, &size.x, &size.y);
+
+	SDL_Rect coordonnees;
+	coordonnees.w = size.x;
+	coordonnees.h = size.y;
+	coordonnees.x = 0;
+	coordonnees.y = (size.y - 20) * 4;
+	SDL_RenderCopy(renderer, OuestBtn, NULL, &coordonnees);
+	// Sud :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 5;
+	SDL_RenderCopy(renderer, SudBtn, NULL, &coordonnees);
+	// Turn :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 4;
+	SDL_RenderCopy(renderer, TurnBtn, NULL, &coordonnees);
+	// Nord :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 3;
+	SDL_RenderCopy(renderer, NordBtn, NULL, &coordonnees);
+	// Est :
+	coordonnees.x = (size.x << 1) - 40;
+	coordonnees.y = (size.y - 20) * 4;
+	SDL_RenderCopy(renderer, EstBtn, NULL, &coordonnees);
+	// Hint :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = size.y - 20;
+	SDL_RenderCopy(renderer, HintBtn, NULL, &coordonnees);
+	// Restart :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = 0;
+	SDL_RenderCopy(renderer, RestartBtn, NULL, &coordonnees);
+	// Exit
+	coordonnees.x = Width - size.x;
+	coordonnees.y = 0;
+	SDL_RenderCopy(renderer, ExitBtn, NULL, &coordonnees);
+	/**/
+}
+
+
+void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 {
 	if (refreshMouseMap) RefreshMouseMap();
 
@@ -1130,7 +1175,8 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 		std::cout << stderr << "could not copy background: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
-
+	if(oneByOne)
+		DisplayInterface();
 	if (!plateau.IsEmpty())
 	{
 		// Placement des dominos :
@@ -1188,6 +1234,9 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 				org.y = y * (sizeMask.y - 40) + z * 40 + tHeight;
 				RenderCopy(x, y, z, domino.rang, index, org, SDL_Point{ 33, 0 }, 0, SDL_FLIP_HORIZONTAL);
 			}
+
+			if (oneByOne)
+				SDL_RenderPresent(renderer);
 		}
 	}
 
@@ -1243,6 +1292,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 				break;
 			case 2:
 				SDL_RenderCopy(renderer, textureBackgroundVictory, NULL, NULL);
+				//DisplayInterface();
 				SDL_FireworksOnTexture(renderer, renderTargetOrg, Width >> 1, Height >> 1, 500, 0xC0);
 				break;
 			}
@@ -1267,51 +1317,10 @@ void GraphicBoard::Refresh(const bool refreshMouseMap)
 	SDL_FireOnRenderer(renderer, Width >> 2, Height >> 2, 0);*/
 #endif
 
-	// Interface :
-	// Ouest :
-	SDL_Point size;
-	SDL_QueryTexture(RestartBtn, NULL, NULL, &size.x, &size.y);
-
-	SDL_Rect coordonnees;
-	coordonnees.w = size.x;
-	coordonnees.h = size.y;
-	coordonnees.x = 0;
-	coordonnees.y = (size.y - 20) * 4;
-	SDL_RenderCopy(renderer, OuestBtn, NULL, &coordonnees);
-	// Sud :
-	coordonnees.x = size.x - 20;
-	coordonnees.y = (size.y - 20) * 5;
-	SDL_RenderCopy(renderer, SudBtn, NULL, &coordonnees);
-	// Turn :
-	coordonnees.x = size.x - 20;
-	coordonnees.y = (size.y - 20) * 4;
-	SDL_RenderCopy(renderer, TurnBtn, NULL, &coordonnees);
-	// Nord :
-	coordonnees.x = size.x - 20;
-	coordonnees.y = (size.y - 20) * 3;
-	SDL_RenderCopy(renderer, NordBtn, NULL, &coordonnees);
-	// Est :
-	coordonnees.x = (size.x << 1) - 40;
-	coordonnees.y = (size.y - 20) * 4;
-	SDL_RenderCopy(renderer, EstBtn, NULL, &coordonnees);
-	// Hint :
-	coordonnees.x = size.x - 20;
-	coordonnees.y = size.y - 20;
-	SDL_RenderCopy(renderer, HintBtn, NULL, &coordonnees);
-	// Restart :
-	coordonnees.x = size.x - 20;
-	coordonnees.y = 0;
-	SDL_RenderCopy(renderer, RestartBtn, NULL, &coordonnees);
-	// Exit
-	coordonnees.x = Width - size.x;
-	coordonnees.y = 0;
-	SDL_RenderCopy(renderer, ExitBtn, NULL, &coordonnees);
-	/**/
-
 #ifdef _DEBUG
 	//SDL_RenderCopy(renderer, textureMouseMap, NULL, NULL);
 #endif
-
+	DisplayInterface();
 	SDL_RenderPresent(renderer);
 }
 
