@@ -619,7 +619,7 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 						clicked[index] = true;
 						Refresh(false);
 #ifdef _DEBUG
-						std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
+						std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index) << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
 					}
 					else
@@ -636,7 +636,7 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 							clicked[index] = false;
 #ifdef _DEBUG
 							std::cout << std::dec << plateau.getNumberOfTilesLeft() << " tile" << (plateau.getNumberOfTilesLeft() > 1 ? "s" : "") << " left." << std::endl;
-							std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
+							std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index) << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 							std::cout << std::dec << plateau.HowManyMovesLeft() << " move" << (plateau.HowManyMovesLeft() > 1 ? "s" : "") << " left." << std::endl;
 							auto it = plateau.GetMovesLeft().begin();
 							if (it != plateau.GetMovesLeft().end())
@@ -652,7 +652,7 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 						{
 							clicked[index] = false;
 #ifdef _DEBUG
-							std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
+							std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index) << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
 						}
 					}
@@ -665,14 +665,14 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 					selected = -1;
 					Refresh(false);
 #ifdef _DEBUG
-					std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
+					std::cout << "Tile" << std::dec << plateau.getDominoFromIndex(index) << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " unclicked." << std::endl;
 #endif					
 				}
 			}
 			else
 			{
 #ifdef _DEBUG
-				std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
+				std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index) << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 #endif					
 			}
 		}
