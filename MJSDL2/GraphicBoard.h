@@ -49,7 +49,8 @@ private:
 	void LoadRandomBackgroundVictory(const std::string& path);
 	void LoadBackgroundVictory(const std::string& path);
 	void LoadResources();
-	void Refresh(const bool);
+	void Refresh(const bool refreshMouseMap, const bool oneByOne = false);
+	void DisplayInterface();
 #ifdef _DEBUG
 	void RefreshExample();
 #endif
