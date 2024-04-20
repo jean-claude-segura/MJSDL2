@@ -21,12 +21,12 @@ public:
 	Domino(const Domino& _domino) : rang(_domino.rang), appairage(_domino.appairage) {}
 
 	// Move constructor
-	Domino(Domino&& _domino) : rang(_domino.rang), appairage(_domino.appairage) {}
+	Domino(Domino&& _domino) noexcept : rang(_domino.rang), appairage(_domino.appairage) {}
 
 	// Assignment operator
 	// Damn sort on LogicalBoard was messing with the values...
 	// https://stackoverflow.com/questions/4136156/const-member-and-assignment-operator-how-to-avoid-the-undefined-behavior/63489092#63489092
-	Domino& operator=(Domino&& other)
+	Domino& operator=(Domino&& other) noexcept
 	{
 		*const_cast<int*> (&rang) = other.rang;
 		*const_cast<int*> (&appairage) = other.appairage;
@@ -68,7 +68,14 @@ public:
 	// copy constructor
 	//DominoIndex(const DominoIndex& dominoindex) : domino(Domino(dominoindex.domino)), index(dominoindex.index) {}
 	// Move constructor
-	//DominoIndex(DominoIndex&& dominoindex) : domino(Domino(dominoindex.domino)), index(dominoindex.index) {}
+	//DominoIndex(DominoIndex&& dominoindex) noexcept : domino(Domino(dominoindex.domino)), index(dominoindex.index) {}
+	// Assignment operator
+	/*DominoIndex& operator=(DominoIndex&& other) noexcept
+	{
+		*const_cast<int*> (&Domino) = other.Domino;
+		*const_cast<int*> (&index) = other.index;
+		return *this;
+	}*/
 };
 
 // https://www.ibm.com/docs/en/i/7.5?topic=only-constexpr-constructors-c11
