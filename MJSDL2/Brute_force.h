@@ -348,9 +348,9 @@ inline std::pair<int, int> BruteForceOrderingEval(
 	std::vector<int> WhatsLeftRemoved;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 	bool full = false;
-	for (const auto& move : Move)
+	for (const auto& index : Move)
 	{
-		RemoveTile(move,
+		RemoveTile(index,
 			LogicalBoard,
 			Removable,
 			TilesMap,
@@ -580,6 +580,136 @@ inline void ConvertMovesToVector(const std::vector<std::pair<int, int>>& oldMove
 	}
 }
 
+inline uint8_t EvalMoveMaxBlock(
+	const std::vector<int>& Move,
+	std::map<int, Domino>& TilesMap)
+{
+	uint8_t blockValue = 0;
+	for (const auto& index : Move)
+	{
+		// Horizontal block value
+		if (index == 0x8C)
+		{
+			// Horizontal block value
+			uint8_t tempBlockValue = 0; 
+			for (int x = 0; x < 12 && (TilesMap.contains(BaseTurtlePattern[x][3][0])); ++x, ++tempBlockValue);
+			if (tempBlockValue > 1)
+				blockValue += tempBlockValue;
+			tempBlockValue = 0;
+			for (int x = 0; x < 12 && (TilesMap.contains(BaseTurtlePattern[x][4][0])); ++x, ++tempBlockValue);
+			if (tempBlockValue > 1)
+				blockValue += tempBlockValue;
+			// Vertical block value = z
+			//blockValue += 0;
+		}
+		else if (index == 0x8D)
+		{
+			// Horizontal block value
+			uint8_t tempBlockValue = 0;
+			for (int x = 11; x >=0 && (TilesMap.contains(BaseTurtlePattern[x][3][0])); --x, ++tempBlockValue);
+			if (tempBlockValue > 1)
+				blockValue += tempBlockValue;
+			tempBlockValue = 0;
+			for (int x = 11; x >= 0 && (TilesMap.contains(BaseTurtlePattern[x][4][0])); --x, ++tempBlockValue);
+			if (tempBlockValue > 1)
+				blockValue += tempBlockValue;
+			// Vertical block value = z
+			//blockValue += 0;
+		}
+		else if (index == 0x8E)
+		{
+			if (TilesMap.contains(0x8D))
+			{
+				// Horizontal block value
+				uint8_t tempBlockValue = 0;
+				for (int x = 11; x >= 0 && (TilesMap.contains(BaseTurtlePattern[x][3][0])); --x, ++tempBlockValue);
+				if (tempBlockValue > 1)
+					blockValue += tempBlockValue;
+				tempBlockValue = 0;
+				for (int x = 11; x >= 0 && (TilesMap.contains(BaseTurtlePattern[x][4][0])); --x, ++tempBlockValue);
+				if (tempBlockValue > 1)
+					blockValue += tempBlockValue;
+			}
+			// Vertical block value = z
+			//blockValue += 0;
+		}
+		else if (index == 0x8F)
+		{
+			uint8_t tempBlockValue = 0;
+			// Horizontal block value
+			blockValue += 0;
+			// Vertical block value = z
+			// But here it blocks 4 tiles at once.
+			blockValue += 4 * 4;
+		}
+		else
+		{
+			auto temp = BaseTurtlePatternToCoord[index];
+			int x = std::get<0>(temp);
+			int y = std::get<1>(temp);
+			int z = std::get<2>(temp);
+			// Vertical block value = z
+			blockValue += z;
+			// Horizontal block value
+			uint8_t tempBlockValue = 0;
+			for (int curX = x + 1; curX < 12 && (TilesMap.contains(BaseTurtlePattern[curX][y][z])); ++curX, ++tempBlockValue);
+			if (tempBlockValue > 1)
+				blockValue += tempBlockValue;
+			tempBlockValue = 0;
+			for (int curX = x - 1; curX >= 0 && (TilesMap.contains(BaseTurtlePattern[curX][y][z])); --curX, ++tempBlockValue);
+			if (tempBlockValue > 1)
+				blockValue += tempBlockValue;
+		}
+	}
+
+	return blockValue;
+}
+
+// Max block to the rescue.
+// Used when there is no choice meeting the requirements for the heuristic running.
+// Section 3.3 from :
+// https://iivq.net/scriptie/scriptie-bsc.pdf
+inline bool tryMaxBlock(Board plateau, std::vector<std::pair<int, int>>& Solution)
+{
+	// New move container to remove the tiles 2 at once or 4 at once.
+	std::vector<std::vector<int>> Moves;
+	ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+
+	while (!Moves.empty())
+	{
+		// Scooting step :
+		std::vector<std::pair<std::vector<int>, int>> sortedMoves;
+		auto TilesMap = plateau.getTilesMap();
+		for (auto& move : Moves)
+		{
+			auto eval = EvalMoveMaxBlock(move, TilesMap);
+			sortedMoves.emplace_back(std::make_pair(move, eval));
+		}
+
+		std::sort(sortedMoves.begin(), sortedMoves.end(),
+			[](const std::pair<std::vector<int>, int>& left, const std::pair<std::vector<int>, int>& right)
+			{
+				return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
+			});
+
+		auto Move = sortedMoves.begin()->first;
+		if (Move.size() == 2)
+		{
+			plateau.RemovePairOfTiles(Move[0], Move[1]);
+			Solution.emplace_back(std::make_pair(Move[0], Move[1]));
+		}
+		if (Move.size() == 4)
+		{
+			plateau.RemovePairOfTiles(Move[2], Move[3]);
+			Solution.emplace_back(std::make_pair(Move[2], Move[3]));
+		}
+
+		Moves.clear();
+		ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+	}
+	return plateau.IsEmpty();
+}
+
 inline bool tryAlwaysFirst(Board plateau, std::vector<std::pair<int, int>>& Solution)
 {
 	while (!plateau.GetMovesLeft().empty())
@@ -591,34 +721,59 @@ inline bool tryAlwaysFirst(Board plateau, std::vector<std::pair<int, int>>& Solu
 	return plateau.IsEmpty();
 }
 
+// Par nombre de dominos enlevés en une seule fois
+// Par nombre de coups jouables
+// Par max bloqueurs
 inline bool tryRandomHeuristics(Board plateau, std::vector<std::pair<int, int>>& Solution)
 {
-	while (!plateau.GetMovesLeft().empty())
+	// New move container to remove the tiles 2 at once or 4 at once.
+	std::vector<std::vector<int>> Moves;
+	ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+
+	while (!Moves.empty())
 	{
-		std::vector<std::pair<int, int>>::const_iterator itNextMove;
-		int index = 0x8F;
-		itNextMove = std::find_if(plateau.GetMovesLeft().begin(), plateau.GetMovesLeft().end(), [index](const std::pair<int, int>& move) { return move.first == index || move.second == index; });
-		if (itNextMove == plateau.GetMovesLeft().end())
+		// Scooting step :
+		std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> sortedMoves;
+		auto LogicalBoard = plateau.getLogicalBoard();
+		auto Removable = plateau.getRemovable();
+		auto TilesMap = plateau.getTilesMap();
+		auto WhatsLeft = plateau.getWhatsLeft();
+		auto OccupationBoard = plateau.getOccupationBoard();
+		for (auto& move : Moves)
 		{
-			int index = 0x8C;
-			itNextMove = std::find_if(plateau.GetMovesLeft().begin(), plateau.GetMovesLeft().end(), [index](const std::pair<int, int>& move) { return move.first == index || move.second == index; });
-			if (itNextMove == plateau.GetMovesLeft().end())
+			auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, OccupationBoard);
+			auto jouables = evalBruteForceOrderingEval.first;
+			auto debloques = evalBruteForceOrderingEval.second;
+			auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, TilesMap);
+			sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock)));
+			//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, jouables, evalEvalMoveMaxBlock)));
+			//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, evalEvalMoveMaxBlock, debloques)));
+		}
+
+		std::sort(sortedMoves.begin(), sortedMoves.end(),
+			[](const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& left, const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& right)
 			{
-				int index = 0x8E;
-				itNextMove = std::find_if(plateau.GetMovesLeft().begin(), plateau.GetMovesLeft().end(), [index](const std::pair<int, int>& move) { return move.first == index || move.second == index; });
-				if (itNextMove == plateau.GetMovesLeft().end())
-				{
-					int index = 0x8D;
-					itNextMove = std::find_if(plateau.GetMovesLeft().begin(), plateau.GetMovesLeft().end(), [index](const std::pair<int, int>& move) { return move.first == index || move.second == index; });
-				}
-			}
-		}
-		if (itNextMove == plateau.GetMovesLeft().end())
+				return
+					left.first.size() > right.first.size() ||
+					left.first.size() == right.first.size() && std::get<0>(left.second) > std::get<0>(right.second) ||
+					(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) > std::get<1>(right.second)) ||
+					(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
+			});
+
+		auto Move = sortedMoves.begin()->first;
+		if (Move.size() == 2)
 		{
-			itNextMove = plateau.GetMovesLeft().begin();
+			plateau.RemovePairOfTiles(Move[0], Move[1]);
+			Solution.emplace_back(std::make_pair(Move[0], Move[1]));
 		}
-		Solution.emplace_back(*itNextMove);
-		plateau.RemovePairOfTiles(itNextMove->first, itNextMove->second);
+		if (Move.size() == 4)
+		{
+			plateau.RemovePairOfTiles(Move[2], Move[3]);
+			Solution.emplace_back(std::make_pair(Move[2], Move[3]));
+		}
+
+		Moves.clear();
+		ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
 	}
 	return plateau.IsEmpty();
 }
@@ -638,9 +793,9 @@ inline uint8_t EvalMoveGreedy(
 	std::vector<int> WhatsLeftRemoved;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 
-	for (const auto& move : Move)
+	for (const auto& index : Move)
 	{
-		RemoveTile(move,
+		RemoveTile(index,
 			LogicalBoard,
 			Removable,
 			TilesMap,
@@ -707,6 +862,9 @@ inline bool tryGreedy(Board plateau, std::vector<std::pair<int, int>>& Solution)
 	return plateau.IsEmpty();
 }
 
+// Removes 4 then 2
+// Supposed to remove 2 out of three free tiles before 2 out of 2.
+// Hence the "Pseudo".
 inline bool tryPseudoMultipleFirst(Board plateau, std::vector<std::pair<int, int>>& Solution)
 {
 	// New move container to remove the tiles 2 at once or 4 at once.
@@ -994,6 +1152,7 @@ inline bool SolveRecInit(const Board& plateau,
 	vTries.push_back({ tryBruteForceOrderingPlayableBlockersFirst, "tryBruteForceOrderingPlayableBlockersFirst" });
 	vTries.push_back({ tryBruteForceOrderingFreed, "tryBruteForceOrderingFreed" });
 	vTries.push_back({ tryBruteForceOrderingFreedBlockersFirst, "tryBruteForceOrderingFreedBlockersFirst" });
+	vTries.push_back({ tryMaxBlock, "tryMaxBlock" });
 
 	Solution.clear();
 	std::vector<std::pair<int, int>> SolutionTemp;
@@ -1109,13 +1268,15 @@ int64_t testAll(const Board& plateau)
 	vTries.push_back({ tryBruteForceOrderingPlayableBlockersFirst, "tryBruteForceOrderingPlayableBlockersFirst" });
 	vTries.push_back({ tryBruteForceOrderingFreed, "tryBruteForceOrderingFreed" });
 	vTries.push_back({ tryBruteForceOrderingFreedBlockersFirst, "tryBruteForceOrderingFreedBlockersFirst" });
+	vTries.push_back({ tryMaxBlock, "tryMaxBlock" });
+
 
 	std::vector<std::pair<int, int>> SolutionTemp;
 
 	uint64_t ret = 0ULL;
 	for (const auto& func : vTries)
 	{
-		ret = ret << 8;
+		ret = ret << 7;
 		ret |= func.first(plateau, SolutionTemp) ? 1 : 0;
 		SolutionTemp.clear();
 	}

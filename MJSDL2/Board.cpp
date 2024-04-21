@@ -378,6 +378,7 @@ bool Board::Test()
 {
 	uint64_t ret = 0ULL;
 	int solved = 0;
+	std::stringstream strout;
 	for (int i = 0; i < 99; ++i)
 	{
 		InitBoard();
@@ -386,23 +387,57 @@ bool Board::Test()
 			++solved;
 		std::cout << std::dec << i << " : " << std::hex << temp << std::dec << std::endl;
 		ret += temp;
+		auto v9 = temp & 0b01111111;
+		temp = temp >> 7;
+		auto v8 = temp & 0b01111111;
+		temp = temp >> 7;
+		auto v7 = temp & 0b01111111;
+		temp = temp >> 7;
+		auto v6 = temp & 0b01111111;
+		temp = temp >> 7;
+		auto v5 = temp & 0b01111111;
+		temp = temp >> 7;
+		auto v4 = temp & 0b01111111;
+		temp = temp >> 7;
+		auto v3 = temp & 0b01111111;
+		temp = temp >> 7;
+		auto v2 = temp & 0b01111111;
+		temp = temp >> 7;
+		auto v1 = temp & 0b01111111;
+		temp = temp >> 7;
+
+		strout << std::endl;
+		strout << std::dec << v1 << ", ";
+		strout << std::dec << v2 << ", ";
+		strout << std::dec << v3 << ", ";
+		strout << std::dec << v4 << ", ";
+		strout << std::dec << v5 << ", ";
+		strout << std::dec << v6 << ", ";
+		strout << std::dec << v7 << ", ";
+		strout << std::dec << v8 << ", ";
+		strout << std::dec << v9 << std::endl;
 	}
-	auto v8 = ret & 0xFF;
-	ret = ret >> 8;
-	auto v7 = ret & 0xFF;
-	ret = ret >> 8;
-	auto v6 = ret & 0xFF;
-	ret = ret >> 8;
-	auto v5 = ret & 0xFF;
-	ret = ret >> 8;
-	auto v4 = ret & 0xFF;
-	ret = ret >> 8;
-	auto v3 = ret & 0xFF;
-	ret = ret >> 8;
-	auto v2 = ret & 0xFF;
-	ret = ret >> 8;
-	auto v1 = ret & 0xFF;
-	ret = ret >> 8;
+
+	std::cout << strout.str();
+
+	auto v9 = ret & 0b01111111;
+	ret = ret >> 7;
+	auto v8 = ret & 0b01111111;
+	ret = ret >> 7;
+	auto v7 = ret & 0b01111111;
+	ret = ret >> 7;
+	auto v6 = ret & 0b01111111;
+	ret = ret >> 7;
+	auto v5 = ret & 0b01111111;
+	ret = ret >> 7;
+	auto v4 = ret & 0b01111111;
+	ret = ret >> 7;
+	auto v3 = ret & 0b01111111;
+	ret = ret >> 7;
+	auto v2 = ret & 0b01111111;
+	ret = ret >> 7;
+	auto v1 = ret & 0b01111111;
+	ret = ret >> 7;
 
 	std::cout << std::endl;
 	std::cout << std::dec << v1 << ", ";
@@ -412,7 +447,8 @@ bool Board::Test()
 	std::cout << std::dec << v5 << ", ";
 	std::cout << std::dec << v6 << ", ";
 	std::cout << std::dec << v7 << ", ";
-	std::cout << std::dec << v8 << std::endl;
+	std::cout << std::dec << v8 << ", ";
+	std::cout << std::dec << v9 << std::endl;
 	std::cout << "Résolus : " << std::dec << solved << "%" << std::endl;
 
 	return false;

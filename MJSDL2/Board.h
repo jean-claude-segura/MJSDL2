@@ -6,6 +6,7 @@
 #include <random>
 #include <cmath>
 #include <map>
+#include <sstream>
 
 class Domino
 {
@@ -215,9 +216,13 @@ constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> InitBasePattern()
 	return BasePattern;
 }
 
+// Available initial positions in the turtles.
 static constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> BasePattern = InitBasePattern();
+// Index to coordinates (x, y, z as Double) of available initial positions in the turtles.
 static constexpr std::array<Coordinates, 144> IndexToCoord = InitIndexToCoord(BasePattern);
+// Coordinates of available initial positions in the turtles as int (Blockers not in)
 static constexpr std::array<std::array<std::array<int, 4>, 8>, 12> BaseTurtlePattern = InitBaseTurtlePattern(BasePattern);
+// Index to coordinates of available initial positions in the turtles as int (Blockers not in)
 static constexpr std::array<std::tuple<int, int, int>, 144> BaseTurtlePatternToCoord = InitBaseTurtlePatternToCoord(BasePattern);
 
 class Board
