@@ -143,6 +143,9 @@ void GraphicBoard::Init()
 	SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));*/
 	//SDL_UpdateWindowSurface(window);
 
+#ifdef _DEBUG	
+	plateau.Test();
+#endif
 	plateau.InitBoard();
 	plateau.SortBoard(direction);
 	itNextMove = plateau.GetMovesLeft().begin();

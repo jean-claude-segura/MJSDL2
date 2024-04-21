@@ -105,6 +105,7 @@ inline void RemoveTile(
 	}
 }
 
+// returns { Nombre de dominos jouables sur ce coup }
 inline int BuildEvalMoves(const std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::const_iterator& itFirst)
 {
 	int moveEval = 0;
@@ -139,7 +140,8 @@ inline int BuildEvalMoves(const std::vector<DominoIndex>& RemovableBoard, std::v
 	return moveEval;
 }
 
-inline int EvalMoves(const std::vector<DominoIndex>& LogicalBoard, const std::array<bool, 144>& Removable)
+// returns { Nombre de dominos jouables sur ce coup , nombre de dominos débloqués }
+inline std::pair<int, int> EvalMoves(const std::vector<DominoIndex>& LogicalBoard, const std::array<bool, 144>& Removable)
 {
 	std::vector<DominoIndex> RemovableBoard; // (domino, index)
 	for (const auto& pair : LogicalBoard)
@@ -148,7 +150,7 @@ inline int EvalMoves(const std::vector<DominoIndex>& LogicalBoard, const std::ar
 	}
 
 	if (Removable.size() == LogicalBoard.size())
-		return 0xFFFF;
+		return { 0xFFFF, 0xFFFF };
 
 	std::sort(RemovableBoard.begin(), RemovableBoard.end(), [](const DominoIndex& left, const DominoIndex& right)
 		{
@@ -156,7 +158,7 @@ inline int EvalMoves(const std::vector<DominoIndex>& LogicalBoard, const std::ar
 		});
 	auto itFirst = RemovableBoard.begin();
 
-	return BuildEvalMoves(RemovableBoard, itFirst);
+	return { BuildEvalMoves(RemovableBoard, itFirst), RemovableBoard.size() };
 }
 
 inline void BuildMoves(const std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::const_iterator& itFirst, std::vector<std::vector<int>>& Moves)
@@ -330,7 +332,8 @@ inline bool stopNow(const std::map<int, Domino>& TilesMap
 	}
 }
 
-inline uint8_t BruteForceOrderingEval(
+// returns { Nombre de dominos jouables sur ce coup , nombre de dominos débloqués }
+inline std::pair<int, int> BruteForceOrderingEval(
 	const std::vector<int>& Move,
 	std::vector<DominoIndex>& LogicalBoard,
 	std::array<bool, 144>& Removable,
@@ -419,16 +422,24 @@ inline bool SolveRec(
 			))
 			{
 				// Scooting step :
-				std::vector<std::pair<std::vector<int>, int>> sortedMoves;
+				std::vector<std::pair<std::vector<int>, std::pair<int, int>>> sortedMoves;
 				for (auto& move : newMoves)
 				{
 					auto eval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard);
 					sortedMoves.emplace_back(std::make_pair(move, eval));
 				}
 				std::sort(sortedMoves.begin(), sortedMoves.end(),
-					[](const std::pair<std::vector<int>, int>& left, const std::pair<std::vector<int>, int>& right)
+					[](const std::pair<std::vector<int>, std::pair<int, int>>& left, const std::pair<std::vector<int>, std::pair<int, int>>& right)
 					{
-						return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
+						//return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
+						/*return left.second.first > right.second.first ||
+						(left.second.first == right.second.first && left.second.second > right.second.second);*/
+						/*return left.first.size() > right.first.size() || (left.first.size() == right.first.size() && left.second.second > right.second.second) ||
+							((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first > right.second.first));*/
+						return
+							left.first.size() > right.first.size() || // Les 4 en priorité
+							(left.first.size() == right.first.size() && left.second.first > right.second.first) || // Le jouables ensuite
+							((left.first.size() == right.first.size() && left.second.first == right.second.first && left.second.second > right.second.second)); // Les débloqués ensuite
 					});
 
 				for (auto& move : sortedMoves)
@@ -481,6 +492,35 @@ inline bool isCenterBlocked(int index, std::map<int, Domino>& TilesMap)
 	return (dominos[0].appairage == dominos[1].appairage && dominos[0].appairage == dominos[2].appairage && dominos[0].appairage == dominos[3].appairage);
 }
 
+
+inline bool checkIfBlocked(int x, int y, int z)
+{
+	if (z == 3)
+	{
+		// z = {z .. z - 3} <=> z = {0 .. 3}
+		// To check A/X/X/X B/X/X/X with 3 A and 3 B among X when there are 4 A and 4 B left.
+		// Among all z = 3
+	}
+	if (z > 1)
+	{
+		// z = { z .. z - 2 }
+		// No idea yet about what I need to look for on 3 tiles high pile.
+	}
+	if (z > 0)
+	{
+		// z = { z .. z - 1 }
+		// To check A/B B/A when 2 A and 2 B are left
+	}
+
+	{
+		// Whatever needs to be check horizontaly 
+		// AAAA****BBBB
+		// AA****BBBB and BBBB****AA when only 2 A are left
+		// AA****BB when there are only 2 A and 2 B left
+	}
+
+	return false;
+}
 /*
 	A  AB
 	A  BA
@@ -505,6 +545,16 @@ inline bool CheckIfBlocked(std::map<int, Domino>& TilesMap)
 	if (TilesMap.contains(0x8A) && isCenterBlocked(0x8A, TilesMap)) return true;
 	if (TilesMap.contains(0x8B) && isCenterBlocked(0x8B, TilesMap)) return true;
 	if (TilesMap.contains(0x8F));
+
+	for(int z = 3; z >= 0; --z)
+	{
+		for (int y = 0; y < 8; ++y)
+		{
+			for (int x = 0; x < 12; ++x)
+			{
+			}
+		}
+	}
 	return false;
 }
 
@@ -684,7 +734,7 @@ inline bool tryPseudoMultipleFirst(Board plateau, std::vector<std::pair<int, int
 	return plateau.IsEmpty();
 }
 
-inline bool tryBruteForceOrdering(Board plateau, std::vector<std::pair<int, int>>& Solution)
+inline bool tryBruteForceOrderingPlayable(Board plateau, std::vector<std::pair<int, int>>& Solution)
 {
 	// New move container to remove the tiles 2 at once or 4 at once.
 	std::vector<std::vector<int>> Moves;
@@ -693,7 +743,7 @@ inline bool tryBruteForceOrdering(Board plateau, std::vector<std::pair<int, int>
 	while (!Moves.empty())
 	{
 		// Scooting step :
-		std::vector<std::pair<std::vector<int>, int>> sortedMoves;
+		std::vector<std::pair<std::vector<int>, std::pair<int, int>>> sortedMoves;
 		auto LogicalBoard = plateau.getLogicalBoard();
 		auto Removable = plateau.getRemovable();
 		auto TilesMap = plateau.getTilesMap();
@@ -706,9 +756,195 @@ inline bool tryBruteForceOrdering(Board plateau, std::vector<std::pair<int, int>
 		}
 
 		std::sort(sortedMoves.begin(), sortedMoves.end(),
-			[](const std::pair<std::vector<int>, int>& left, const std::pair<std::vector<int>, int>& right)
+			[](const std::pair<std::vector<int>, std::pair<int, int>>& left, const std::pair<std::vector<int>, std::pair<int, int>>& right)
 			{
-				return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
+				return left.first.size() > right.first.size() || (left.first.size() == right.first.size() && left.second.first > right.second.first) ||
+					((left.first.size() == right.first.size() && left.second.first == right.second.first && left.second.second > right.second.second));
+			});
+
+		auto Move = sortedMoves.begin()->first;
+		if (Move.size() == 2)
+		{
+			plateau.RemovePairOfTiles(Move[0], Move[1]);
+			Solution.emplace_back(std::make_pair(Move[0], Move[1]));
+		}
+		if (Move.size() == 4)
+		{
+			plateau.RemovePairOfTiles(Move[2], Move[3]);
+			Solution.emplace_back(std::make_pair(Move[2], Move[3]));
+		}
+
+		Moves.clear();
+		ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+	}
+	return plateau.IsEmpty();
+}
+
+inline bool tryBruteForceOrderingPlayableBlockersFirst(Board plateau, std::vector<std::pair<int, int>>& Solution)
+{
+	// New move container to remove the tiles 2 at once or 4 at once.
+	std::vector<std::vector<int>> Moves;
+	ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+
+	while (!Moves.empty())
+	{
+		// Scooting step :
+		std::vector<std::pair<std::vector<int>, std::pair<int, int>>> sortedMoves;
+		auto LogicalBoard = plateau.getLogicalBoard();
+		auto Removable = plateau.getRemovable();
+		auto TilesMap = plateau.getTilesMap();
+		auto WhatsLeft = plateau.getWhatsLeft();
+		auto OccupationBoard = plateau.getOccupationBoard();
+		for (auto& move : Moves)
+		{
+			auto eval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, OccupationBoard);
+			sortedMoves.emplace_back(std::make_pair(move, eval));
+		}
+
+		std::sort(sortedMoves.begin(), sortedMoves.end(),
+			[](const std::pair<std::vector<int>, std::pair<int, int>>& left, const std::pair<std::vector<int>, std::pair<int, int>>& right)
+			{
+				return
+					left.first.size() > right.first.size() || // Les 4 en premier.
+					
+					(left.first.size() == right.first.size() && left.second.first > right.second.first) || // Les jouables ensuite.
+
+					((left.first.size() == right.first.size() && left.second.first == right.second.first && left.second.second > right.second.second)) || // Les déblocables
+
+					// Les bloqueurs.
+					((left.first.size() == right.first.size() && left.second.first == right.second.first && left.second.second > right.second.second) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8F) && right.first.end() == std::find(right.first.begin(), right.first.end(), 0x8F))) ||
+
+					((left.first.size() == right.first.size() && left.second.first == right.second.first && left.second.second > right.second.second) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8F) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8F)) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8E) && right.first.end() == std::find(right.first.begin(), right.first.end(), 0x8E))) ||
+
+					((left.first.size() == right.first.size() && left.second.first == right.second.first && left.second.second > right.second.second) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8F) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8F)) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8E) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8E)) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8D) && right.first.end() == std::find(right.first.begin(), right.first.end(), 0x8D))) ||
+
+					((left.first.size() == right.first.size() && left.second.first == right.second.first && left.second.second > right.second.second) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8F) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8F)) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8E) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8E)) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8D) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8D)) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8C) && right.first.end() == std::find(right.first.begin(), right.first.end(), 0x8C)))
+					;
+			});
+
+		auto Move = sortedMoves.begin()->first;
+		if (Move.size() == 2)
+		{
+			plateau.RemovePairOfTiles(Move[0], Move[1]);
+			Solution.emplace_back(std::make_pair(Move[0], Move[1]));
+		}
+		if (Move.size() == 4)
+		{
+			plateau.RemovePairOfTiles(Move[2], Move[3]);
+			Solution.emplace_back(std::make_pair(Move[2], Move[3]));
+		}
+
+		Moves.clear();
+		ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+	}
+	return plateau.IsEmpty();
+}
+
+inline bool tryBruteForceOrderingFreed(Board plateau, std::vector<std::pair<int, int>>& Solution)
+{
+	// New move container to remove the tiles 2 at once or 4 at once.
+	std::vector<std::vector<int>> Moves;
+	ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+
+	while (!Moves.empty())
+	{
+		// Scooting step :
+		std::vector<std::pair<std::vector<int>, std::pair<int, int>>> sortedMoves;
+		auto LogicalBoard = plateau.getLogicalBoard();
+		auto Removable = plateau.getRemovable();
+		auto TilesMap = plateau.getTilesMap();
+		auto WhatsLeft = plateau.getWhatsLeft();
+		auto OccupationBoard = plateau.getOccupationBoard();
+		for (auto& move : Moves)
+		{
+			auto eval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, OccupationBoard);
+			sortedMoves.emplace_back(std::make_pair(move, eval));
+		}
+
+		std::sort(sortedMoves.begin(), sortedMoves.end(),
+			[](const std::pair<std::vector<int>, std::pair<int, int>>& left, const std::pair<std::vector<int>, std::pair<int, int>>& right)
+			{
+					return left.first.size() > right.first.size() || (left.first.size() == right.first.size() && left.second.second > right.second.second) ||
+						((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first > right.second.first));
+			});
+
+		auto Move = sortedMoves.begin()->first;
+		if (Move.size() == 2)
+		{
+			plateau.RemovePairOfTiles(Move[0], Move[1]);
+			Solution.emplace_back(std::make_pair(Move[0], Move[1]));
+		}
+		if (Move.size() == 4)
+		{
+			plateau.RemovePairOfTiles(Move[2], Move[3]);
+			Solution.emplace_back(std::make_pair(Move[2], Move[3]));
+		}
+
+		Moves.clear();
+		ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+	}
+	return plateau.IsEmpty();
+}
+
+inline bool tryBruteForceOrderingFreedBlockersFirst(Board plateau, std::vector<std::pair<int, int>>& Solution)
+{
+	// New move container to remove the tiles 2 at once or 4 at once.
+	std::vector<std::vector<int>> Moves;
+	ConvertMovesToVector(plateau.GetMovesLeft(), Moves);
+
+	while (!Moves.empty())
+	{
+		// Scooting step :
+		std::vector<std::pair<std::vector<int>, std::pair<int, int>>> sortedMoves;
+		auto LogicalBoard = plateau.getLogicalBoard();
+		auto Removable = plateau.getRemovable();
+		auto TilesMap = plateau.getTilesMap();
+		auto WhatsLeft = plateau.getWhatsLeft();
+		auto OccupationBoard = plateau.getOccupationBoard();
+		for (auto& move : Moves)
+		{
+			auto eval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, OccupationBoard);
+			sortedMoves.emplace_back(std::make_pair(move, eval));
+		}
+
+		std::sort(sortedMoves.begin(), sortedMoves.end(),
+			[](const std::pair<std::vector<int>, std::pair<int, int>>& left, const std::pair<std::vector<int>, std::pair<int, int>>& right)
+			{
+				return
+					(left.first.size() > right.first.size()) ||
+
+					(left.first.size() == right.first.size() && left.second.second > right.second.second) ||
+
+					((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first > right.second.first)) ||
+
+					((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first == right.second.first) &&
+					(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8F) && right.first.end() == std::find(right.first.begin(), right.first.end(), 0x8F))) ||
+
+					((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first == right.second.first) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8F) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8F)) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8E) && right.first.end() == std::find(right.first.begin(), right.first.end(), 0x8E))) ||
+
+					((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first == right.second.first) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8F) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8F)) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8E) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8E)) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8D) && right.first.end() == std::find(right.first.begin(), right.first.end(), 0x8D))) ||
+
+					((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first == right.second.first) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8F) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8F)) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8E) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8E)) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8D) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8D)) &&
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8C) && right.first.end() == std::find(right.first.begin(), right.first.end(), 0x8C)))
+					;
 			});
 
 		auto Move = sortedMoves.begin()->first;
@@ -750,11 +986,14 @@ inline bool SolveRecInit(const Board& plateau,
 
 	std::vector<std::pair<bool (*)(Board plateau, std::vector<std::pair<int, int>>& Solution), std::string>> vTries;
 
-	vTries.push_back({ tryAlwaysFirst, "tryAlwaysFirst" });
+	vTries.push_back({tryAlwaysFirst, "tryAlwaysFirst"});
 	vTries.push_back({ tryRandomHeuristics, "tryRandomHeuristics" });
 	vTries.push_back({ tryGreedy, "tryGreedy" });
 	vTries.push_back({ tryPseudoMultipleFirst, "tryPseudoMultipleFirst" });
-	vTries.push_back({ tryBruteForceOrdering, "tryBruteForceOrdering" });
+	vTries.push_back({ tryBruteForceOrderingPlayable, "tryBruteForceOrderingPlayable" });
+	vTries.push_back({ tryBruteForceOrderingPlayableBlockersFirst, "tryBruteForceOrderingPlayableBlockersFirst" });
+	vTries.push_back({ tryBruteForceOrderingFreed, "tryBruteForceOrderingFreed" });
+	vTries.push_back({ tryBruteForceOrderingFreedBlockersFirst, "tryBruteForceOrderingFreedBlockersFirst" });
 
 	Solution.clear();
 	std::vector<std::pair<int, int>> SolutionTemp;
@@ -797,16 +1036,24 @@ inline bool SolveRecInit(const Board& plateau,
 	ConvertMovesToVector(oldMoves, Moves);
 
 	// Scooting step :
-	std::vector<std::pair<std::vector<int>, int>> sortedMoves;
+	std::vector<std::pair<std::vector<int>, std::pair<int, int>>> sortedMoves;
 	for (auto& move : Moves)
 	{
 		auto eval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard);
 		sortedMoves.emplace_back(std::make_pair(move, eval));
 	}
 	std::sort(sortedMoves.begin(), sortedMoves.end(),
-		[](const std::pair<std::vector<int>, int>& left, const std::pair<std::vector<int>, int>& right)
+		[](const std::pair<std::vector<int>, std::pair<int, int>>& left, const std::pair<std::vector<int>, std::pair<int, int>>& right)
 		{
-			return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
+			//return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
+				/*return left.second.first > right.second.first ||
+					(left.second.first == right.second.first && left.second.second > right.second.second);*/
+			/*return left.first.size() > right.first.size() || (left.first.size() == right.first.size() && left.second.second > right.second.second) ||
+				((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first > right.second.first));*/
+			return
+				left.first.size() > right.first.size() ||
+				(left.first.size() == right.first.size() && left.second.first > right.second.first) ||
+				((left.first.size() == right.first.size() && left.second.first == right.second.first && left.second.second > right.second.second));
 		});
 
 #ifdef _DEBUG
@@ -848,3 +1095,31 @@ inline bool SolveRecInit(const Board& plateau,
 
 	return ret;
 }
+
+#ifdef _DEBUG
+int64_t testAll(const Board& plateau)
+{
+	std::vector<std::pair<bool (*)(Board plateau, std::vector<std::pair<int, int>>& Solution), std::string>> vTries;
+
+	vTries.push_back({ tryAlwaysFirst, "tryAlwaysFirst" });
+	vTries.push_back({ tryRandomHeuristics, "tryRandomHeuristics" });
+	vTries.push_back({ tryGreedy, "tryGreedy" });
+	vTries.push_back({ tryPseudoMultipleFirst, "tryPseudoMultipleFirst" });
+	vTries.push_back({ tryBruteForceOrderingPlayable, "tryBruteForceOrderingPlayable" });
+	vTries.push_back({ tryBruteForceOrderingPlayableBlockersFirst, "tryBruteForceOrderingPlayableBlockersFirst" });
+	vTries.push_back({ tryBruteForceOrderingFreed, "tryBruteForceOrderingFreed" });
+	vTries.push_back({ tryBruteForceOrderingFreedBlockersFirst, "tryBruteForceOrderingFreedBlockersFirst" });
+
+	std::vector<std::pair<int, int>> SolutionTemp;
+
+	uint64_t ret = 0ULL;
+	for (const auto& func : vTries)
+	{
+		ret = ret << 8;
+		ret |= func.first(plateau, SolutionTemp) ? 1 : 0;
+		SolutionTemp.clear();
+	}
+
+	return ret;
+}
+#endif
