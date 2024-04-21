@@ -1,6 +1,10 @@
 #pragma once
 #include "Board.h"
 
+inline uint8_t EvalMoveMaxBlock(
+	const std::vector<int>& Move,
+	std::map<int, Domino>& TilesMap);
+
 inline void RemoveTile(
 	const int index,
 	std::vector<DominoIndex>& LogicalBoard,
@@ -421,25 +425,26 @@ inline bool SolveRec(
 #endif
 			))
 			{
-				// Scooting step :
-				std::vector<std::pair<std::vector<int>, std::pair<int, int>>> sortedMoves;
+				std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> sortedMoves;
 				for (auto& move : newMoves)
 				{
-					auto eval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard);
-					sortedMoves.emplace_back(std::make_pair(move, eval));
+					auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard);
+					auto jouables = evalBruteForceOrderingEval.first;
+					auto debloques = evalBruteForceOrderingEval.second;
+					auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, TilesMap);
+					sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock)));
+					//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, jouables, evalEvalMoveMaxBlock)));
+					//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, evalEvalMoveMaxBlock, debloques)));
 				}
+
 				std::sort(sortedMoves.begin(), sortedMoves.end(),
-					[](const std::pair<std::vector<int>, std::pair<int, int>>& left, const std::pair<std::vector<int>, std::pair<int, int>>& right)
+					[](const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& left, const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& right)
 					{
-						//return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
-						/*return left.second.first > right.second.first ||
-						(left.second.first == right.second.first && left.second.second > right.second.second);*/
-						/*return left.first.size() > right.first.size() || (left.first.size() == right.first.size() && left.second.second > right.second.second) ||
-							((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first > right.second.first));*/
 						return
-							left.first.size() > right.first.size() || // Les 4 en priorité
-							(left.first.size() == right.first.size() && left.second.first > right.second.first) || // Le jouables ensuite
-							((left.first.size() == right.first.size() && left.second.first == right.second.first && left.second.second > right.second.second)); // Les débloqués ensuite
+							left.first.size() > right.first.size() ||
+							left.first.size() == right.first.size() && std::get<0>(left.second) > std::get<0>(right.second) ||
+							(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) > std::get<1>(right.second)) ||
+							(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
 					});
 
 				for (auto& move : sortedMoves)
@@ -592,13 +597,28 @@ inline uint8_t EvalMoveMaxBlock(
 		{
 			// Horizontal block value
 			uint8_t tempBlockValue = 0; 
+
+			// Droite haut
 			for (int x = 0; x < 12 && (TilesMap.contains(BaseTurtlePattern[x][3][0])); ++x, ++tempBlockValue);
-			if (tempBlockValue > 1)
-				blockValue += tempBlockValue;
+			if (tempBlockValue > 0)
+			{
+				if (tempBlockValue == 12 && TilesMap.contains(0x8D))
+					blockValue += TilesMap.contains(0x8E) ? tempBlockValue + 1 : tempBlockValue;
+				else
+					blockValue += tempBlockValue - 1;
+			}
+
 			tempBlockValue = 0;
+
+			// Droite bas
 			for (int x = 0; x < 12 && (TilesMap.contains(BaseTurtlePattern[x][4][0])); ++x, ++tempBlockValue);
-			if (tempBlockValue > 1)
-				blockValue += tempBlockValue;
+			if (tempBlockValue > 0)
+			{
+				if (tempBlockValue == 12 && TilesMap.contains(0x8D))
+					blockValue += TilesMap.contains(0x8E) ? tempBlockValue + 1 : tempBlockValue;
+				else
+					blockValue += tempBlockValue - 1;
+			}
 			// Vertical block value = z
 			//blockValue += 0;
 		}
@@ -606,13 +626,18 @@ inline uint8_t EvalMoveMaxBlock(
 		{
 			// Horizontal block value
 			uint8_t tempBlockValue = 0;
+
+			// Gauche haut
 			for (int x = 11; x >=0 && (TilesMap.contains(BaseTurtlePattern[x][3][0])); --x, ++tempBlockValue);
-			if (tempBlockValue > 1)
-				blockValue += tempBlockValue;
+			if (tempBlockValue > 0)
+				blockValue += tempBlockValue == 12 && TilesMap.contains(0x8C) ? tempBlockValue : tempBlockValue - 1;
+
 			tempBlockValue = 0;
+
+			// Gauche bas
 			for (int x = 11; x >= 0 && (TilesMap.contains(BaseTurtlePattern[x][4][0])); --x, ++tempBlockValue);
-			if (tempBlockValue > 1)
-				blockValue += tempBlockValue;
+			if (tempBlockValue > 0)
+				blockValue += tempBlockValue == 12 && TilesMap.contains(0x8C) ? tempBlockValue : tempBlockValue - 1;
 			// Vertical block value = z
 			//blockValue += 0;
 		}
@@ -622,22 +647,26 @@ inline uint8_t EvalMoveMaxBlock(
 			{
 				// Horizontal block value
 				uint8_t tempBlockValue = 0;
+
+				// Gauche haut
 				for (int x = 11; x >= 0 && (TilesMap.contains(BaseTurtlePattern[x][3][0])); --x, ++tempBlockValue);
-				if (tempBlockValue > 1)
-					blockValue += tempBlockValue;
+				if (tempBlockValue > 0)
+					blockValue += tempBlockValue == 12 && TilesMap.contains(0x8C) ? tempBlockValue + 1 : tempBlockValue;
+
 				tempBlockValue = 0;
+
+				// Gauche bas
 				for (int x = 11; x >= 0 && (TilesMap.contains(BaseTurtlePattern[x][4][0])); --x, ++tempBlockValue);
-				if (tempBlockValue > 1)
-					blockValue += tempBlockValue;
+				if (tempBlockValue > 0)
+					blockValue += tempBlockValue == 12 && TilesMap.contains(0x8C) ? tempBlockValue + 1 : tempBlockValue;
 			}
 			// Vertical block value = z
 			//blockValue += 0;
 		}
 		else if (index == 0x8F)
 		{
-			uint8_t tempBlockValue = 0;
 			// Horizontal block value
-			blockValue += 0;
+			//blockValue += 0;
 			// Vertical block value = z
 			// But here it blocks 4 tiles at once.
 			blockValue += 4 * 4;
@@ -648,17 +677,45 @@ inline uint8_t EvalMoveMaxBlock(
 			int x = std::get<0>(temp);
 			int y = std::get<1>(temp);
 			int z = std::get<2>(temp);
+			int curX = 0;
 			// Vertical block value = z
 			blockValue += z;
 			// Horizontal block value
 			uint8_t tempBlockValue = 0;
-			for (int curX = x + 1; curX < 12 && (TilesMap.contains(BaseTurtlePattern[curX][y][z])); ++curX, ++tempBlockValue);
-			if (tempBlockValue > 1)
-				blockValue += tempBlockValue;
+			// Droite
+			for (curX = x + 1; curX < 12 && (TilesMap.contains(BaseTurtlePattern[curX][y][z])); ++curX, ++tempBlockValue);
+			if (tempBlockValue > 0)
+			{
+				if (z == 0 && (y == 3 || y == 4))
+				{
+					if ((x == 11 || curX == 12) && TilesMap.contains(0x8D))
+						blockValue += TilesMap.contains(0x8E) ? tempBlockValue + 1 : tempBlockValue;
+					else
+						blockValue += tempBlockValue - 1;
+				}
+				else
+				{
+					blockValue += tempBlockValue - 1;
+				}
+
+			}
 			tempBlockValue = 0;
-			for (int curX = x - 1; curX >= 0 && (TilesMap.contains(BaseTurtlePattern[curX][y][z])); --curX, ++tempBlockValue);
-			if (tempBlockValue > 1)
-				blockValue += tempBlockValue;
+			// Gauche
+			for (curX = x - 1; curX >= 0 && (TilesMap.contains(BaseTurtlePattern[curX][y][z])); --curX, ++tempBlockValue);
+			if (tempBlockValue > 0)
+			{
+				if (z == 0 && (y == 3 || y == 4))
+				{
+					if ((x == 0 || curX == -1) && TilesMap.contains(0x8C))
+						blockValue += TilesMap.contains(0x8E) ? tempBlockValue + 1 : tempBlockValue;
+					else
+						blockValue += tempBlockValue - 1;
+				}
+				else
+				{
+					blockValue += tempBlockValue - 1;
+				}
+			}
 		}
 	}
 
@@ -1194,25 +1251,26 @@ inline bool SolveRecInit(const Board& plateau,
 	std::vector<std::vector<int>> Moves;
 	ConvertMovesToVector(oldMoves, Moves);
 
-	// Scooting step :
-	std::vector<std::pair<std::vector<int>, std::pair<int, int>>> sortedMoves;
+	std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> sortedMoves;
 	for (auto& move : Moves)
 	{
-		auto eval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard);
-		sortedMoves.emplace_back(std::make_pair(move, eval));
+		auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard);
+		auto jouables = evalBruteForceOrderingEval.first;
+		auto debloques = evalBruteForceOrderingEval.second;
+		auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, TilesMap);
+		sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock)));
+		//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, jouables, evalEvalMoveMaxBlock)));
+		//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, evalEvalMoveMaxBlock, debloques)));
 	}
+
 	std::sort(sortedMoves.begin(), sortedMoves.end(),
-		[](const std::pair<std::vector<int>, std::pair<int, int>>& left, const std::pair<std::vector<int>, std::pair<int, int>>& right)
+		[](const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& left, const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& right)
 		{
-			//return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
-				/*return left.second.first > right.second.first ||
-					(left.second.first == right.second.first && left.second.second > right.second.second);*/
-			/*return left.first.size() > right.first.size() || (left.first.size() == right.first.size() && left.second.second > right.second.second) ||
-				((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first > right.second.first));*/
 			return
 				left.first.size() > right.first.size() ||
-				(left.first.size() == right.first.size() && left.second.first > right.second.first) ||
-				((left.first.size() == right.first.size() && left.second.first == right.second.first && left.second.second > right.second.second));
+				left.first.size() == right.first.size() && std::get<0>(left.second) > std::get<0>(right.second) ||
+				(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) > std::get<1>(right.second)) ||
+				(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
 		});
 
 #ifdef _DEBUG
