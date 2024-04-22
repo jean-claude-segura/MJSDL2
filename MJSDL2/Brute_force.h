@@ -631,12 +631,15 @@ inline bool checkIfBlocked(int x, int y, int z)
 	0x77 -> 0x87 third floor
 	0x88 -> 0x8b fourth floor
 */
-inline bool CheckIfBlocked(const std::map<int, Domino>& TilesMap)
+inline bool CheckIfBlockedFromStart(const std::map<int, Domino>& TilesMap)
 {
 	// Index -> domino
 	// std::map<int, Domino>& TilesMap
 	
-	if (TilesMap.contains(0x8F))
+	if (TilesMap.size() < 144)
+		return false;
+
+	if (TilesMap.contains(0x8F)) // Useless condition for a starting pos. I keep it for a probable future copy and paste.
 	{
 		auto bestBlocker = TilesMap.find(0x8F)->second.appairage;
 
@@ -669,19 +672,22 @@ inline bool CheckIfBlocked(const std::map<int, Domino>& TilesMap)
 	}
 
 	std::vector<int> startPos;
+	// Useless conditions for a starting pos. I keep them for a probable future copy and paste.
 	if (TilesMap.contains(0x88)) startPos.emplace_back(0x88);
 	if (TilesMap.contains(0x89)) startPos.emplace_back(0x89);
 	if (TilesMap.contains(0x8A)) startPos.emplace_back(0x8A);
 	if (TilesMap.contains(0x8B)) startPos.emplace_back(0x8B);
 
-	if (!startPos.empty())
+	if (!startPos.empty()) // Useless condition for a starting pos. I keep it for a probable future copy and paste.
 	{
+		// Pure vertical lock
 		for (const auto& index : startPos)
 		{
 			auto c = IndexToBoardCoord[index];
 			auto x = std::get<0>(c);
 			auto y = std::get<1>(c);
 			auto z = std::get<2>(c);
+			// All of this can be harcoded. I keep it like this for a probable future copy and paste.
 			auto firstBlocker = TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage;
 			if (
 				firstBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 1])->second.appairage &&
@@ -692,12 +698,25 @@ inline bool CheckIfBlocked(const std::map<int, Domino>& TilesMap)
 		}
 	}
 
+	// Doesn't work if not a starting pos. There could be holes in the lines.
 	for(int z = 3; z >= 0; --z)
 	{
 		for (int y = 0; y < 8; ++y)
 		{
-			for (int x = std::max(0,HorizontalLimits[y][z].first); x <= HorizontalLimits[y][z].second; ++x)
+			auto horizontalLimits = HorizontalLimits[y][z];
+			if (horizontalLimits.second - horizontalLimits.first + 1 > 7)
 			{
+				auto first = TilesMap.find(BoardCoordToIndex[horizontalLimits.first][y][z])->second;
+				auto last = TilesMap.find(BoardCoordToIndex[horizontalLimits.second][y][z])->second;
+				auto firstCount = 0;
+				auto lastCount = 0;
+				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+				{
+					if (TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage == first.appairage) ++firstCount;
+					if (TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage == last.appairage) ++lastCount;
+				}
+				if (firstCount == lastCount && lastCount == 4)
+					return true;
 			}
 		}
 	}
@@ -1384,7 +1403,7 @@ inline bool SolveRecInit(const Board& plateau,
 	for (auto& move : Solution)
 		std::cout << move.first << ";" << move.second << std::endl;
 #endif
-	if (CheckIfBlocked(TilesMap))
+	if (CheckIfBlockedFromStart(TilesMap))
 	{
 #ifdef _DEBUG
 		std::cout << "************" << std::endl;

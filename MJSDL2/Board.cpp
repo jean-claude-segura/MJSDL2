@@ -385,7 +385,7 @@ bool Board::Test()
 	do
 	{
 		InitBoard();
-		if (CheckIfBlocked(TilesMap))
+		if (CheckIfBlockedFromStart(TilesMap))
 		{
 			blocked.emplace_back(i++);
 			continue;
@@ -492,7 +492,7 @@ bool Board::TestBlocked()
 	for (int i = 0; i < 99; ++i)
 	{
 		InitBoard();
-		if (CheckIfBlocked(TilesMap))
+		if (CheckIfBlockedFromStart(TilesMap))
 			blocked.emplace_back(i);
 	}
 
