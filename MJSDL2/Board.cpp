@@ -379,9 +379,17 @@ bool Board::Test()
 	uint64_t ret = 0ULL;
 	int solved = 0;
 	std::stringstream strout;
-	for (int i = 0; i < 99; ++i)
+	std::vector<int> blocked;
+	int i = 0;
+	bool goOn = true;
+	do
 	{
 		InitBoard();
+		if (CheckIfBlocked(TilesMap))
+		{
+			blocked.emplace_back(i++);
+			continue;
+		}
 		auto temp = testAll(*this);
 		if (temp != 0ULL)
 			++solved;
@@ -416,7 +424,17 @@ bool Board::Test()
 		strout << std::dec << v7 << ", ";
 		strout << std::dec << v8 << ", ";
 		strout << std::dec << v9 << std::endl;
-	}
+		++i;
+
+		auto tempRet = ret;
+		for (int dec = 0; dec < 9 && goOn; ++dec)
+		{
+			auto rv1 = tempRet & 0b01111111;
+			tempRet = tempRet >> 7;
+			if (rv1 == 0b01111111)
+				goOn = false;
+		}
+	} while (goOn);
 
 	std::cout << strout.str();
 
@@ -449,7 +467,45 @@ bool Board::Test()
 	std::cout << std::dec << v7 << ", ";
 	std::cout << std::dec << v8 << ", ";
 	std::cout << std::dec << v9 << std::endl;
-	std::cout << "Résolus : " << std::dec << solved << "%" << std::endl;
+
+	auto pourcent = solved * 100. / (i - blocked.size());
+
+	std::cout << "Résolus : " << std::dec << pourcent << "%" << std::endl;
+
+	std::cout << std::endl;
+
+	auto it = blocked.begin();
+	for (; it != blocked.end() - 1; ++it)
+	{
+		std::cout << std::dec << *it << ", ";
+	}
+	std::cout << std::dec << *it << std::endl;
+
+	std::cout << "Bloqués : " << std::dec << blocked.size() << "." << std::endl;
+
+	return false;
+}
+
+bool Board::TestBlocked()
+{
+	std::vector<int> blocked;
+	for (int i = 0; i < 99; ++i)
+	{
+		InitBoard();
+		if (CheckIfBlocked(TilesMap))
+			blocked.emplace_back(i);
+	}
+
+	std::cout << std::endl;
+
+	auto it = blocked.begin();
+	for (; it != blocked.end() - 1; ++it)
+	{
+		std::cout << std::dec << *it << ", ";
+	}
+	std::cout << std::dec << *it << std::endl;
+
+	std::cout << "Bloqués : " << std::dec << blocked.size() << "." << std::endl;
 
 	return false;
 }

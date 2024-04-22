@@ -251,6 +251,7 @@ public:
 	bool Solve();
 #ifdef _DEBUG
 	bool Test();
+	bool TestBlocked();
 #endif
 	const std::vector<std::pair<int, int>>& GetSolution() { return Solution; }
 	const std::vector<std::pair<int, int>>& GetHistory() { return History; }

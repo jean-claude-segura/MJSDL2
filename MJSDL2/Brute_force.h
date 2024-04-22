@@ -503,8 +503,11 @@ inline bool checkIfBlocked(int x, int y, int z)
 	if (z == 3)
 	{
 		// z = {z .. z - 3} <=> z = {0 .. 3}
-		// To check A/X/X/X B/X/X/X with 3 A and 3 B among X when there are 4 A and 4 B left.
+		// To check A/X/X/X & B/X/X/X with 3 A and 3 B among X when there are 4 A and 4 B left.
 		// Among all z = 3
+		// A/A when there are only 2 A left.
+		// A/.../A/... when there are only 2 A left : generalisation.
+		// A/.../B/.../ & B/.../A/... when there are only 2 A and 2 B left : generalisation.
 	}
 	if (z > 1)
 	{
@@ -542,7 +545,7 @@ inline bool checkIfBlocked(int x, int y, int z)
 	0x77 -> 0x87 third floor
 	0x88 -> 0x8b fourth floor
 */
-inline bool CheckIfBlocked(std::map<int, Domino>& TilesMap)
+inline bool CheckIfBlocked(const std::map<int, Domino>& TilesMap)
 {
 	// Index -> domino
 	// std::map<int, Domino>& TilesMap
