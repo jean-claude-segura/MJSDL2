@@ -639,64 +639,108 @@ inline bool CheckIfLockedFromStart(const std::map<int, Domino>& TilesMap)
 	if (TilesMap.size() < 144)
 		return false;
 
-	if (TilesMap.contains(0x8F)) // Useless condition for a starting pos. I keep it for a probable future copy and paste.
-	{
-		auto bestPadlock = TilesMap.find(0x8F)->second.appairage;
-
-		std::vector<int> startPos;
-		startPos.emplace_back(0x88);
-		startPos.emplace_back(0x89);
-		startPos.emplace_back(0x8A);
-		startPos.emplace_back(0x8B);
-
-		int pairs = 0;
-		for (const auto& index : startPos)
-		{
-			auto c = IndexToBoardCoord[index];
-			auto x = std::get<0>(c);
-			auto y = std::get<1>(c);
-			auto z = std::get<2>(c);
-			if (bestPadlock == TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage) ++pairs;
-			if (pairs == 3)
-				return true;
-			if (bestPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 1])->second.appairage) ++pairs;
-			if (pairs == 3)
-				return true;
-			if (bestPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 2])->second.appairage) ++pairs;
-			if (pairs == 3)
-				return true;
-			if (bestPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 3])->second.appairage) ++pairs;
-			if (pairs == 3)
-				return true;
-		}
-	}
+	auto bestPadlock = TilesMap.find(0x8F)->second.appairage;
 
 	std::vector<int> startPos;
-	// Useless conditions for a starting pos. I keep them for a probable future copy and paste.
-	if (TilesMap.contains(0x88)) startPos.emplace_back(0x88);
-	if (TilesMap.contains(0x89)) startPos.emplace_back(0x89);
-	if (TilesMap.contains(0x8A)) startPos.emplace_back(0x8A);
-	if (TilesMap.contains(0x8B)) startPos.emplace_back(0x8B);
+	startPos.emplace_back(0x88);
+	startPos.emplace_back(0x89);
+	startPos.emplace_back(0x8A);
+	startPos.emplace_back(0x8B);
 
-	if (!startPos.empty()) // Useless condition for a starting pos. I keep it for a probable future copy and paste.
+	/**/
+	int pairs = 0;
+	for (auto itIndex = startPos.begin(); itIndex != startPos.end(); ++itIndex)
 	{
+		auto c = IndexToBoardCoord[*itIndex];
+		auto x = std::get<0>(c);
+		auto y = std::get<1>(c);
+		auto z = std::get<2>(c);
+
+		auto firstPadlock = TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage;
+		if (bestPadlock == firstPadlock) ++pairs;
+		if (pairs == 3)
+			return true;
+		if (bestPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 1])->second.appairage) ++pairs;
+		if (pairs == 3)
+			return true;
+		if (bestPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 2])->second.appairage) ++pairs;
+		if (pairs == 3)
+			return true;
+		if (bestPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 3])->second.appairage) ++pairs;
+		if (pairs == 3)
+			return true;
+
 		// Pure vertical lock
-		for (const auto& index : startPos)
+		// All of this can be harcoded. I keep it like this for a probable future copy and paste.
+		if (
+			firstPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 1])->second.appairage &&
+			firstPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 2])->second.appairage &&
+			firstPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 3])->second.appairage
+			)
+			return true;
+
+		if (itIndex < startPos.end() - 1)
 		{
-			auto c = IndexToBoardCoord[index];
-			auto x = std::get<0>(c);
-			auto y = std::get<1>(c);
-			auto z = std::get<2>(c);
-			// All of this can be harcoded. I keep it like this for a probable future copy and paste.
-			auto firstPadlock = TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage;
-			if (
-				firstPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 1])->second.appairage &&
-				firstPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 2])->second.appairage &&
-				firstPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 3])->second.appairage
-				)
-				return true;
+			auto itRef = itIndex;
+			auto refAppairage = TilesMap.find(*itRef)->second.appairage;
+			auto refBoardCoord = IndexToBoardCoord[*itRef];
+			int refX = std::get<0>(refBoardCoord);
+			int refY = std::get<1>(refBoardCoord);
+			int refZ = std::get<2>(refBoardCoord);
+			for (auto itSecond = itRef + 1; itSecond != startPos.end(); ++itSecond)
+			{
+				auto secondAppairage = TilesMap.find(*itSecond)->second.appairage;
+				auto secondBoardCoord = IndexToBoardCoord[*itSecond];
+				int secondX = std::get<0>(secondBoardCoord);
+				int secondY = std::get<1>(secondBoardCoord);
+				auto refCount = 0;
+				auto secondCount = 0;
+				for (int z = refZ; z >= 0; --z)
+				{
+					auto compAppairage = TilesMap.find(BoardCoordToIndex[refX][refY][z])->second.appairage;
+					if (refAppairage == compAppairage) ++refCount;
+					if (secondAppairage == compAppairage) ++secondCount;
+					compAppairage = TilesMap.find(BoardCoordToIndex[secondX][secondY][z])->second.appairage;
+					if (refAppairage == compAppairage) ++refCount;
+					if (secondAppairage == compAppairage) ++secondCount;
+					if (secondCount == 4 && refCount == secondCount)
+						return true;
+				}
+			}
 		}
 	}
+
+	/**/
+	/**/
+	auto first = TilesMap.find(0x8C)->second.appairage;
+	auto last = TilesMap.find(0x8D)->second.appairage;
+	if (first != last)
+	{
+		auto firstCount = 0;
+		auto lastCount = last == TilesMap.find(0x8E)->second.appairage ? 1 : 0;
+		for (int x = 0; x < 12; ++x)
+		{
+			if (TilesMap.find(BoardCoordToIndex[x][3][0])->second.appairage == first) ++firstCount;
+			if (TilesMap.find(BoardCoordToIndex[x][3][0])->second.appairage == last) ++lastCount;
+		}
+		if (lastCount == 3 && firstCount == lastCount)
+			return true;
+	}
+
+	last = TilesMap.find(0x8E)->second.appairage;
+	if (first != last)
+	{
+		auto firstCount = 0;
+		auto lastCount = last == TilesMap.find(0x8D)->second.appairage ? 1 : 0;
+		for (int x = 0; x < 12; ++x)
+		{
+			if (TilesMap.find(BoardCoordToIndex[x][3][0])->second.appairage == first) ++firstCount;
+			if (TilesMap.find(BoardCoordToIndex[x][3][0])->second.appairage == last) ++lastCount;
+		}
+		if (lastCount == 3 && firstCount == lastCount)
+			return true;
+	}
+	/**/
 
 	// Doesn't work if not a starting pos. There could be holes in the lines.
 	for(int z = 3; z >= 0; --z)
@@ -708,15 +752,18 @@ inline bool CheckIfLockedFromStart(const std::map<int, Domino>& TilesMap)
 			{
 				auto first = TilesMap.find(BoardCoordToIndex[horizontalLimits.first][y][z])->second;
 				auto last = TilesMap.find(BoardCoordToIndex[horizontalLimits.second][y][z])->second;
-				auto firstCount = 0;
-				auto lastCount = 0;
-				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+				if (first != last)
 				{
-					if (TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage == first.appairage) ++firstCount;
-					if (TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage == last.appairage) ++lastCount;
+					auto firstCount = 0;
+					auto lastCount = 0;
+					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+					{
+						if (TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage == first.appairage) ++firstCount;
+						if (TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage == last.appairage) ++lastCount;
+					}
+					if (lastCount == 4 && firstCount == lastCount)
+						return true;
 				}
-				if (firstCount == lastCount && lastCount == 4)
-					return true;
 			}
 		}
 	}

@@ -474,13 +474,15 @@ bool Board::Test()
 
 	std::cout << std::endl;
 
-	auto it = Locked.begin();
-	for (; it != Locked.end() - 1; ++it)
+	if (!Locked.empty())
 	{
-		std::cout << std::dec << *it << ", ";
+		auto it = Locked.begin();
+		for (; it != Locked.end() - 1; ++it)
+		{
+			std::cout << std::dec << *it << ", ";
+		}
+		std::cout << std::dec << *it << std::endl;
 	}
-	std::cout << std::dec << *it << std::endl;
-
 	std::cout << "Bloqués : " << std::dec << Locked.size() << "." << std::endl;
 
 	return false;
