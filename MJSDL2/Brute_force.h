@@ -854,9 +854,12 @@ inline bool tryRandomHeuristics(Board plateau, std::vector<std::pair<int, int>>&
 			auto jouables = evalBruteForceOrderingEval.first;
 			auto debloques = evalBruteForceOrderingEval.second;
 			auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, TilesMap);
-			sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock)));
-			//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, jouables, evalEvalMoveMaxBlock)));
-			//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, evalEvalMoveMaxBlock, debloques)));
+			sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock))); // 25
+			//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, jouables, evalEvalMoveMaxBlock))); // 22
+			//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, evalEvalMoveMaxBlock, debloques))); // 23
+			//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, evalEvalMoveMaxBlock, jouables))); // 13
+			//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(evalEvalMoveMaxBlock, debloques, jouables))); // 17
+			//sortedMoves.emplace_back(std::make_pair(move, std::make_tuple(evalEvalMoveMaxBlock, jouables, debloques))); // 19
 		}
 
 		std::sort(sortedMoves.begin(), sortedMoves.end(),
