@@ -159,8 +159,6 @@ inline Uint32 SDL_TextureReadPixel(SDL_Renderer* renderer, SDL_Texture* texture,
 * ***************************************************************************************************************************************************************************************** */
 inline SDL_Texture* SDL_GreyscaleTexture(SDL_Renderer* renderer, SDL_Texture* src, SDL_Texture*& tgt)
 {
-	SDL_DuplicateTexture(renderer, src, tgt);
-
 	auto renderTarget = SDL_GetRenderTarget(renderer);
 	SDL_SetRenderTarget(renderer, src);
 

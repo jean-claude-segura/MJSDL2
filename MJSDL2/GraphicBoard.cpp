@@ -1309,7 +1309,6 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 		{
 			// Défaite :
 			SDL_Texture* greyScreen = NULL;
-			greyScreen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
 			SDL_GreyscaleTexture(renderer, screen, greyScreen);
 			SDL_SetRenderTarget(renderer, renderTargetOrg);
 			SDL_RenderCopy(renderer, greyScreen, NULL, NULL);
