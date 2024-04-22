@@ -187,7 +187,7 @@ public:
 	const Domino getDominoFromIndex(const int index) { return TilesMap.find(index)->second; }
 	const bool getRemovableFromIndex(const int index) { return Removable[index]; }
 	bool RemovePairOfTiles(const int, const int);
-	const bool IsBlocked() { return Moves.size() == 0; }
+	const bool IsLocked() { return Moves.size() == 0; }
 	const int HowManyMovesLeft() { return Moves.size(); }
 	const std::vector<std::pair<int, int>>& GetMovesLeft() { return Moves; }
 	bool IsEmpty() { return WhatsLeft.empty(); }
@@ -198,7 +198,7 @@ public:
 	bool Solve();
 #ifdef _DEBUG
 	bool Test();
-	bool TestBlocked();
+	bool TestLocked();
 #endif
 	const std::vector<std::pair<int, int>>& GetSolution() { return Solution; }
 	const std::vector<std::pair<int, int>>& GetHistory() { return History; }

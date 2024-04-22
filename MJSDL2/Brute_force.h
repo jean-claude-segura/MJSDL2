@@ -570,7 +570,7 @@ A
 A
 A
 */
-inline bool isCenterBlocked(int index, std::map<int, Domino>& TilesMap)
+inline bool isCenterLocked(int index, std::map<int, Domino>& TilesMap)
 {
 	std::vector<Domino> dominos;
 	int dec1 = ((index - 0x88) >> 1) << 1;
@@ -584,7 +584,7 @@ inline bool isCenterBlocked(int index, std::map<int, Domino>& TilesMap)
 }
 
 
-inline bool checkIfBlocked(int x, int y, int z)
+inline bool checkIfLocked(int x, int y, int z)
 {
 	if (z == 3)
 	{
@@ -631,7 +631,7 @@ inline bool checkIfBlocked(int x, int y, int z)
 	0x77 -> 0x87 third floor
 	0x88 -> 0x8b fourth floor
 */
-inline bool CheckIfBlockedFromStart(const std::map<int, Domino>& TilesMap)
+inline bool CheckIfLockedFromStart(const std::map<int, Domino>& TilesMap)
 {
 	// Index -> domino
 	// std::map<int, Domino>& TilesMap
@@ -1403,11 +1403,11 @@ inline bool SolveRecInit(const Board& plateau,
 	for (auto& move : Solution)
 		std::cout << move.first << ";" << move.second << std::endl;
 #endif
-	if (CheckIfBlockedFromStart(TilesMap))
+	if (CheckIfLockedFromStart(TilesMap))
 	{
 #ifdef _DEBUG
 		std::cout << "************" << std::endl;
-		std::cout << "* Blocked. *" << std::endl;
+		std::cout << "* Locked. *" << std::endl;
 		std::cout << "************" << std::endl;
 #endif
 		return false;

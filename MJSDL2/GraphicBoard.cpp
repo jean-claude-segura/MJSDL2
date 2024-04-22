@@ -612,7 +612,7 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 			itNextMove = plateau.GetMovesLeft().begin();
 			itPrevMove = plateau.GetMovesLeft().end();
 			// Tile clicked :
-			if (!plateau.IsBlocked() && plateau.getRemovableFromIndex(index))
+			if (!plateau.IsLocked() && plateau.getRemovableFromIndex(index))
 			{
 				if (!clicked[index])
 				{
@@ -1165,7 +1165,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 
 	SDL_Texture* screen = NULL;
 	auto renderTargetOrg = SDL_GetRenderTarget(renderer);
-	if (plateau.IsBlocked())
+	if (plateau.IsLocked())
 	{
 		screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
 		SDL_SetRenderTarget(renderer, screen);
@@ -1244,7 +1244,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 	}
 
 	// Fin de partie :
-	if (plateau.IsBlocked())
+	if (plateau.IsLocked())
 	{
 		if (plateau.IsEmpty())
 		{
@@ -1454,7 +1454,7 @@ void GraphicBoard::Loop()
 						itNextMove = plateau.GetMovesLeft().begin();
 						itPrevMove = plateau.GetMovesLeft().end();
 
-						if (!plateau.IsBlocked() && plateau.getRemovableFromIndex(index))
+						if (!plateau.IsLocked() && plateau.getRemovableFromIndex(index))
 						{
 							if (0 <= selected && selected < 143)
 								clicked[selected] = false;
