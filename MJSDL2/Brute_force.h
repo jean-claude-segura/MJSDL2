@@ -545,11 +545,63 @@ inline bool checkIfBlocked(int x, int y, int z)
 inline bool CheckIfBlocked(std::map<int, Domino>& TilesMap)
 {
 	// Index -> domino
-	if (TilesMap.contains(0x88) && isCenterBlocked(0x88, TilesMap)) return true;
-	if (TilesMap.contains(0x89) && isCenterBlocked(0x89, TilesMap)) return true;
-	if (TilesMap.contains(0x8A) && isCenterBlocked(0x8A, TilesMap)) return true;
-	if (TilesMap.contains(0x8B) && isCenterBlocked(0x8B, TilesMap)) return true;
-	if (TilesMap.contains(0x8F));
+	// std::map<int, Domino>& TilesMap
+	
+	if (TilesMap.contains(0x8F))
+	{
+		auto bestBlocker = TilesMap.find(0x8F)->second.appairage;
+
+		std::vector<int> startPos;
+		startPos.emplace_back(0x88);
+		startPos.emplace_back(0x89);
+		startPos.emplace_back(0x8A);
+		startPos.emplace_back(0x8B);
+
+		int pairs = 0;
+		for (const auto& index : startPos)
+		{
+			auto c = BaseTurtlePatternToCoord[index];
+			auto x = std::get<0>(c);
+			auto y = std::get<1>(c);
+			auto z = std::get<2>(c);
+			if (bestBlocker == TilesMap.find(BaseTurtlePattern[x][y][z])->second.appairage) ++pairs;
+			if (pairs == 3)
+				return true;
+			if (bestBlocker == TilesMap.find(BaseTurtlePattern[x][y][z - 1])->second.appairage) ++pairs;
+			if (pairs == 3)
+				return true;
+			if (bestBlocker == TilesMap.find(BaseTurtlePattern[x][y][z - 2])->second.appairage) ++pairs;
+			if (pairs == 3)
+				return true;
+			if (bestBlocker == TilesMap.find(BaseTurtlePattern[x][y][z - 3])->second.appairage) ++pairs;
+			if (pairs == 3)
+				return true;
+		}
+	}
+
+	std::vector<int> startPos;
+	if (TilesMap.contains(0x88)) startPos.emplace_back(0x88);
+	if (TilesMap.contains(0x89)) startPos.emplace_back(0x89);
+	if (TilesMap.contains(0x8A)) startPos.emplace_back(0x8A);
+	if (TilesMap.contains(0x8B)) startPos.emplace_back(0x8B);
+
+	if (!startPos.empty())
+	{
+		for (const auto& index : startPos)
+		{
+			auto c = BaseTurtlePatternToCoord[index];
+			auto x = std::get<0>(c);
+			auto y = std::get<1>(c);
+			auto z = std::get<2>(c);
+			auto firstBlocker = TilesMap.find(BaseTurtlePattern[x][y][z])->second.appairage;
+			if (
+				firstBlocker == TilesMap.find(BaseTurtlePattern[x][y][z - 1])->second.appairage &&
+				firstBlocker == TilesMap.find(BaseTurtlePattern[x][y][z - 2])->second.appairage &&
+				firstBlocker == TilesMap.find(BaseTurtlePattern[x][y][z - 3])->second.appairage
+				)
+				return true;
+		}
+	}
 
 	for(int z = 3; z >= 0; --z)
 	{
@@ -1240,11 +1292,18 @@ inline bool SolveRecInit(const Board& plateau,
 	for (auto& move : Solution)
 		std::cout << move.first << ";" << move.second << std::endl;
 #endif
+	if (CheckIfBlocked(TilesMap))
+	{
+#ifdef _DEBUG
+		std::cout << "************" << std::endl;
+		std::cout << "* Blocked. *" << std::endl;
+		std::cout << "************" << std::endl;
+#endif
+		return false;
+	}
+
 	return true;
 	Solution.clear();
-	if (CheckIfBlocked(TilesMap))
-		return false;
-
 	bool ret = false;
 
 	// New move container to remove the tiles 2 at once or 4 at once.
