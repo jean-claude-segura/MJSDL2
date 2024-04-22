@@ -446,6 +446,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 
 					plateau.RemovePairOfTiles(move.first, move.second);
 
+					itNextMove = plateau.GetMovesLeft().begin();
+					itPrevMove = plateau.GetMovesLeft().end();
+
 					Refresh(false);
 				}
 
