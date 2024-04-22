@@ -749,87 +749,87 @@ inline uint8_t EvalMoveMaxBlock(
 	const std::vector<int>& Move,
 	std::map<int, Domino>& TilesMap)
 {
-	uint8_t blockValue = 0;
+	uint8_t lockingValue = 0;
 	for (const auto& index : Move)
 	{
 		// Horizontal block value
 		if (index == 0x8C)
 		{
 			// Horizontal block value
-			uint8_t tempBlockValue = 0; 
+			uint8_t tempLockingValue = 0; 
 
 			// Droite haut
-			for (int x = 0; x < 12 && (TilesMap.contains(BoardCoordToIndex[x][3][0])); ++x, ++tempBlockValue);
-			if (tempBlockValue > 0)
+			for (int x = 0; x < 12 && (TilesMap.contains(BoardCoordToIndex[x][3][0])); ++x, ++tempLockingValue);
+			if (tempLockingValue > 0)
 			{
-				if (tempBlockValue == 12 && TilesMap.contains(0x8D))
-					blockValue += TilesMap.contains(0x8E) ? tempBlockValue + 1 : tempBlockValue;
+				if (tempLockingValue == 12 && TilesMap.contains(0x8D))
+					lockingValue += TilesMap.contains(0x8E) ? tempLockingValue + 1 : tempLockingValue;
 				else
-					blockValue += tempBlockValue - 1;
+					lockingValue += tempLockingValue - 1;
 			}
 
-			tempBlockValue = 0;
+			tempLockingValue = 0;
 
 			// Droite bas
-			for (int x = 0; x < 12 && (TilesMap.contains(BoardCoordToIndex[x][4][0])); ++x, ++tempBlockValue);
-			if (tempBlockValue > 0)
+			for (int x = 0; x < 12 && (TilesMap.contains(BoardCoordToIndex[x][4][0])); ++x, ++tempLockingValue);
+			if (tempLockingValue > 0)
 			{
-				if (tempBlockValue == 12 && TilesMap.contains(0x8D))
-					blockValue += TilesMap.contains(0x8E) ? tempBlockValue + 1 : tempBlockValue;
+				if (tempLockingValue == 12 && TilesMap.contains(0x8D))
+					lockingValue += TilesMap.contains(0x8E) ? tempLockingValue + 1 : tempLockingValue;
 				else
-					blockValue += tempBlockValue - 1;
+					lockingValue += tempLockingValue - 1;
 			}
 			// Vertical block value = z
-			//blockValue += 0;
+			//lockingValue += 0;
 		}
 		else if (index == 0x8D)
 		{
 			// Horizontal block value
-			uint8_t tempBlockValue = 0;
+			uint8_t tempLockingValue = 0;
 
 			// Gauche haut
-			for (int x = 11; x >=0 && (TilesMap.contains(BoardCoordToIndex[x][3][0])); --x, ++tempBlockValue);
-			if (tempBlockValue > 0)
-				blockValue += tempBlockValue == 12 && TilesMap.contains(0x8C) ? tempBlockValue : tempBlockValue - 1;
+			for (int x = 11; x >=0 && (TilesMap.contains(BoardCoordToIndex[x][3][0])); --x, ++tempLockingValue);
+			if (tempLockingValue > 0)
+				lockingValue += tempLockingValue == 12 && TilesMap.contains(0x8C) ? tempLockingValue : tempLockingValue - 1;
 
-			tempBlockValue = 0;
+			tempLockingValue = 0;
 
 			// Gauche bas
-			for (int x = 11; x >= 0 && (TilesMap.contains(BoardCoordToIndex[x][4][0])); --x, ++tempBlockValue);
-			if (tempBlockValue > 0)
-				blockValue += tempBlockValue == 12 && TilesMap.contains(0x8C) ? tempBlockValue : tempBlockValue - 1;
+			for (int x = 11; x >= 0 && (TilesMap.contains(BoardCoordToIndex[x][4][0])); --x, ++tempLockingValue);
+			if (tempLockingValue > 0)
+				lockingValue += tempLockingValue == 12 && TilesMap.contains(0x8C) ? tempLockingValue : tempLockingValue - 1;
 			// Vertical block value = z
-			//blockValue += 0;
+			//lockingValue += 0;
 		}
 		else if (index == 0x8E)
 		{
 			if (TilesMap.contains(0x8D))
 			{
 				// Horizontal block value
-				uint8_t tempBlockValue = 0;
+				uint8_t tempLockingValue = 0;
 
 				// Gauche haut
-				for (int x = 11; x >= 0 && (TilesMap.contains(BoardCoordToIndex[x][3][0])); --x, ++tempBlockValue);
-				if (tempBlockValue > 0)
-					blockValue += tempBlockValue == 12 && TilesMap.contains(0x8C) ? tempBlockValue + 1 : tempBlockValue;
+				for (int x = 11; x >= 0 && (TilesMap.contains(BoardCoordToIndex[x][3][0])); --x, ++tempLockingValue);
+				if (tempLockingValue > 0)
+					lockingValue += tempLockingValue == 12 && TilesMap.contains(0x8C) ? tempLockingValue + 1 : tempLockingValue;
 
-				tempBlockValue = 0;
+				tempLockingValue = 0;
 
 				// Gauche bas
-				for (int x = 11; x >= 0 && (TilesMap.contains(BoardCoordToIndex[x][4][0])); --x, ++tempBlockValue);
-				if (tempBlockValue > 0)
-					blockValue += tempBlockValue == 12 && TilesMap.contains(0x8C) ? tempBlockValue + 1 : tempBlockValue;
+				for (int x = 11; x >= 0 && (TilesMap.contains(BoardCoordToIndex[x][4][0])); --x, ++tempLockingValue);
+				if (tempLockingValue > 0)
+					lockingValue += tempLockingValue == 12 && TilesMap.contains(0x8C) ? tempLockingValue + 1 : tempLockingValue;
 			}
 			// Vertical block value = z
-			//blockValue += 0;
+			//lockingValue += 0;
 		}
 		else if (index == 0x8F)
 		{
 			// Horizontal block value
-			//blockValue += 0;
+			//lockingValue += 0;
 			// Vertical block value = z
 			// But here it blocks 4 tiles at once.
-			blockValue += 4 * 4;
+			lockingValue += 4 * 4;
 		}
 		else
 		{
@@ -839,47 +839,47 @@ inline uint8_t EvalMoveMaxBlock(
 			int z = std::get<2>(temp);
 			int curX = 0;
 			// Vertical block value = z
-			blockValue += z;
+			lockingValue += z;
 			// Horizontal block value
-			uint8_t tempBlockValue = 0;
+			uint8_t tempLockingValue = 0;
 			// Droite
-			for (curX = x + 1; curX < 12 && (TilesMap.contains(BoardCoordToIndex[curX][y][z])); ++curX, ++tempBlockValue);
-			if (tempBlockValue > 0)
+			for (curX = x + 1; curX < 12 && (TilesMap.contains(BoardCoordToIndex[curX][y][z])); ++curX, ++tempLockingValue);
+			if (tempLockingValue > 0)
 			{
 				if (z == 0 && (y == 3 || y == 4))
 				{
 					if ((x == 11 || curX == 12) && TilesMap.contains(0x8D))
-						blockValue += TilesMap.contains(0x8E) ? tempBlockValue + 1 : tempBlockValue;
+						lockingValue += TilesMap.contains(0x8E) ? tempLockingValue + 1 : tempLockingValue;
 					else
-						blockValue += tempBlockValue - 1;
+						lockingValue += tempLockingValue - 1;
 				}
 				else
 				{
-					blockValue += tempBlockValue - 1;
+					lockingValue += tempLockingValue - 1;
 				}
 
 			}
-			tempBlockValue = 0;
+			tempLockingValue = 0;
 			// Gauche
-			for (curX = x - 1; curX >= 0 && (TilesMap.contains(BoardCoordToIndex[curX][y][z])); --curX, ++tempBlockValue);
-			if (tempBlockValue > 0)
+			for (curX = x - 1; curX >= 0 && (TilesMap.contains(BoardCoordToIndex[curX][y][z])); --curX, ++tempLockingValue);
+			if (tempLockingValue > 0)
 			{
 				if (z == 0 && (y == 3 || y == 4))
 				{
 					if ((x == 0 || curX == -1) && TilesMap.contains(0x8C))
-						blockValue += TilesMap.contains(0x8E) ? tempBlockValue + 1 : tempBlockValue;
+						lockingValue += TilesMap.contains(0x8E) ? tempLockingValue + 1 : tempLockingValue;
 					else
-						blockValue += tempBlockValue - 1;
+						lockingValue += tempLockingValue - 1;
 				}
 				else
 				{
-					blockValue += tempBlockValue - 1;
+					lockingValue += tempLockingValue - 1;
 				}
 			}
 		}
 	}
 
-	return blockValue;
+	return lockingValue;
 }
 
 // Max block to the rescue.
