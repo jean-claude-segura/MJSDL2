@@ -1,6 +1,89 @@
 #pragma once
 #include "Board.h"
 
+constexpr std::array<std::array<std::array<int, 4>, 8>, 12> InitBoardCoordToIndex(const std::array<std::array<std::array<bool, 4>, 8>, 12>& BasePattern)
+{
+	std::array<std::array<std::array<int, 4>, 8>, 12> BaseTurtlePattern;
+	int index = 0;
+	for (int z = 0; z < 4; ++z)
+	{
+		for (int y = 0; y < 8; ++y)
+		{
+			for (int x = 0; x < 12; ++x)
+			{
+				if (BasePattern[x][y][z]) {
+					BaseTurtlePattern[x][y][z] = index++;
+				}
+				else
+				{
+					BaseTurtlePattern[x][y][z] = -1;
+				}
+			}
+		}
+	}
+
+	return BaseTurtlePattern;
+}
+
+constexpr std::array<std::tuple<int, int, int>, 140> InitIndexToBoardCoord(const std::array<std::array<std::array<bool, 4>, 8>, 12>& BasePattern)
+{
+	std::array<std::tuple<int, int, int>, 140> BaseTurtlePatternToCoord;
+	int index = 0;
+	for (int z = 0; z < 4; ++z)
+	{
+		for (int y = 0; y < 8; ++y)
+		{
+			for (int x = 0; x < 12; ++x)
+			{
+				if (BasePattern[x][y][z]) {
+					BaseTurtlePatternToCoord[index++] = { x, y, z };
+				}
+			}
+		}
+	}
+
+	return BaseTurtlePatternToCoord;
+}
+
+constexpr std::array < std::array < std::pair<int, int>, 4>, 8> InitHorizontalLimits(std::array<std::array<std::array<int, 4>, 8>, 12> BaseTurtlePattern)
+{
+	std::array < std::array < std::pair<int, int>, 4>, 8> HorizontalLimits;
+
+	for (int z = 0; z < 4; ++z)
+	{
+		for (int y = 0; y < 8; ++y)
+		{
+			int x = 0;
+			int first = -1;
+			int second = -1;
+			for (; x < 12; ++x)
+			{
+				if (BaseTurtlePattern[x][y][z] != -1) {
+					first = BaseTurtlePattern[x][y][z];
+					break;
+				}
+			}
+			for (; x < 12; ++x)
+			{
+				second = BaseTurtlePattern[x][y][z];
+				if (BaseTurtlePattern[x][y][z] != -1)
+					break;
+			}
+
+			HorizontalLimits[y][z] = std::make_pair(first, second);
+		}
+	}
+
+	return HorizontalLimits;
+}
+
+// Gets index from position (Blockers not in).
+constexpr std::array<std::array<std::array<int, 4>, 8>, 12> BoardCoordToIndex = InitBoardCoordToIndex(BasePattern);
+// Gets position from the index (Blockers not in).
+constexpr std::array<std::tuple<int, int, int>, 140> IndexToBoardCoord = InitIndexToBoardCoord(BasePattern);
+// Limits on horizontal lines (Blockers not in).
+constexpr std::array < std::array < std::pair<int, int>, 4>, 8> HorizontalLimits = InitHorizontalLimits(BoardCoordToIndex);
+
 inline uint8_t EvalMoveMaxBlock(
 	const std::vector<int>& Move,
 	std::map<int, Domino>& TilesMap);
@@ -563,20 +646,20 @@ inline bool CheckIfBlocked(const std::map<int, Domino>& TilesMap)
 		int pairs = 0;
 		for (const auto& index : startPos)
 		{
-			auto c = BaseTurtlePatternToCoord[index];
+			auto c = IndexToBoardCoord[index];
 			auto x = std::get<0>(c);
 			auto y = std::get<1>(c);
 			auto z = std::get<2>(c);
-			if (bestBlocker == TilesMap.find(BaseTurtlePattern[x][y][z])->second.appairage) ++pairs;
+			if (bestBlocker == TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage) ++pairs;
 			if (pairs == 3)
 				return true;
-			if (bestBlocker == TilesMap.find(BaseTurtlePattern[x][y][z - 1])->second.appairage) ++pairs;
+			if (bestBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 1])->second.appairage) ++pairs;
 			if (pairs == 3)
 				return true;
-			if (bestBlocker == TilesMap.find(BaseTurtlePattern[x][y][z - 2])->second.appairage) ++pairs;
+			if (bestBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 2])->second.appairage) ++pairs;
 			if (pairs == 3)
 				return true;
-			if (bestBlocker == TilesMap.find(BaseTurtlePattern[x][y][z - 3])->second.appairage) ++pairs;
+			if (bestBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 3])->second.appairage) ++pairs;
 			if (pairs == 3)
 				return true;
 		}
@@ -592,15 +675,15 @@ inline bool CheckIfBlocked(const std::map<int, Domino>& TilesMap)
 	{
 		for (const auto& index : startPos)
 		{
-			auto c = BaseTurtlePatternToCoord[index];
+			auto c = IndexToBoardCoord[index];
 			auto x = std::get<0>(c);
 			auto y = std::get<1>(c);
 			auto z = std::get<2>(c);
-			auto firstBlocker = TilesMap.find(BaseTurtlePattern[x][y][z])->second.appairage;
+			auto firstBlocker = TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage;
 			if (
-				firstBlocker == TilesMap.find(BaseTurtlePattern[x][y][z - 1])->second.appairage &&
-				firstBlocker == TilesMap.find(BaseTurtlePattern[x][y][z - 2])->second.appairage &&
-				firstBlocker == TilesMap.find(BaseTurtlePattern[x][y][z - 3])->second.appairage
+				firstBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 1])->second.appairage &&
+				firstBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 2])->second.appairage &&
+				firstBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 3])->second.appairage
 				)
 				return true;
 		}
@@ -654,7 +737,7 @@ inline uint8_t EvalMoveMaxBlock(
 			uint8_t tempBlockValue = 0; 
 
 			// Droite haut
-			for (int x = 0; x < 12 && (TilesMap.contains(BaseTurtlePattern[x][3][0])); ++x, ++tempBlockValue);
+			for (int x = 0; x < 12 && (TilesMap.contains(BoardCoordToIndex[x][3][0])); ++x, ++tempBlockValue);
 			if (tempBlockValue > 0)
 			{
 				if (tempBlockValue == 12 && TilesMap.contains(0x8D))
@@ -666,7 +749,7 @@ inline uint8_t EvalMoveMaxBlock(
 			tempBlockValue = 0;
 
 			// Droite bas
-			for (int x = 0; x < 12 && (TilesMap.contains(BaseTurtlePattern[x][4][0])); ++x, ++tempBlockValue);
+			for (int x = 0; x < 12 && (TilesMap.contains(BoardCoordToIndex[x][4][0])); ++x, ++tempBlockValue);
 			if (tempBlockValue > 0)
 			{
 				if (tempBlockValue == 12 && TilesMap.contains(0x8D))
@@ -683,14 +766,14 @@ inline uint8_t EvalMoveMaxBlock(
 			uint8_t tempBlockValue = 0;
 
 			// Gauche haut
-			for (int x = 11; x >=0 && (TilesMap.contains(BaseTurtlePattern[x][3][0])); --x, ++tempBlockValue);
+			for (int x = 11; x >=0 && (TilesMap.contains(BoardCoordToIndex[x][3][0])); --x, ++tempBlockValue);
 			if (tempBlockValue > 0)
 				blockValue += tempBlockValue == 12 && TilesMap.contains(0x8C) ? tempBlockValue : tempBlockValue - 1;
 
 			tempBlockValue = 0;
 
 			// Gauche bas
-			for (int x = 11; x >= 0 && (TilesMap.contains(BaseTurtlePattern[x][4][0])); --x, ++tempBlockValue);
+			for (int x = 11; x >= 0 && (TilesMap.contains(BoardCoordToIndex[x][4][0])); --x, ++tempBlockValue);
 			if (tempBlockValue > 0)
 				blockValue += tempBlockValue == 12 && TilesMap.contains(0x8C) ? tempBlockValue : tempBlockValue - 1;
 			// Vertical block value = z
@@ -704,14 +787,14 @@ inline uint8_t EvalMoveMaxBlock(
 				uint8_t tempBlockValue = 0;
 
 				// Gauche haut
-				for (int x = 11; x >= 0 && (TilesMap.contains(BaseTurtlePattern[x][3][0])); --x, ++tempBlockValue);
+				for (int x = 11; x >= 0 && (TilesMap.contains(BoardCoordToIndex[x][3][0])); --x, ++tempBlockValue);
 				if (tempBlockValue > 0)
 					blockValue += tempBlockValue == 12 && TilesMap.contains(0x8C) ? tempBlockValue + 1 : tempBlockValue;
 
 				tempBlockValue = 0;
 
 				// Gauche bas
-				for (int x = 11; x >= 0 && (TilesMap.contains(BaseTurtlePattern[x][4][0])); --x, ++tempBlockValue);
+				for (int x = 11; x >= 0 && (TilesMap.contains(BoardCoordToIndex[x][4][0])); --x, ++tempBlockValue);
 				if (tempBlockValue > 0)
 					blockValue += tempBlockValue == 12 && TilesMap.contains(0x8C) ? tempBlockValue + 1 : tempBlockValue;
 			}
@@ -728,7 +811,7 @@ inline uint8_t EvalMoveMaxBlock(
 		}
 		else
 		{
-			auto temp = BaseTurtlePatternToCoord[index];
+			auto temp = IndexToBoardCoord[index];
 			int x = std::get<0>(temp);
 			int y = std::get<1>(temp);
 			int z = std::get<2>(temp);
@@ -738,7 +821,7 @@ inline uint8_t EvalMoveMaxBlock(
 			// Horizontal block value
 			uint8_t tempBlockValue = 0;
 			// Droite
-			for (curX = x + 1; curX < 12 && (TilesMap.contains(BaseTurtlePattern[curX][y][z])); ++curX, ++tempBlockValue);
+			for (curX = x + 1; curX < 12 && (TilesMap.contains(BoardCoordToIndex[curX][y][z])); ++curX, ++tempBlockValue);
 			if (tempBlockValue > 0)
 			{
 				if (z == 0 && (y == 3 || y == 4))
@@ -756,7 +839,7 @@ inline uint8_t EvalMoveMaxBlock(
 			}
 			tempBlockValue = 0;
 			// Gauche
-			for (curX = x - 1; curX >= 0 && (TilesMap.contains(BaseTurtlePattern[curX][y][z])); --curX, ++tempBlockValue);
+			for (curX = x - 1; curX >= 0 && (TilesMap.contains(BoardCoordToIndex[curX][y][z])); --curX, ++tempBlockValue);
 			if (tempBlockValue > 0)
 			{
 				if (z == 0 && (y == 3 || y == 4))

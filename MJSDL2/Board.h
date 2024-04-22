@@ -127,55 +127,6 @@ constexpr std::array<Coordinates, 144> InitIndexToCoord(const std::array<std::ar
 	return InitIndexToCoord;
 }
 
-constexpr std::array<std::array<std::array<int, 4>, 8>, 12> InitBaseTurtlePattern(const std::array<std::array<std::array<bool, 4>, 8>, 12>& BasePattern)
-{
-	std::array<std::array<std::array<int, 4>, 8>, 12> BaseTurtlePattern;
-	int index = 0;
-	for (int z = 0; z < 4; ++z)
-	{
-		for (int y = 0; y < 8; ++y)
-		{
-			for (int x = 0; x < 12; ++x)
-			{
-				if (BasePattern[x][y][z]) {
-					BaseTurtlePattern[x][y][z] = index++;
-				}
-				else
-				{
-					BaseTurtlePattern[x][y][z] = -1;
-				}
-			}
-		}
-	}
-
-	return BaseTurtlePattern;
-}
-
-constexpr std::array<std::tuple<int, int, int>, 144> InitBaseTurtlePatternToCoord(const std::array<std::array<std::array<bool, 4>, 8>, 12>& BasePattern)
-{
-	std::array<std::tuple<int, int, int>, 144> BaseTurtlePatternToCoord;
-	int index = 0;
-	for (int z = 0; z < 4; ++z)
-	{
-		for (int y = 0; y < 8; ++y)
-		{
-			for (int x = 0; x < 12; ++x)
-			{
-				if (BasePattern[x][y][z]) {
-					BaseTurtlePatternToCoord[index++] = { x, y, z };
-				}
-			}
-		}
-	}
-
-	BaseTurtlePatternToCoord[index++] = { -1., 3.5, 0. };
-	BaseTurtlePatternToCoord[index++] = { 12., 3.5, 0. };
-	BaseTurtlePatternToCoord[index++] = { 13., 3.5, 0. };
-	BaseTurtlePatternToCoord[index++] = { 5.5, 3.5, 4. };
-
-	return BaseTurtlePatternToCoord;
-}
-
 constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> InitBasePattern()
 {
 	std::array<std::array<std::array<bool, 4>, 8>, 12> BasePattern;
@@ -217,13 +168,9 @@ constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> InitBasePattern()
 }
 
 // Available initial positions in the turtles.
-static constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> BasePattern = InitBasePattern();
+constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> BasePattern = InitBasePattern();
 // Index to coordinates (x, y, z as Double) of available initial positions in the turtles.
-static constexpr std::array<Coordinates, 144> IndexToCoord = InitIndexToCoord(BasePattern);
-// Coordinates of available initial positions in the turtles as int (Blockers not in)
-static constexpr std::array<std::array<std::array<int, 4>, 8>, 12> BaseTurtlePattern = InitBaseTurtlePattern(BasePattern); // Gets index from position
-// Index to coordinates of available initial positions in the turtles as int (Blockers not in)
-static constexpr std::array<std::tuple<int, int, int>, 144> BaseTurtlePatternToCoord = InitBaseTurtlePatternToCoord(BasePattern); // Gets position from the index
+constexpr std::array<Coordinates, 144> IndexToCoord = InitIndexToCoord(BasePattern);
 
 class Board
 {
