@@ -748,6 +748,7 @@ inline bool CheckIfLockedFromStart(const std::map<int, Domino>& TilesMap)
 		for (int y = 0; y < 8; ++y)
 		{
 			auto horizontalLimits = HorizontalLimits[y][z];
+			// You need at least 8 slots to block 8 tiles...
 			if (horizontalLimits.second - horizontalLimits.first + 1 > 7)
 			{
 				auto first = TilesMap.find(BoardCoordToIndex[horizontalLimits.first][y][z])->second;
@@ -758,6 +759,7 @@ inline bool CheckIfLockedFromStart(const std::map<int, Domino>& TilesMap)
 					auto lastCount = 0;
 					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
 					{
+						// A ....A/B ..... A/B ..... A/B ..... B
 						if (TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage == first.appairage) ++firstCount;
 						if (TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage == last.appairage) ++lastCount;
 					}
@@ -1453,9 +1455,9 @@ inline bool SolveRecInit(const Board& plateau,
 	if (CheckIfLockedFromStart(TilesMap))
 	{
 #ifdef _DEBUG
-		std::cout << "************" << std::endl;
-		std::cout << "* Locked. *" << std::endl;
-		std::cout << "************" << std::endl;
+		std::cout << "*************" << std::endl;
+		std::cout << "*  Locked.  *" << std::endl;
+		std::cout << "*************" << std::endl;
 #endif
 		return false;
 	}
