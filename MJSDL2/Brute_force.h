@@ -752,10 +752,10 @@ inline uint8_t EvalMoveMaxBlock(
 	uint8_t lockingValue = 0;
 	for (const auto& index : Move)
 	{
-		// Horizontal block value
+		// Horizontal locking value
 		if (index == 0x8C)
 		{
-			// Horizontal block value
+			// Horizontal locking value
 			uint8_t tempLockingValue = 0; 
 
 			// Droite haut
@@ -779,12 +779,12 @@ inline uint8_t EvalMoveMaxBlock(
 				else
 					lockingValue += tempLockingValue - 1;
 			}
-			// Vertical block value = z
+			// Vertical locking value = z
 			//lockingValue += 0;
 		}
 		else if (index == 0x8D)
 		{
-			// Horizontal block value
+			// Horizontal locking value
 			uint8_t tempLockingValue = 0;
 
 			// Gauche haut
@@ -798,14 +798,14 @@ inline uint8_t EvalMoveMaxBlock(
 			for (int x = 11; x >= 0 && (TilesMap.contains(BoardCoordToIndex[x][4][0])); --x, ++tempLockingValue);
 			if (tempLockingValue > 0)
 				lockingValue += tempLockingValue == 12 && TilesMap.contains(0x8C) ? tempLockingValue : tempLockingValue - 1;
-			// Vertical block value = z
+			// Vertical locking value = z
 			//lockingValue += 0;
 		}
 		else if (index == 0x8E)
 		{
 			if (TilesMap.contains(0x8D))
 			{
-				// Horizontal block value
+				// Horizontal locking value
 				uint8_t tempLockingValue = 0;
 
 				// Gauche haut
@@ -820,14 +820,14 @@ inline uint8_t EvalMoveMaxBlock(
 				if (tempLockingValue > 0)
 					lockingValue += tempLockingValue == 12 && TilesMap.contains(0x8C) ? tempLockingValue + 1 : tempLockingValue;
 			}
-			// Vertical block value = z
+			// Vertical locking value = z
 			//lockingValue += 0;
 		}
 		else if (index == 0x8F)
 		{
-			// Horizontal block value
+			// Horizontal locking value
 			//lockingValue += 0;
-			// Vertical block value = z
+			// Vertical locking value = z
 			// But here it blocks 4 tiles at once.
 			lockingValue += 4 * 4;
 		}
@@ -838,9 +838,9 @@ inline uint8_t EvalMoveMaxBlock(
 			int y = std::get<1>(temp);
 			int z = std::get<2>(temp);
 			int curX = 0;
-			// Vertical block value = z
+			// Vertical locking value = z
 			lockingValue += z;
-			// Horizontal block value
+			// Horizontal locking value
 			uint8_t tempLockingValue = 0;
 			// Droite
 			for (curX = x + 1; curX < 12 && (TilesMap.contains(BoardCoordToIndex[curX][y][z])); ++curX, ++tempLockingValue);
@@ -882,7 +882,7 @@ inline uint8_t EvalMoveMaxBlock(
 	return lockingValue;
 }
 
-// Max block to the rescue.
+// Max locking value to the rescue.
 // Used when there is no choice meeting the requirements for the heuristic running.
 // Section 3.3 from :
 // https://iivq.net/scriptie/scriptie-bsc.pdf
