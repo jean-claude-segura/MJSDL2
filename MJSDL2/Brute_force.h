@@ -59,15 +59,18 @@ constexpr std::array < std::array < std::pair<int, int>, 4>, 8> InitHorizontalLi
 			for (; x < 12; ++x)
 			{
 				if (BaseTurtlePattern[x][y][z] != -1) {
-					first = BaseTurtlePattern[x][y][z];
+					first = x;
 					break;
 				}
 			}
 			for (; x < 12; ++x)
 			{
-				second = BaseTurtlePattern[x][y][z];
-				if (BaseTurtlePattern[x][y][z] != -1)
+				second = x;
+				if (BaseTurtlePattern[x][y][z] == -1)
+				{
+					--second;
 					break;
+				}
 			}
 
 			HorizontalLimits[y][z] = std::make_pair(first, second);
@@ -693,7 +696,7 @@ inline bool CheckIfBlocked(const std::map<int, Domino>& TilesMap)
 	{
 		for (int y = 0; y < 8; ++y)
 		{
-			for (int x = 0; x < 12; ++x)
+			for (int x = std::max(0,HorizontalLimits[y][z].first); x <= HorizontalLimits[y][z].second; ++x)
 			{
 			}
 		}
