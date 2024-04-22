@@ -80,11 +80,11 @@ constexpr std::array < std::array < std::pair<int, int>, 4>, 8> InitHorizontalLi
 	return HorizontalLimits;
 }
 
-// Gets index from position (Blockers not in).
+// Gets index from position (Padlocks not in).
 constexpr std::array<std::array<std::array<int, 4>, 8>, 12> BoardCoordToIndex = InitBoardCoordToIndex(BasePattern);
-// Gets position from the index (Blockers not in).
+// Gets position from the index (Padlocks not in).
 constexpr std::array<std::tuple<int, int, int>, 140> IndexToBoardCoord = InitIndexToBoardCoord(BasePattern);
-// Limits on horizontal lines (Blockers not in).
+// Limits on horizontal lines (Padlocks not in).
 constexpr std::array < std::array < std::pair<int, int>, 4>, 8> HorizontalLimits = InitHorizontalLimits(BoardCoordToIndex);
 
 inline uint8_t EvalMoveMaxBlock(
@@ -641,7 +641,7 @@ inline bool CheckIfLockedFromStart(const std::map<int, Domino>& TilesMap)
 
 	if (TilesMap.contains(0x8F)) // Useless condition for a starting pos. I keep it for a probable future copy and paste.
 	{
-		auto bestBlocker = TilesMap.find(0x8F)->second.appairage;
+		auto bestPadlock = TilesMap.find(0x8F)->second.appairage;
 
 		std::vector<int> startPos;
 		startPos.emplace_back(0x88);
@@ -656,16 +656,16 @@ inline bool CheckIfLockedFromStart(const std::map<int, Domino>& TilesMap)
 			auto x = std::get<0>(c);
 			auto y = std::get<1>(c);
 			auto z = std::get<2>(c);
-			if (bestBlocker == TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage) ++pairs;
+			if (bestPadlock == TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage) ++pairs;
 			if (pairs == 3)
 				return true;
-			if (bestBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 1])->second.appairage) ++pairs;
+			if (bestPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 1])->second.appairage) ++pairs;
 			if (pairs == 3)
 				return true;
-			if (bestBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 2])->second.appairage) ++pairs;
+			if (bestPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 2])->second.appairage) ++pairs;
 			if (pairs == 3)
 				return true;
-			if (bestBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 3])->second.appairage) ++pairs;
+			if (bestPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 3])->second.appairage) ++pairs;
 			if (pairs == 3)
 				return true;
 		}
@@ -688,11 +688,11 @@ inline bool CheckIfLockedFromStart(const std::map<int, Domino>& TilesMap)
 			auto y = std::get<1>(c);
 			auto z = std::get<2>(c);
 			// All of this can be harcoded. I keep it like this for a probable future copy and paste.
-			auto firstBlocker = TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage;
+			auto firstPadlock = TilesMap.find(BoardCoordToIndex[x][y][z])->second.appairage;
 			if (
-				firstBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 1])->second.appairage &&
-				firstBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 2])->second.appairage &&
-				firstBlocker == TilesMap.find(BoardCoordToIndex[x][y][z - 3])->second.appairage
+				firstPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 1])->second.appairage &&
+				firstPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 2])->second.appairage &&
+				firstPadlock == TilesMap.find(BoardCoordToIndex[x][y][z - 3])->second.appairage
 				)
 				return true;
 		}
@@ -1158,7 +1158,7 @@ inline bool tryBruteForceOrderingPlayable(Board plateau, std::vector<std::pair<i
 	return plateau.IsEmpty();
 }
 
-inline bool tryBruteForceOrderingPlayableBlockersFirst(Board plateau, std::vector<std::pair<int, int>>& Solution)
+inline bool tryBruteForceOrderingPlayablePadlocksFirst(Board plateau, std::vector<std::pair<int, int>>& Solution)
 {
 	// New move container to remove the tiles 2 at once or 4 at once.
 	std::vector<std::vector<int>> Moves;
@@ -1274,7 +1274,7 @@ inline bool tryBruteForceOrderingFreed(Board plateau, std::vector<std::pair<int,
 	return plateau.IsEmpty();
 }
 
-inline bool tryBruteForceOrderingFreedBlockersFirst(Board plateau, std::vector<std::pair<int, int>>& Solution)
+inline bool tryBruteForceOrderingFreedPadlocksFirst(Board plateau, std::vector<std::pair<int, int>>& Solution)
 {
 	// New move container to remove the tiles 2 at once or 4 at once.
 	std::vector<std::vector<int>> Moves;
@@ -1369,9 +1369,9 @@ inline bool SolveRecInit(const Board& plateau,
 	vTries.push_back({ tryGreedy, "tryGreedy" });
 	vTries.push_back({ tryPseudoMultipleFirst, "tryPseudoMultipleFirst" });
 	vTries.push_back({ tryBruteForceOrderingPlayable, "tryBruteForceOrderingPlayable" });
-	vTries.push_back({ tryBruteForceOrderingPlayableBlockersFirst, "tryBruteForceOrderingPlayableBlockersFirst" });
+	vTries.push_back({ tryBruteForceOrderingPlayablePadlocksFirst, "tryBruteForceOrderingPlayablePadlocksFirst" });
 	vTries.push_back({ tryBruteForceOrderingFreed, "tryBruteForceOrderingFreed" });
-	vTries.push_back({ tryBruteForceOrderingFreedBlockersFirst, "tryBruteForceOrderingFreedBlockersFirst" });
+	vTries.push_back({ tryBruteForceOrderingFreedPadlocksFirst, "tryBruteForceOrderingFreedPadlocksFirst" });
 	vTries.push_back({ tryMaxBlock, "tryMaxBlock" });
 
 	Solution.clear();
@@ -1493,9 +1493,9 @@ int64_t testAll(const Board& plateau)
 	vTries.push_back({ tryGreedy, "tryGreedy" });
 	vTries.push_back({ tryPseudoMultipleFirst, "tryPseudoMultipleFirst" });
 	vTries.push_back({ tryBruteForceOrderingPlayable, "tryBruteForceOrderingPlayable" });
-	vTries.push_back({ tryBruteForceOrderingPlayableBlockersFirst, "tryBruteForceOrderingPlayableBlockersFirst" });
+	vTries.push_back({ tryBruteForceOrderingPlayablePadlocksFirst, "tryBruteForceOrderingPlayablePadlocksFirst" });
 	vTries.push_back({ tryBruteForceOrderingFreed, "tryBruteForceOrderingFreed" });
-	vTries.push_back({ tryBruteForceOrderingFreedBlockersFirst, "tryBruteForceOrderingFreedBlockersFirst" });
+	vTries.push_back({ tryBruteForceOrderingFreedPadlocksFirst, "tryBruteForceOrderingFreedPadlocksFirst" });
 	vTries.push_back({ tryMaxBlock, "tryMaxBlock" });
 
 
