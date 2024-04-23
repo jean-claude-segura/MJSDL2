@@ -295,6 +295,7 @@ void GraphicBoard::LoadBackground(const std::string& path)
 			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 			ThrowException(1);
 		}
+		SDL_ResizeTexture(renderer, textureBackground, Width, Height);
 	}
 	SDL_FreeSurface(background);
 	SDL_FreeSurface(temp);
@@ -334,6 +335,7 @@ void GraphicBoard::LoadBackgroundVictory(const std::string& path)
 			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 			ThrowException(1);
 		}
+		SDL_ResizeTexture(renderer, textureBackgroundVictory, Width, Height);
 	}
 	SDL_FreeSurface(background);
 	SDL_FreeSurface(temp);
