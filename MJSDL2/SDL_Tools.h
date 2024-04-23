@@ -186,3 +186,17 @@ inline SDL_Texture* SDL_GreyscaleTexture(SDL_Renderer* renderer, SDL_Texture* sr
 	SDL_SetRenderTarget(renderer, renderTarget);
 	return tgt;
 }
+
+inline SDL_Texture* SDL_ResizeTexture(SDL_Renderer* renderer, SDL_Texture* &src, int Width, int Height)
+{
+	auto renderTargetOrg = SDL_GetRenderTarget(renderer);
+	SDL_Texture* temp = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
+	SDL_SetRenderTarget(renderer, temp);
+
+	SDL_RenderCopy(renderer, src, NULL, NULL);
+	SDL_SetRenderTarget(renderer, renderTargetOrg);
+
+	SDL_DestroyTexture(src);
+	src = temp;
+	return src;
+}
