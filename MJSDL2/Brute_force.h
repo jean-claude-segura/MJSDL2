@@ -631,7 +631,7 @@ inline bool checkIfLocked(int x, int y, int z)
 	0x77 -> 0x87 third floor
 	0x88 -> 0x8b fourth floor
 */
-inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile)
+inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int* cause = NULL)
 {
 	// Index -> TileObject
 	// std::map<int, Tile>& mIndexToTile
@@ -657,28 +657,31 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile)
 		auto z = std::get<2>(c);
 
 		auto firstPadlock = mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second.Pairing;
+
+		// Blocked by the bestPadlock.
 		if (bestPadlock == firstPadlock) ++pairs;
 		if (pairs == 3)
-			return true;
+			{ if (cause != NULL) { *cause = 1; }; return true; }
 		if (bestPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 1])->second.Pairing) ++pairs;
 		if (pairs == 3)
-			return true;
+			{ if (cause != NULL) { *cause = 1; }; return true; }
 		if (bestPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 2])->second.Pairing) ++pairs;
 		if (pairs == 3)
-			return true;
+			{ if (cause != NULL) { *cause = 1; }; return true; }
 		if (bestPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 3])->second.Pairing) ++pairs;
 		if (pairs == 3)
-			return true;
+			{ if (cause != NULL) { *cause = 1; }; return true; }
 
-		// Pure vertical lock
+		// Pure vertical lock.
 		// All of this can be harcoded. I keep it like this for a probable future copy and paste.
 		if (
 			firstPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 1])->second.Pairing &&
 			firstPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 2])->second.Pairing &&
 			firstPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 3])->second.Pairing
 			)
-			return true;
+			{ if (cause != NULL) { *cause = 2; }; return true; }
 
+		// Crossed vertical lock.
 		if (itIndex < vStartPos.end() - 1)
 		{
 			auto itRef = itIndex;
@@ -704,7 +707,7 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile)
 					if (refAppairage == compAppairage) ++refCount;
 					if (secondAppairage == compAppairage) ++secondCount;
 					if (secondCount == 4 && refCount == secondCount)
-						return true;
+						{ if (cause != NULL) { *cause = 3; }; return true; }
 				}
 			}
 		}
@@ -712,33 +715,46 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile)
 
 	/**/
 	/**/
+	// Blocked by left and right padlocks.
 	auto first = mIndexToTile.find(0x8C)->second.Pairing;
 	auto last = mIndexToTile.find(0x8D)->second.Pairing;
 	if (first != last)
 	{
-		auto firstCount = 0;
-		auto lastCount = last == mIndexToTile.find(0x8E)->second.Pairing ? 1 : 0;
+		auto firstCount = 1;
+		auto lastCount = 1 + last == mIndexToTile.find(0x8E)->second.Pairing ? 1 : 0;
 		for (int x = 0; x < 12; ++x)
 		{
 			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == first) ++firstCount;
 			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == last) ++lastCount;
+
+			if (mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second.Pairing == first) ++firstCount;
+			if (mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second.Pairing == last) ++lastCount;
+
+			if (lastCount == 4 && firstCount == lastCount)
+			{
+				if (cause != NULL) { *cause = 4; }; return true;
+			}
 		}
-		if (lastCount == 3 && firstCount == lastCount)
-			return true;
 	}
 
 	last = mIndexToTile.find(0x8E)->second.Pairing;
 	if (first != last)
 	{
-		auto firstCount = 0;
-		auto lastCount = last == mIndexToTile.find(0x8D)->second.Pairing ? 1 : 0;
+		auto firstCount = 1;
+		auto lastCount = 1 + last == mIndexToTile.find(0x8D)->second.Pairing ? 1 : 0;
 		for (int x = 0; x < 12; ++x)
 		{
 			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == first) ++firstCount;
 			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == last) ++lastCount;
+
+			if (mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second.Pairing == first) ++firstCount;
+			if (mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second.Pairing == last) ++lastCount;
+
+			if (lastCount == 4 && firstCount == lastCount)
+			{
+				if (cause != NULL) { *cause = 5; }; return true;
+			}
 		}
-		if (lastCount == 3 && firstCount == lastCount)
-			return true;
 	}
 	/**/
 
@@ -764,12 +780,12 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile)
 						if (mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second.Pairing == last.Pairing) ++lastCount;
 					}
 					if (lastCount == 4 && firstCount == lastCount)
-						return true;
+						{ if (cause != NULL) { *cause = 6; }; return true; }
 				}
 			}
 		}
 	}
-	return false;
+	{ if (cause != NULL) { *cause = 0; }; return false; }
 }
 
 // New move container to remove the tiles 2 at once or 4 at once.

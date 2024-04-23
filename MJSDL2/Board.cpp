@@ -463,11 +463,16 @@ bool Board::Test()
 bool Board::TestLocked()
 {
 	std::vector<int> Locked;
-	for (int i = 0; i < 99; ++i)
+	std::map<int, int> causes;
+	int cause;
+	for (int i = 0; i < 10000; ++i)
 	{
 		InitBoard();
-		if (CheckIfLockedFromStart(mIndexToTile))
+		if (CheckIfLockedFromStart(mIndexToTile, &cause))
+		{
 			Locked.emplace_back(i);
+			causes[cause] += 1;
+		}
 	}
 
 	std::cout << std::endl;
@@ -480,7 +485,8 @@ bool Board::TestLocked()
 	std::cout << std::dec << *it << std::endl;
 
 	std::cout << "Bloqués : " << std::dec << Locked.size() << "." << std::endl;
-
+	for(const auto & cause : causes)
+		std::cout << "Cause : (" << std::dec << cause.first << "; " << cause.second<< ")." << std::endl;
 	return false;
 }
 #endif
