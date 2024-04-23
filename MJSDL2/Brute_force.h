@@ -897,20 +897,48 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 			// You need at least 8 slots to block 8 tiles...
 			if (horizontalLimits.second - horizontalLimits.first + 1 > 7)
 			{
-				auto first = mIndexToTile.find(arrBoardCoordToIndex[horizontalLimits.first][y][z])->second;
-				auto last = mIndexToTile.find(arrBoardCoordToIndex[horizontalLimits.second][y][z])->second;
-				if (first != last)
+				// First pass : check potential issues
+				std::map<int, int> mPairingCount;
+				std::map<int, int> mPairingFirst;
+				std::map<int, int> mPairingLast;
+				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
 				{
-					auto firstCount = 0;
-					auto lastCount = 0;
-					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+					// First get the tile.
+					const auto& object = mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second;
+					// Get the first occurence
+					if (!mPairingFirst.contains(object.Pairing))
+						mPairingFirst[object.Pairing] = x;
+					// Get the last occurence
+					mPairingLast[object.Pairing] = x;
+					// Get the count of occurences
+					++mPairingCount[object.Pairing];
+				}
+				// Remove the useless ones :
+				for (const auto& item : mPairingCount)
+				{
+					if (item.second != 4)
 					{
-						// A ....A/B ..... A/B ..... A/B ..... B
-						if (mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second.Pairing == first.Pairing) ++firstCount;
-						if (mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second.Pairing == last.Pairing) ++lastCount;
+						mPairingFirst.erase(item.first);
+						mPairingLast.erase(item.first);
 					}
-					if (lastCount == 4 && firstCount == lastCount)
-						{ if (cause != NULL) { *cause = 10; }; return true; }
+				}
+				if (mPairingFirst.size() > 1) // Ok, now we have an issue...
+				{
+					auto itEnd = mPairingFirst.end();
+					--itEnd;
+					for (auto it = mPairingFirst.begin(); it != itEnd; ++it)
+					{
+						auto itNext = it;
+						for (++itNext; itNext != mPairingFirst.end(); ++itNext)
+						{
+							// fAx < fBx && lAx < lBx
+							if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
+								if (cause != NULL) { *cause = 10; }; return true;
+							// fBx < fAx && lBx < lAx
+							if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
+								if (cause != NULL) { *cause = 10; }; return true;
+						}
+					}
 				}
 			}
 		}

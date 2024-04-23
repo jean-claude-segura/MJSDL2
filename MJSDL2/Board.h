@@ -246,6 +246,7 @@ public:
 	bool IsLockedFromMove();
 #ifdef _DEBUG
 	bool Test();
+	void InitBoardLockedHorizontal(int test);
 	bool TestLocked();
 #endif
 	const std::vector<std::pair<int, int>>& GetSolution() { return vSolution; }

@@ -465,33 +465,181 @@ bool Board::Test()
 	return false;
 }
 
+void Board::InitBoardLockedHorizontal(int test)
+{
+	// 0, 1, 2, 5, 7, 12, 18, 19, 24, 25, 27, 31, 34, 36, 44, 49, 50, 55, 61, 62, 64, 66
+	// [0, 2, 21, 32]
+	static int seed = 0;
+	std::mt19937 e1(seed++);
+	std::cout << "******************************************* " << seed - 1 << " *******************************************" << std::endl;
+
+	std::uniform_int_distribution<int> uniform_dist(0, 41);
+	vLogicalBoard.clear();
+	mIndexToTile.clear();
+	mOccupationBoard.clear();
+
+	int tempDominos[42] = {
+	4,4,4,4,4,4,4,4,4, // Bambous
+	4,4,4,4,4,4,4,4,4, // Cercles
+	4,4,4,4,4,4,4,4,4, // Caractères
+	4,4,4,4, // Vents
+	4,4,4, // Dragons
+	1,1,1,1, // Saisons
+	1,1,1,1 // Fleurs
+	};
+
+	int index = 0;
+
+	if (test == 0)
+	{
+		for (; index < 4; ++index)
+		{
+			int domino = 0;
+			int debugdom = tempDominos[domino];
+			--tempDominos[domino];
+			mOccupationBoard[arrIndexToCoord[index]] = index;
+			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+			mIndexToTile.emplace(index, Tile(domino));
+		}
+
+		for (; index < 8; ++index)
+		{
+			int domino = 1;
+			int debugdom = tempDominos[domino];
+			--tempDominos[domino];
+			mOccupationBoard[arrIndexToCoord[index]] = index;
+			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+			mIndexToTile.emplace(index, Tile(domino));
+		}
+	}
+
+	if (test == 1)
+	{
+		for (; index < 4; ++index)
+		{
+			int domino = 0;
+			int debugdom = tempDominos[domino];
+			--tempDominos[domino];
+			mOccupationBoard[arrIndexToCoord[index]] = index;
+			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+			mIndexToTile.emplace(index, Tile(domino));
+		}
+
+		for (; index < 8; ++index)
+		{
+			int domino = 0;
+			do
+			{
+				domino = uniform_dist(e1);
+			} while (domino == 1 || tempDominos[domino] == 0);
+			int debugdom = tempDominos[domino];
+			--tempDominos[domino];
+			mOccupationBoard[arrIndexToCoord[index]] = index;
+			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+			mIndexToTile.emplace(index, Tile(domino));
+		}
+		for (; index < 12; ++index)
+		{
+			int domino = 1;
+			int debugdom = tempDominos[domino];
+			--tempDominos[domino];
+			mOccupationBoard[arrIndexToCoord[index]] = index;
+			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+			mIndexToTile.emplace(index, Tile(domino));
+		}
+	}
+
+	if (test == 2)
+	{
+		for (; index < 4; ++index)
+		{
+			int domino = 0;
+			do
+			{
+				domino = uniform_dist(e1);
+			} while (domino == 1 || domino == 0 || tempDominos[domino] == 0);
+			int debugdom = tempDominos[domino];
+			--tempDominos[domino];
+			mOccupationBoard[arrIndexToCoord[index]] = index;
+			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+			mIndexToTile.emplace(index, Tile(domino));
+		}
+		for (; index < 8; ++index)
+		{
+			int domino = 0;
+			int debugdom = tempDominos[domino];
+			--tempDominos[domino];
+			mOccupationBoard[arrIndexToCoord[index]] = index;
+			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+			mIndexToTile.emplace(index, Tile(domino));
+		}
+
+		for (; index < 12; ++index)
+		{
+			int domino = 1;
+			int debugdom = tempDominos[domino];
+			--tempDominos[domino];
+			mOccupationBoard[arrIndexToCoord[index]] = index;
+			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+			mIndexToTile.emplace(index, Tile(domino));
+		}
+	}
+
+	for (/*int index = 0*/; index < 144; ++index)
+	{
+		int domino = 0;
+		do
+		{
+			domino = uniform_dist(e1);
+		} while (tempDominos[domino] == 0);
+		int debugdom = tempDominos[domino];
+		--tempDominos[domino];
+		mOccupationBoard[arrIndexToCoord[index]] = index;
+		vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+		mIndexToTile.emplace(index, Tile(domino));
+	}
+
+	arrRemovable = InitRemovable();
+
+	vWhatsLeft.clear();
+	for (int i = 0; i < 144; ++i) vWhatsLeft.emplace_back(i);
+
+	SetMoves();
+}
+
 bool Board::TestLocked()
 {
-	std::vector<int> Locked;
+	std::vector<std::pair<int, int>> Locked;
 	std::map<int, int> causes;
 	int cause;
 	for (int i = 0; i < 10000; ++i)
 	{
+		//InitBoardLockedHorizontal(i%3);
 		InitBoard();
 		if (CheckIfLockedFromStart(mIndexToTile, &cause))
 		{
-			Locked.emplace_back(i);
+			Locked.emplace_back(std::make_pair(i, cause));
 			causes[cause] += 1;
 		}
 	}
 
 	std::cout << std::endl;
 
-	auto it = Locked.begin();
-	for (; it != Locked.end() - 1; ++it)
+	if (!Locked.empty())
 	{
-		std::cout << std::dec << *it << ", ";
+		auto it = Locked.begin();
+		for (; it != Locked.end() - 1; ++it)
+		{
+			std::cout << std::dec << "(" << it->first << ";" << it->second << "), ";
+		}
+		std::cout << std::dec << "(" << it->first << ";" << it->second << ")." << std::endl;
 	}
-	std::cout << std::dec << *it << std::endl;
 
 	std::cout << "Bloqués : " << std::dec << Locked.size() << "." << std::endl;
-	for(const auto & cause : causes)
-		std::cout << "Cause : (" << std::dec << cause.first << "; " << cause.second<< ")." << std::endl;
+
+	for (const auto& cause : causes)
+		std::cout << "Cause : (" << std::dec << cause.first << "; " << cause.second << ")." << std::endl;
+
 	return false;
 }
 #endif
