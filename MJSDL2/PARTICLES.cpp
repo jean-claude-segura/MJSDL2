@@ -115,28 +115,28 @@ const uint8_t PARTICLES::getRemaining()
 
 PARTICLE::PARTICLE(const int _SCREEN_WIDTH, const int _SCREEN_HEIGHT) : SCREEN_WIDTH(_SCREEN_WIDTH), SCREEN_HEIGHT(_SCREEN_HEIGHT)
 {
-	xpos = ypos = 0;
-	xdir = ydir = 0;
-	colorindex = 255;
-	dead = false;
+	XPos = YPos = 0;
+	XDir = YDir = 0;
+	ColorIndex = 255;
+	Dead = false;
 }
 
 bool PARTICLE::draw(uint8_t* fire, bool& bAtLeastOneAlive)
 {
-	if (!dead && !setDeath())
+	if (!Dead && !setDeath())
 	{
 		int32_t temp;
 		/* draw particle */
-		if (ypos > 1 && xpos > 1 &&
-			(xpos < SCREEN_WIDTH - 3))
+		if (YPos > 1 && XPos > 1 &&
+			(XPos < SCREEN_WIDTH - 3))
 		{
-			temp = ypos * SCREEN_WIDTH + xpos;
+			temp = YPos * SCREEN_WIDTH + XPos;
 
-			fire[temp] = colorindex;
-			fire[temp - 1] = colorindex;
-			fire[temp + SCREEN_WIDTH] = colorindex;
-			fire[temp - SCREEN_WIDTH] = colorindex;
-			fire[temp + 1] = colorindex;
+			fire[temp] = ColorIndex;
+			fire[temp - 1] = ColorIndex;
+			fire[temp + SCREEN_WIDTH] = ColorIndex;
+			fire[temp - SCREEN_WIDTH] = ColorIndex;
+			fire[temp + 1] = ColorIndex;
 		}
 		bAtLeastOneAlive = true;
 		return true;
@@ -146,51 +146,51 @@ bool PARTICLE::draw(uint8_t* fire, bool& bAtLeastOneAlive)
 
 const bool PARTICLE::setDeath()
 {
-	xpos += xdir;
-	ypos += ydir;
+	XPos += XDir;
+	YPos += YDir;
 
-	/* is particle dead? */
-	if (colorindex == 0 ||
-		(ypos >= SCREEN_HEIGHT - 3))
+	/* is particle Dead? */
+	if (ColorIndex == 0 ||
+		(YPos >= SCREEN_HEIGHT - 3))
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	// Is particle on the left side of visible screen coming back ?
-	// If not -> dead.
-	if (xpos <= 1 && xdir <= 0) // Minimal check : those going left are not coming back for sure.
+	// If not -> Dead.
+	if (XPos <= 1 && XDir <= 0) // Minimal check : those going left are not coming back for sure.
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	// Is particle on the right side of visible screen coming back ?
-	// If not -> dead.
-	if ((xpos >= SCREEN_WIDTH - 3) && xdir >= 0) // Minimal check : those going right are not coming back for sure.
+	// If not -> Dead.
+	if ((XPos >= SCREEN_WIDTH - 3) && XDir >= 0) // Minimal check : those going right are not coming back for sure.
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	// Is particle above (Actually *under*) visible screen coming back ?
-	// If not -> dead.
-	if (ypos <= 1)
+	// If not -> Dead.
+	if (YPos <= 1)
 	{
-		int32_t deltaX = xdir;
-		if ((deltaX > 0 && (xpos + deltaX >= SCREEN_WIDTH - 3)) ||
-			(deltaX < 0 && (xpos + deltaX <= 1)))
+		int32_t deltaX = XDir;
+		if ((deltaX > 0 && (XPos + deltaX >= SCREEN_WIDTH - 3)) ||
+			(deltaX < 0 && (XPos + deltaX <= 1)))
 		{
-			dead = true;
+			Dead = true;
 			return true;
 		}
 	}
 
 	/* gravity takes over */
-	ydir++;
+	YDir++;
 
 	/* particle cools off */
-	colorindex--;
+	ColorIndex--;
 
 	return false;
 }
@@ -200,46 +200,46 @@ RANDOMORIGIN::RANDOMORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PA
 	const int xOrg = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH );
 	const int yOrg = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_HEIGHT );
 
-	xpos = xOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	ypos = yOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	xdir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
-	ydir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
+	XPos = xOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	YPos = yOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	XDir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
+	YDir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
 }
 
 // Original settings from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
 CENTEREDEDORIGIN::CENTEREDEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	/* randomly init particle, generate it in the center of the screen */
-	xpos = (SCREEN_WIDTH >> 1) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	ypos = (SCREEN_HEIGHT >> 1) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	xdir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
-	ydir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
+	XPos = (SCREEN_WIDTH >> 1) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	YPos = (SCREEN_HEIGHT >> 1) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	XDir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
+	YDir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
 }
 
 FORCEDORIGIN::FORCEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	xpos = xOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	ypos = yOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	xdir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
-	ydir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
+	XPos = xOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	YPos = yOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	XDir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
+	YDir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
 }
 
-CIRCULARPOS::CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double _radius) : radius(_radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+CIRCULARPOS::CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius) : Radius(radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	double angle = PARTICLES::user_uniform_real_distribution<double>( 0, std::numbers::pi * 2. );
-	xpos = xOrg + std::cos(angle) * radius; // X est le cosinus de l'angle.
-	ypos = yOrg + std::sin(angle) * radius; // Y est le sinus de l'angle.
-	xdir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
-	ydir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
+	const double angle = PARTICLES::user_uniform_real_distribution<double>( 0, std::numbers::pi * 2. );
+	XPos = xOrg + std::cos(angle) * Radius; // X est le cosinus de l'angle.
+	YPos = yOrg + std::sin(angle) * Radius; // Y est le sinus de l'angle.
+	XDir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
+	YDir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
 }
 
 CIRCULARDIR::CIRCULARDIR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	double angle = PARTICLES::user_uniform_real_distribution<double>( 0, std::numbers::pi * 2. );
-	xpos = xOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	ypos = yOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	xdir = std::cos(angle) * 10;
-	ydir = std::sin(angle) * 10;
+	const double angle = PARTICLES::user_uniform_real_distribution<double>( 0, std::numbers::pi * 2. );
+	XPos = xOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	YPos = yOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	XDir = std::cos(angle) * 10;
+	YDir = std::sin(angle) * 10;
 }
 
 TRAIL::TRAIL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -257,10 +257,10 @@ TRAIL::TRAIL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_
 		ydirdecbase = 25;
 	}
 
-	xpos = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH ) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	ypos = SCREEN_HEIGHT - 4;
-	xdir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
-	ydir = ydirbase + PARTICLES::user_uniform_int_distribution<int32_t>( 0, ydirdecbase ); // -32 -20
+	XPos = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH ) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	YPos = SCREEN_HEIGHT - 4;
+	XDir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
+	YDir = ydirbase + PARTICLES::user_uniform_int_distribution<int32_t>( 0, ydirdecbase ); // -32 -20
 }
 
 void TRAIL::init()
@@ -282,51 +282,51 @@ void TRAIL::init()
 		ydirbase = -65;
 		ydirdecbase = 25;
 	}
-	xpos = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH ) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	ypos = SCREEN_HEIGHT - 4;
-	xdir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
-	ydir = ydirbase + PARTICLES::user_uniform_int_distribution<int32_t>( 0, ydirdecbase ); // -32 -20
-	colorindex = 255;
-	dead = false;
+	XPos = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH ) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	YPos = SCREEN_HEIGHT - 4;
+	XDir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
+	YDir = ydirbase + PARTICLES::user_uniform_int_distribution<int32_t>( 0, ydirdecbase ); // -32 -20
+	ColorIndex = 255;
+	Dead = false;
 }
 
 const bool TRAIL::setDeath()
 {
-	xpos += xdir;
-	ypos += ydir;
+	XPos += XDir;
+	YPos += YDir;
 
-	/* is particle dead? */
-	if (colorindex == 0 ||
-		(ypos >= SCREEN_HEIGHT - 3))
+	/* is particle Dead? */
+	if (ColorIndex == 0 ||
+		(YPos >= SCREEN_HEIGHT - 3))
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	// Is particle above (Actually *under*) visible screen coming back ?
-	// If not -> dead.
-	if (ypos <= 1)
+	// If not -> Dead.
+	if (YPos <= 1)
 	{
-		int32_t deltaX = xdir;
-		if ((deltaX > 0 && (xpos + deltaX >= SCREEN_WIDTH - 3)) ||
-			(deltaX < 0 && (xpos + deltaX <= 1)))
+		int32_t deltaX = XDir;
+		if ((deltaX > 0 && (XPos + deltaX >= SCREEN_WIDTH - 3)) ||
+			(deltaX < 0 && (XPos + deltaX <= 1)))
 		{
-			dead = true;
+			Dead = true;
 			return true;
 		}
 	}
 
-	if (ydir > 0)
+	if (YDir > 0)
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	/* gravity takes over */
-	ydir++;
+	YDir++;
 
 	/* particle cools off */
-	colorindex--;
+	ColorIndex--;
 	return false;
 }
 
@@ -336,156 +336,156 @@ RADIAL::RADIAL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, 
 
 const bool RADIAL::setDeath()
 {
-	xpos += xdir;
-	ypos += ydir;
+	XPos += XDir;
+	YPos += YDir;
 
-	/* is particle dead? */
-	if (colorindex == 0 ||
-		(ypos >= SCREEN_HEIGHT - 3))
+	/* is particle Dead? */
+	if (ColorIndex == 0 ||
+		(YPos >= SCREEN_HEIGHT - 3))
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	// Is particle on the left side of visible screen coming back ?
-	// If not -> dead.
-	if (xpos <= 1 && xdir <= 0) // Minimal check : those going left are not coming back for sure.
+	// If not -> Dead.
+	if (XPos <= 1 && XDir <= 0) // Minimal check : those going left are not coming back for sure.
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	// Is particle on the right side of visible screen coming back ?
-	// If not -> dead.
-	if ((xpos >= SCREEN_WIDTH - 3) && xdir >= 0) // Minimal check : those going right are not coming back for sure.
+	// If not -> Dead.
+	if ((XPos >= SCREEN_WIDTH - 3) && XDir >= 0) // Minimal check : those going right are not coming back for sure.
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	// Is particle above (Actually *under*) visible screen coming back ?
-	// If not -> dead.
-	if (ypos <= 1 && ydir <= 0) // RADIAL never fall.
+	// If not -> Dead.
+	if (YPos <= 1 && YDir <= 0) // RADIAL never fall.
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	/* particle cools off */
-	colorindex--;
+	ColorIndex--;
 
 	return false;
 }
 
 CIRCLE::CIRCLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : RADIAL(SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
 {
-	radius = 30;
+	Radius = 30;
 }
 
 const bool CIRCLE::setDeath()
 {
-	xpos += xdir;
-	ypos += ydir;
-	if (radius > 0)
-		--radius;
+	XPos += XDir;
+	YPos += YDir;
+	if (Radius > 0)
+		--Radius;
 
-	/* is particle dead? */
-	if (colorindex == 0 ||
-		(ypos >= SCREEN_HEIGHT - 3) ||
-		radius == 0)
+	/* is particle Dead? */
+	if (ColorIndex == 0 ||
+		(YPos >= SCREEN_HEIGHT - 3) ||
+		Radius == 0)
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	// Is particle on the left side of visible screen coming back ?
-	// If not -> dead.
-	if (xpos <= 1 && xdir <= 0) // Minimal check : those going left are not coming back for sure.
+	// If not -> Dead.
+	if (XPos <= 1 && XDir <= 0) // Minimal check : those going left are not coming back for sure.
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	// Is particle on the right side of visible screen coming back ?
-	// If not -> dead.
-	if ((xpos >= SCREEN_WIDTH - 3) && xdir >= 0) // Minimal check : those going right are not coming back for sure.
+	// If not -> Dead.
+	if ((XPos >= SCREEN_WIDTH - 3) && XDir >= 0) // Minimal check : those going right are not coming back for sure.
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	// Is particle above (Actually *under*) visible screen coming back ?
-	// If not -> dead.
-	if (ypos <= 1 && ydir <= 0) // Circulars never fall.
+	// If not -> Dead.
+	if (YPos <= 1 && YDir <= 0) // Circulars never fall.
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	/* particle cools off */
-	colorindex--;
+	ColorIndex--;
 
 	return false;
 }
 
 WATERFALL::WATERFALL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : RADIAL(SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
 {
-	radius = 30;
+	Radius = 30;
 }
 
 const bool WATERFALL::setDeath()
 {
-	xpos += xdir;
-	ypos += ydir;
-	if (radius > 0)
-		--radius;
+	XPos += XDir;
+	YPos += YDir;
+	if (Radius > 0)
+		--Radius;
 
-	/* is particle dead? */
-	if (colorindex == 0 ||
-		(ypos >= SCREEN_HEIGHT - 3))
+	/* is particle Dead? */
+	if (ColorIndex == 0 ||
+		(YPos >= SCREEN_HEIGHT - 3))
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	// Is particle on the left side of visible screen coming back ?
-	// If not -> dead.
-	if (xpos <= 1 && xdir <= 0) // Minimal check : those going left are not coming back for sure.
+	// If not -> Dead.
+	if (XPos <= 1 && XDir <= 0) // Minimal check : those going left are not coming back for sure.
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
 	// Is particle on the right side of visible screen coming back ?
-	// If not -> dead.
-	if ((xpos >= SCREEN_WIDTH - 3) && xdir >= 0) // Minimal check : those going right are not coming back for sure.
+	// If not -> Dead.
+	if ((XPos >= SCREEN_WIDTH - 3) && XDir >= 0) // Minimal check : those going right are not coming back for sure.
 	{
-		dead = true;
+		Dead = true;
 		return true;
 	}
 
-	if (radius == 0)
+	if (Radius == 0)
 	{
 		// Is particle above (Actually *under*) visible screen coming back ?
-		// If not -> dead.
-		if (ypos <= 1)
+		// If not -> Dead.
+		if (YPos <= 1)
 		{
-			int32_t deltaX = xdir;
-			if ((deltaX > 0 && (xpos + deltaX >= SCREEN_WIDTH - 3)) ||
-				(deltaX < 0 && (xpos + deltaX <= 1)))
+			int32_t deltaX = XDir;
+			if ((deltaX > 0 && (XPos + deltaX >= SCREEN_WIDTH - 3)) ||
+				(deltaX < 0 && (XPos + deltaX <= 1)))
 			{
-				dead = true;
+				Dead = true;
 				return true;
 			}
 		}
 	}
 
 	/* gravity takes over */
-	if (radius == 0)
-		ydir++;
+	if (Radius == 0)
+		YDir++;
 
 	/* particle cools off */
-	colorindex--;
+	ColorIndex--;
 
 	return false;
 }

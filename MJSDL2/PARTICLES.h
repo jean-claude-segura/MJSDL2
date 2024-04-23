@@ -68,10 +68,10 @@ public:
 class PARTICLE
 {
 protected:
-	int32_t xpos, ypos;
-	int32_t xdir, ydir;
-	uint8_t colorindex;
-	bool dead;
+	int32_t XPos, YPos;
+	int32_t XDir, YDir;
+	uint8_t ColorIndex;
+	bool Dead;
 	int32_t SCREEN_WIDTH;
 	int32_t SCREEN_HEIGHT;
 	PARTICLE(const int _SCREEN_WIDTH, const int _SCREEN_HEIGHT);
@@ -105,11 +105,11 @@ public:
 class CIRCULARPOS : public PARTICLE
 {
 private:
-	const double radius;
+	const double Radius;
 public:
 	// Starts from (xOrg; yOrg)
-	// Every particle with the same (xOrg; yOrg) will be at the same distance from it (On a circle with the radius specified centered from there)
-	CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double _radius);
+	// Every particle with the same (xOrg; yOrg) will be at the same distance from it (On a circle with the Radius specified centered from there)
+	CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius);
 };
 
 class CIRCULARDIR : public PARTICLE
@@ -129,8 +129,8 @@ public:
 
 	void init();
 
-	const int32_t getXPos() { return xpos; }
-	const int32_t getYPos() { return ypos; }
+	const int32_t getXPos() { return XPos; }
+	const int32_t getYPos() { return YPos; }
 
 protected:
 	const bool setDeath();
@@ -156,7 +156,7 @@ public:
 	// Will die after 30 frames.
 	CIRCLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
 private:
-	uint8_t radius;
+	uint8_t Radius;
 protected:
 	const bool setDeath();
 };
@@ -170,7 +170,7 @@ public:
 	// Will fall after 30 frames.
 	WATERFALL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
 private:
-	uint8_t radius;
+	uint8_t Radius;
 protected:
 	const bool setDeath();
 };

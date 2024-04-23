@@ -399,7 +399,7 @@ void FireTypeThree(SDL_Surface* firesurface, Uint8* fire, Uint8* prev_fire, Uint
 	auto p = (Uint32*)firesurface->pixels;
 	/*
 	Uint8* f = (Uint8*)fire;
-	for(int index = 0; index < SCREEN_HEIGHT * SCREEN_WIDTH;  ++index, ++p, ++f)
+	for(int Index = 0; Index < SCREEN_HEIGHT * SCREEN_WIDTH;  ++Index, ++p, ++f)
 		*p = palette[*f];
 	/**/
 	/* Copy to framebuffer and map to RGBA, scrolling up one row. */
@@ -945,7 +945,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 				const int size = choices.size() - 1;
 				auto next = std::uniform_int_distribution<int>{ 0, size }(e1);
 				particles.init(NUMBER_OF_PARTICLES, choices[next], trail.getXPos(), trail.getYPos());
-				//vparticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_THISISMADNESS, vtrails[i].getXPos(), vtrails[i].getYPos());
+				//vParticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_THISISMADNESS, vTrails[i].getXPos(), vTrails[i].getYPos());
 			}
 
 		}
@@ -1054,8 +1054,8 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_WATERFALL);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_TRAIL);
 
-	std::vector<PARTICLES> vparticles;
-	std::vector<TRAIL> vtrails;
+	std::vector<PARTICLES> vParticles;
+	std::vector<TRAIL> vTrails;
 
 	bool * bAtLeastOneAlive = new bool [max_number_of_fires];
 	bool * bTrailAlive = new bool[max_number_of_fires];
@@ -1083,8 +1083,8 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	//for (Uint8 i = 0; i < max_number_of_fires; ++i)
 	int i = 0;
 	{
-		vparticles.emplace_back(PARTICLES(SCREEN_WIDTH, SCREEN_HEIGHT));
-		vtrails.emplace_back(TRAIL(SCREEN_WIDTH, SCREEN_HEIGHT));
+		vParticles.emplace_back(PARTICLES(SCREEN_WIDTH, SCREEN_HEIGHT));
+		vTrails.emplace_back(TRAIL(SCREEN_WIDTH, SCREEN_HEIGHT));
 		bAtLeastOneAlive[i] = false;
 		bTrailAlive[i] = false;
 		palette[i] = NULL;
@@ -1123,8 +1123,8 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 				number_of_fires = std::min(number_of_fires, max_number_of_fires);
 				int i = number_of_fires - 1;
 				{
-					vparticles.emplace_back(PARTICLES(SCREEN_WIDTH, SCREEN_HEIGHT));
-					vtrails.emplace_back(TRAIL(SCREEN_WIDTH, SCREEN_HEIGHT));
+					vParticles.emplace_back(PARTICLES(SCREEN_WIDTH, SCREEN_HEIGHT));
+					vTrails.emplace_back(TRAIL(SCREEN_WIDTH, SCREEN_HEIGHT));
 					bAtLeastOneAlive[i] = false;
 					bTrailAlive[i] = false;
 					palette[i] = NULL;
@@ -1132,7 +1132,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 					fire[i] = new Uint8[SCREEN_WIDTH * SCREEN_HEIGHT];
 					memset(fire[i], 0, SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(Uint8));
 
-					vtrails[i].init();
+					vTrails[i].init();
 					if (palette[i] != NULL)
 						delete[] palette[i];
 					palette[i] = new Uint32[size];
@@ -1143,7 +1143,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 					bAtLeastOneAlive[i] = true; // To prevent init of the trail on next loop.
 					const int size = choices.size() - 1;
 					auto next = std::uniform_int_distribution<int>{ 0, size }(e1);
-					vparticles[i].init(NUMBER_OF_PARTICLES, choices[next], vtrails[i].getXPos(), vtrails[i].getYPos());
+					vParticles[i].init(NUMBER_OF_PARTICLES, choices[next], vTrails[i].getXPos(), vTrails[i].getYPos());
 				}
 			}
 			else
@@ -1166,7 +1166,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 		{
 			if (!bAtLeastOneAlive[i])
 			{
-				vtrails[i].init();
+				vTrails[i].init();
 				if (palette[i] != NULL)
 					delete[] palette[i];
 				palette[i] = new Uint32[size];
@@ -1180,20 +1180,20 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 			if (bTrailAlive[i])
 			{
 				bTrailAlive[i] = false;
-				vtrails[i].draw(fire[i], bTrailAlive[i]);
+				vTrails[i].draw(fire[i], bTrailAlive[i]);
 				if (!bTrailAlive[i])
 				{
 					const int size = choices.size() - 1;
 					auto next = std::uniform_int_distribution<int>{ 0, size }(e1);
-					vparticles[i].init(NUMBER_OF_PARTICLES, choices[next], vtrails[i].getXPos(), vtrails[i].getYPos());
-					//vparticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_THISISMADNESS, vtrails[i].getXPos(), vtrails[i].getYPos());
-					//vparticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_CIRCLE, vtrails[i].getXPos(), vtrails[i].getYPos());
+					vParticles[i].init(NUMBER_OF_PARTICLES, choices[next], vTrails[i].getXPos(), vTrails[i].getYPos());
+					//vParticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_THISISMADNESS, vTrails[i].getXPos(), vTrails[i].getYPos());
+					//vParticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_CIRCLE, vTrails[i].getXPos(), vTrails[i].getYPos());
 				}
 			}
 			else
 			{
 				/* move and draw particles into fire[i] array */
-				bAtLeastOneAlive[i] = vparticles[i].draw(fire[i]);
+				bAtLeastOneAlive[i] = vParticles[i].draw(fire[i]);
 			}
 
 			/* create fire[i] effect */
