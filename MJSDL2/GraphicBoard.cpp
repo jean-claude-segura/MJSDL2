@@ -1204,7 +1204,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 
 	SDL_Texture* currTextureBackground = NULL;
 	// Copie du fond :
-	if (plateau.IsLockedFromStart())
+	if (plateau.IsLockedFromStart() || plateau.IsLockedFromMove())
 	{
 		currTextureBackground = textureGreyedBackground;
 	}

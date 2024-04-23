@@ -584,8 +584,45 @@ inline bool isCenterLocked(int index, std::map<int, Tile>& mIndexToTile)
 }
 
 
-inline bool checkIfLocked(int x, int y, int z)
+inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard)
 {
+	std::array<int, 42> arrCountOnPairing;
+	for (int i = 0; i < 42; ++i) arrCountOnPairing[i] = 0;
+	for (const auto& tileAndIndex : vLogicalBoard)
+	{
+		++arrCountOnPairing[tileAndIndex.TileObject.Pairing];
+	}
+
+	for (int pairing = 0; pairing < 42; ++pairing)
+	{
+		if (arrCountOnPairing[pairing] != 2)
+			continue;
+		std::vector<int> vPairedIndex;
+		auto it = vLogicalBoard.begin();
+		for (; it != vLogicalBoard.end(); ++it)
+		{
+			if (it->TileObject.Pairing == pairing)
+			{
+				vPairedIndex.emplace_back(it->Index);
+				break;
+			}
+		}
+		for ( ++it; it != vLogicalBoard.end(); ++it)
+		{
+			if (it->TileObject.Pairing == pairing)
+			{
+				vPairedIndex.emplace_back(it->Index);
+				break;
+			}
+		}
+
+		// Pure vertical lock.
+		auto c1 = arrIndexToCoord[vPairedIndex[0]];
+		auto c2 = arrIndexToCoord[vPairedIndex[1]];
+		if (c1.x == c2.x && c1.y == c2.y)
+			return true;
+	}
+	/*
 	if (z == 3)
 	{
 		// z = {z .. z - 3} <=> z = {0 .. 3}
@@ -612,7 +649,7 @@ inline bool checkIfLocked(int x, int y, int z)
 		// AA****BBBB and BBBB****AA when only 2 A are left
 		// AA****BB when there are only 2 A and 2 B left
 	}
-
+	*/
 	return false;
 }
 /*

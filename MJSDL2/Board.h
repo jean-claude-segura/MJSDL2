@@ -243,6 +243,7 @@ public:
 	void SortBoard(const uint8_t direction);
 	bool Solve();
 	bool IsLockedFromStart();
+	bool IsLockedFromMove();
 #ifdef _DEBUG
 	bool Test();
 	bool TestLocked();
