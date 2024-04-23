@@ -144,7 +144,7 @@ void GraphicBoard::Init()
 	//SDL_UpdateWindowSurface(window);
 
 #ifdef _DEBUG	
-	plateau.Test();
+	//plateau.Test();
 #endif
 	plateau.InitBoard();
 	plateau.SortBoard(direction);
@@ -1176,10 +1176,26 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 	SDL_RenderClear(renderer);
 
 	// Copie du fond :
-	if (SDL_RenderCopy(renderer, textureBackground, NULL, NULL) < 0)
+	if (false)
 	{
-		std::cout << stderr << "could not copy background: " << SDL_GetError() << std::endl;
-		ThrowException(1);
+		SDL_Texture* temp = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
+		SDL_SetRenderTarget(renderer, temp);
+		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
+		SDL_SetRenderTarget(renderer, renderTargetOrg);
+		SDL_Texture* greyedBackground = NULL;
+		SDL_GreyscaleTexture(renderer, temp, greyedBackground);
+		SDL_RenderCopy(renderer, greyedBackground, NULL, NULL);
+		SDL_DestroyTexture(greyedBackground);
+		SDL_DestroyTexture(temp);
+	}
+	else
+	{
+		// Copie du fond :
+		if (SDL_RenderCopy(renderer, textureBackground, NULL, NULL) < 0)
+		{
+			std::cout << stderr << "could not copy background: " << SDL_GetError() << std::endl;
+			ThrowException(1);
+		}
 	}
 	if(oneByOne)
 		DisplayInterface();
