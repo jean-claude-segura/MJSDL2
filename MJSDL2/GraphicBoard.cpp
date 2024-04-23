@@ -281,6 +281,11 @@ void GraphicBoard::LoadRandomBackground(const std::string& path)
 
 void GraphicBoard::LoadBackground(const std::string& path)
 {
+	if (textureBackground != NULL)
+		SDL_DestroyTexture(textureBackground);
+	if (textureGreyedBackground != NULL)
+		SDL_DestroyTexture(textureGreyedBackground);
+
 	auto temp = IMG_Load(path.c_str());
 	auto background = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (background == NULL) {
@@ -323,6 +328,9 @@ void GraphicBoard::LoadRandomBackgroundVictory(const std::string& path)
 
 void GraphicBoard::LoadBackgroundVictory(const std::string& path)
 {
+	if (textureBackgroundVictory != NULL)
+		SDL_DestroyTexture(textureBackgroundVictory);
+
 	auto temp = IMG_Load(path.c_str());
 	auto background = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
 	if (background == NULL) {
@@ -370,15 +378,24 @@ void GraphicBoard::LoadTiles()
 	LoadRamdomTileSet(38, 42, "./tiles/Fleurs/");
 }
 
+void GraphicBoard::LoadRandomBackground()
+{
+	LoadRandomBackground("./background/");
+}
+
+void GraphicBoard::LoadRandomBackgroundVictory()
+{
+	LoadRandomBackgroundVictory("./background-victory/");
+}
+
 void GraphicBoard::LoadResources()
 {
 	LoadFaceMask();
 	LoadMouseMask();
 
 	LoadTiles();
-
-	LoadRandomBackground("./background/");
-	LoadRandomBackgroundVictory("./background-victory/");
+	LoadRandomBackground();
+	LoadRandomBackgroundVictory();
 }
 
 void GraphicBoard::LoadButton(SDL_Texture*& button, const std::string& strPath, const std::string& strName)
@@ -468,7 +485,10 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			plateau.SortBoard(direction);
 			itNextMove = plateau.GetMovesLeft().begin();
 			itPrevMove = plateau.GetMovesLeft().end();
+
 			LoadTiles();
+			LoadRandomBackground();
+
 			Refresh(true, true);
 		}
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
@@ -1321,6 +1341,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 			}
 			SDL_SetRenderTarget(renderer, renderTargetOrg);
 			SDL_RenderCopy(renderer, currTextureBackground, NULL, NULL);
+			LoadRandomBackgroundVictory();
 		}
 		else
 		{

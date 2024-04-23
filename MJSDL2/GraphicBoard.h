@@ -45,8 +45,10 @@ private:
 	void LoadRamdomTileSet(const int istart, const int iend, const std::string& path);
 	void LoadTiles();
 	void LoadRandomBackground(const std::string& path);
+	void LoadRandomBackground();
 	void LoadBackground(const std::string& path);
 	void LoadRandomBackgroundVictory(const std::string& path);
+	void LoadRandomBackgroundVictory();
 	void LoadBackgroundVictory(const std::string& path);
 	void LoadResources();
 	void Refresh(const bool refreshMouseMap, const bool oneByOne = false);
