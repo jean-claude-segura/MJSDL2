@@ -658,6 +658,7 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 					else
 					{
 						clicked[index] = true;
+						std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index).Rank << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 						if (plateau.RemovePairOfTiles(selected, index))
 						{
 							int temp = selected;
@@ -669,7 +670,6 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 							clicked[index] = false;
 #ifdef _DEBUG
 							std::cout << std::dec << plateau.getNumberOfTilesLeft() << " tile" << (plateau.getNumberOfTilesLeft() > 1 ? "s" : "") << " left." << std::endl;
-							std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index).Rank << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 							std::cout << std::dec << plateau.HowManyMovesLeft() << " move" << (plateau.HowManyMovesLeft() > 1 ? "s" : "") << " left." << std::endl;
 							auto it = plateau.GetMovesLeft().begin();
 							if (it != plateau.GetMovesLeft().end())

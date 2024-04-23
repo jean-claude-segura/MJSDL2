@@ -716,43 +716,99 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 	/**/
 	/**/
 	// Blocked by left and right padlocks.
-	auto first = mIndexToTile.find(0x8C)->second.Pairing;
-	auto last = mIndexToTile.find(0x8D)->second.Pairing;
-	if (first != last)
 	{
-		auto firstCount = 1;
-		auto lastCount = 1 + last == mIndexToTile.find(0x8E)->second.Pairing ? 1 : 0;
-		for (int x = 0; x < 12; ++x)
+		auto first = mIndexToTile.find(0x8C)->second.Pairing;
+		std::vector<int> lasts;
+		lasts.emplace_back(mIndexToTile.find(0x8D)->second.Pairing);
+		lasts.emplace_back(mIndexToTile.find(0x8E)->second.Pairing);
+		int run = 0;
+		for (const auto& last : lasts)
 		{
-			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == first) ++firstCount;
-			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == last) ++lastCount;
-
-			if (mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second.Pairing == first) ++firstCount;
-			if (mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second.Pairing == last) ++lastCount;
-
-			if (lastCount == 4 && firstCount == lastCount)
+			if (first != last)
 			{
-				if (cause != NULL) { *cause = 4; }; return true;
+				auto firstCount = 1;
+				auto lastCount = 1 + lasts[0] == lasts[1] ? 1 : 0;
+				for (int x = 0; x < 12; ++x)
+				{
+					if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == first) ++firstCount;
+					if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == last) ++lastCount;
+
+					if (mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second.Pairing == first) ++firstCount;
+					if (mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second.Pairing == last) ++lastCount;
+
+					if (lastCount == 4 && firstCount == lastCount)
+					{
+						if (cause != NULL) { *cause = 4 + run; }; return true;
+					}
+				}
 			}
+
+			if (lasts[0] == lasts[1]) break;
+			++run;
 		}
 	}
-
-	last = mIndexToTile.find(0x8E)->second.Pairing;
-	if (first != last)
+	/**/
+	// Blocked by left padlock.
 	{
-		auto firstCount = 1;
-		auto lastCount = 1 + last == mIndexToTile.find(0x8D)->second.Pairing ? 1 : 0;
-		for (int x = 0; x < 12; ++x)
+		auto first = mIndexToTile.find(0x8C)->second.Pairing;
+		std::vector<int> lasts;
+		lasts.emplace_back(mIndexToTile.find(arrBoardCoordToIndex[11][3][0])->second.Pairing);
+		lasts.emplace_back(mIndexToTile.find(arrBoardCoordToIndex[11][4][0])->second.Pairing);
+		int run = 0;
+		for (const auto& last : lasts)
 		{
-			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == first) ++firstCount;
-			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == last) ++lastCount;
-
-			if (mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second.Pairing == first) ++firstCount;
-			if (mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second.Pairing == last) ++lastCount;
-
-			if (lastCount == 4 && firstCount == lastCount)
+			if (first != last)
 			{
-				if (cause != NULL) { *cause = 5; }; return true;
+				auto firstCount = 1;
+				auto lastCount = 1;
+				for (int x = 0; x < 11; ++x)
+				{
+					if (mIndexToTile.find(arrBoardCoordToIndex[x][3 + run][0])->second.Pairing == first) ++firstCount;
+					if (mIndexToTile.find(arrBoardCoordToIndex[x][3 + run][0])->second.Pairing == last) ++lastCount;
+
+					if (lastCount == 4 && firstCount == lastCount)
+					{
+						if (cause != NULL) { *cause = 6 + run; }; return true;
+					}
+				}
+			}
+
+			if (lasts[0] == lasts[1]) break;
+			++run;
+		}
+	}
+	/**/
+	// Blocked by right padlocks.
+	{
+		std::vector<int> firsts;
+		firsts.emplace_back(mIndexToTile.find(arrBoardCoordToIndex[0][3][0])->second.Pairing);
+		firsts.emplace_back(mIndexToTile.find(arrBoardCoordToIndex[0][4][0])->second.Pairing);
+		std::vector<int> lasts;
+		lasts.emplace_back(mIndexToTile.find(0x8D)->second.Pairing);
+		lasts.emplace_back(mIndexToTile.find(0x8E)->second.Pairing);
+		for (const auto& first : firsts)
+		{
+			int run = 0;
+			for (const auto& last : lasts)
+			{
+				if (first != last)
+				{
+					auto firstCount = 1;
+					auto lastCount = 1 + lasts[0] == lasts[1] ? 1 : 0;
+					for (int x = 1; x < 12; ++x)
+					{
+						if (mIndexToTile.find(arrBoardCoordToIndex[x][3+run][0])->second.Pairing == first) ++firstCount;
+						if (mIndexToTile.find(arrBoardCoordToIndex[x][3+run][0])->second.Pairing == last) ++lastCount;
+
+						if (lastCount == 4 && firstCount == lastCount)
+						{
+							if (cause != NULL) { *cause = 8 + run; }; return true;
+						}
+					}
+				}
+
+				if (lasts[0] == lasts[1]) break;
+				++run;
 			}
 		}
 	}
@@ -780,7 +836,7 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 						if (mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second.Pairing == last.Pairing) ++lastCount;
 					}
 					if (lastCount == 4 && firstCount == lastCount)
-						{ if (cause != NULL) { *cause = 6; }; return true; }
+						{ if (cause != NULL) { *cause = 10; }; return true; }
 				}
 			}
 		}
