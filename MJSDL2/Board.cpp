@@ -5,60 +5,60 @@ Board::Board()
 {
 }
 
-bool Board::CompLogicalBoardDownLeft(const DominoIndex& left, const DominoIndex& right)
+bool Board::CompLogicalBoardDownLeft(const TileAndIndex& left, const TileAndIndex& right)
 {
 	return
 		(
-			arrIndexToCoord[left.index].z <= arrIndexToCoord[right.index].z &&
+			arrIndexToCoord[left.Index].z <= arrIndexToCoord[right.Index].z &&
 			(
-				(arrIndexToCoord[left.index].z != arrIndexToCoord[right.index].z) ||
-				(arrIndexToCoord[left.index].y >= arrIndexToCoord[right.index].y) && (arrIndexToCoord[left.index].y != arrIndexToCoord[right.index].y || arrIndexToCoord[left.index].x <= arrIndexToCoord[right.index].x)
+				(arrIndexToCoord[left.Index].z != arrIndexToCoord[right.Index].z) ||
+				(arrIndexToCoord[left.Index].y >= arrIndexToCoord[right.Index].y) && (arrIndexToCoord[left.Index].y != arrIndexToCoord[right.Index].y || arrIndexToCoord[left.Index].x <= arrIndexToCoord[right.Index].x)
 				)
 			);
-	/*return !(std::get<2>(arrIndexToCoord[left.index]) > std::get<2>(right) ||
-		std::get<2>(arrIndexToCoord[left.index]) == std::get<2>(right) &&
-		(std::get<1>(arrIndexToCoord[left.index]) < std::get<1>(right) || std::get<1>(arrIndexToCoord[left.index]) == std::get<1>(right) && std::get<0>(arrIndexToCoord[left.index]) > std::get<0>(right)));*/
+	/*return !(std::get<2>(arrIndexToCoord[left.Index]) > std::get<2>(right) ||
+		std::get<2>(arrIndexToCoord[left.Index]) == std::get<2>(right) &&
+		(std::get<1>(arrIndexToCoord[left.Index]) < std::get<1>(right) || std::get<1>(arrIndexToCoord[left.Index]) == std::get<1>(right) && std::get<0>(arrIndexToCoord[left.Index]) > std::get<0>(right)));*/
 }
 
 
-bool Board::CompLogicalBoardDownRight(const DominoIndex& left, const DominoIndex& right)
+bool Board::CompLogicalBoardDownRight(const TileAndIndex& left, const TileAndIndex& right)
 {
 	return
 		(
-			arrIndexToCoord[left.index].z <= arrIndexToCoord[right.index].z &&
+			arrIndexToCoord[left.Index].z <= arrIndexToCoord[right.Index].z &&
 			(
-				(arrIndexToCoord[left.index].z != arrIndexToCoord[right.index].z) ||
-				(arrIndexToCoord[left.index].y >= arrIndexToCoord[right.index].y) && (arrIndexToCoord[left.index].y != arrIndexToCoord[right.index].y || arrIndexToCoord[left.index].x > arrIndexToCoord[right.index].x)
+				(arrIndexToCoord[left.Index].z != arrIndexToCoord[right.Index].z) ||
+				(arrIndexToCoord[left.Index].y >= arrIndexToCoord[right.Index].y) && (arrIndexToCoord[left.Index].y != arrIndexToCoord[right.Index].y || arrIndexToCoord[left.Index].x > arrIndexToCoord[right.Index].x)
 				)
 			);
 }
-bool Board::CompLogicalBoardUpLeft(const DominoIndex& left, const DominoIndex& right)
+bool Board::CompLogicalBoardUpLeft(const TileAndIndex& left, const TileAndIndex& right)
 {
 	return
 		(
-			arrIndexToCoord[left.index].z <= arrIndexToCoord[right.index].z &&
+			arrIndexToCoord[left.Index].z <= arrIndexToCoord[right.Index].z &&
 			(
-				(arrIndexToCoord[left.index].z != arrIndexToCoord[right.index].z) ||
-				(arrIndexToCoord[left.index].y <= arrIndexToCoord[right.index].y) && (arrIndexToCoord[left.index].y != arrIndexToCoord[right.index].y || arrIndexToCoord[left.index].x <= arrIndexToCoord[right.index].x)
+				(arrIndexToCoord[left.Index].z != arrIndexToCoord[right.Index].z) ||
+				(arrIndexToCoord[left.Index].y <= arrIndexToCoord[right.Index].y) && (arrIndexToCoord[left.Index].y != arrIndexToCoord[right.Index].y || arrIndexToCoord[left.Index].x <= arrIndexToCoord[right.Index].x)
 				)
 			);
 }
 
-bool Board::CompLogicalBoardUpRight(const DominoIndex& left, const DominoIndex& right)
+bool Board::CompLogicalBoardUpRight(const TileAndIndex& left, const TileAndIndex& right)
 {
 	return
 		(
-			arrIndexToCoord[left.index].z <= arrIndexToCoord[right.index].z &&
+			arrIndexToCoord[left.Index].z <= arrIndexToCoord[right.Index].z &&
 			(
-				(arrIndexToCoord[left.index].z != arrIndexToCoord[right.index].z) ||
-				(arrIndexToCoord[left.index].y <= arrIndexToCoord[right.index].y) && (arrIndexToCoord[left.index].y != arrIndexToCoord[right.index].y || arrIndexToCoord[left.index].x > arrIndexToCoord[right.index].x)
+				(arrIndexToCoord[left.Index].z != arrIndexToCoord[right.Index].z) ||
+				(arrIndexToCoord[left.Index].y <= arrIndexToCoord[right.Index].y) && (arrIndexToCoord[left.Index].y != arrIndexToCoord[right.Index].y || arrIndexToCoord[left.Index].x > arrIndexToCoord[right.Index].x)
 				)
 			);
 }
 
 void Board::SortBoard(const uint8_t direction)
 {
-	bool (*Comparateur)(const DominoIndex&left, const DominoIndex&right);
+	bool (*Comparateur)(const TileAndIndex&left, const TileAndIndex&right);
 	switch (direction)
 	{
 	default:
@@ -75,75 +75,75 @@ void Board::SortBoard(const uint8_t direction)
 		Comparateur = Board::CompLogicalBoardDownRight;
 		break;
 	}
-	std::sort(LogicalBoard.begin(), LogicalBoard.end(), Comparateur);
-	std::vector< DominoIndex>::iterator it;
+	std::sort(vLogicalBoard.begin(), vLogicalBoard.end(), Comparateur);
+	std::vector< TileAndIndex>::iterator it;
 	if (direction == 0 || direction == 3)
 	{
-		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 140; ++it);
-		if (it != LogicalBoard.end())
+		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 140; ++it);
+		if (it != vLogicalBoard.end())
 		{
-			auto temp = DominoIndex(it->domino, it->index);
-			LogicalBoard.erase(it);
-			LogicalBoard.insert(LogicalBoard.begin(), temp);
+			auto temp = TileAndIndex(it->TileObject, it->Index);
+			vLogicalBoard.erase(it);
+			vLogicalBoard.insert(vLogicalBoard.begin(), temp);
 		}
-		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 141; ++it);
-		if (it != LogicalBoard.end())
+		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 141; ++it);
+		if (it != vLogicalBoard.end())
 		{
 			/*auto t = std::make_tuple(12, 8, 0, 0, 0);
-			it = std::find_if(LogicalBoard.begin(), LogicalBoard.end(),
+			it = std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(),
 				[&t](const std::tuple<double, double, double, int, int>& in)
 				{
 					return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
 				}
 			);*/
-			auto temp = DominoIndex(it->domino, it->index);
-			LogicalBoard.erase(it);
-			LogicalBoard.emplace_back(temp);
+			auto temp = TileAndIndex(it->TileObject, it->Index);
+			vLogicalBoard.erase(it);
+			vLogicalBoard.emplace_back(temp);
 		}
-		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 142; ++it);
-		if (it != LogicalBoard.end())
+		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 142; ++it);
+		if (it != vLogicalBoard.end())
 		{
-			auto temp = DominoIndex(it->domino, it->index);
-			LogicalBoard.erase(it);
-			LogicalBoard.emplace_back(temp);
+			auto temp = TileAndIndex(it->TileObject, it->Index);
+			vLogicalBoard.erase(it);
+			vLogicalBoard.emplace_back(temp);
 		}
-		for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 143; ++it);
-		if (it != LogicalBoard.end())
+		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 143; ++it);
+		if (it != vLogicalBoard.end())
 		{
-			auto temp = DominoIndex(it->domino, it->index);
-			LogicalBoard.erase(it);
-			LogicalBoard.emplace_back(temp);
+			auto temp = TileAndIndex(it->TileObject, it->Index);
+			vLogicalBoard.erase(it);
+			vLogicalBoard.emplace_back(temp);
 		}
 	}
 	else if (direction == 1 || direction == 2)
 		{
-			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 140; ++it);
-			if (it != LogicalBoard.end())
+			for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 140; ++it);
+			if (it != vLogicalBoard.end())
 			{
-				auto temp = DominoIndex(it->domino, it->index);
-				LogicalBoard.erase(it);
-				LogicalBoard.emplace_back(temp);
+				auto temp = TileAndIndex(it->TileObject, it->Index);
+				vLogicalBoard.erase(it);
+				vLogicalBoard.emplace_back(temp);
 			}
-			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 141; ++it);
-			if (it != LogicalBoard.end())
+			for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 141; ++it);
+			if (it != vLogicalBoard.end())
 			{
-				auto temp = DominoIndex(it->domino, it->index);
-				LogicalBoard.erase(it);
-				LogicalBoard.insert(LogicalBoard.begin(), temp);
+				auto temp = TileAndIndex(it->TileObject, it->Index);
+				vLogicalBoard.erase(it);
+				vLogicalBoard.insert(vLogicalBoard.begin(), temp);
 			}
-			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 142; ++it);
-			if (it != LogicalBoard.end())
+			for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 142; ++it);
+			if (it != vLogicalBoard.end())
 			{
-				auto temp = DominoIndex(it->domino, it->index);
-				LogicalBoard.erase(it);
-				LogicalBoard.insert(LogicalBoard.begin(), temp);
+				auto temp = TileAndIndex(it->TileObject, it->Index);
+				vLogicalBoard.erase(it);
+				vLogicalBoard.insert(vLogicalBoard.begin(), temp);
 			}
-			for (it = LogicalBoard.begin(); it != LogicalBoard.end() && it->index != 143; ++it);
-			if (it != LogicalBoard.end())
+			for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 143; ++it);
+			if (it != vLogicalBoard.end())
 			{
-				auto temp = DominoIndex(it->domino, it->index);
-				LogicalBoard.erase(it);
-				LogicalBoard.emplace_back(temp);
+				auto temp = TileAndIndex(it->TileObject, it->Index);
+				vLogicalBoard.erase(it);
+				vLogicalBoard.emplace_back(temp);
 			}
 		}
 }
@@ -161,7 +161,7 @@ void Board::InitBoard()
 	std::default_random_engine e1(r());
 #endif
 	std::uniform_int_distribution<int> uniform_dist(0, 41);
-	LogicalBoard.clear();
+	vLogicalBoard.clear();
 	mIndexToTile.clear();
 	mOccupationBoard.clear();
 
@@ -185,25 +185,25 @@ void Board::InitBoard()
 		int debugdom = tempDominos[domino];
 		--tempDominos[domino];
 		mOccupationBoard[arrIndexToCoord[index]] = index;
-		LogicalBoard.emplace_back(DominoIndex(domino, index));
-		mIndexToTile.emplace(index, Domino(domino));
+		vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+		mIndexToTile.emplace(index, Tile(domino));
 	}
 
 	arrRemovable = InitRemovable();
 
-	WhatsLeft.clear();
-	for (int i = 0; i < 144; ++i) WhatsLeft.emplace_back(i);
+	vWhatsLeft.clear();
+	for (int i = 0; i < 144; ++i) vWhatsLeft.emplace_back(i);
 
 	SetMoves();
 
 #ifdef _DEBUG
-	std::cout << std::dec << WhatsLeft.size() << " tile" << (WhatsLeft.size() > 1 ? "s" : "") << " left." << std::endl;
-	std::cout << std::dec << Moves.size() << " move" << (Moves.size() > 1 ? "s" : "") << " left." << std::endl;
-	auto it = Moves.begin();
-	if (it != Moves.end())
+	std::cout << std::dec << vWhatsLeft.size() << " tile" << (vWhatsLeft.size() > 1 ? "s" : "") << " left." << std::endl;
+	std::cout << std::dec << vMoves.size() << " move" << (vMoves.size() > 1 ? "s" : "") << " left." << std::endl;
+	auto it = vMoves.begin();
+	if (it != vMoves.end())
 	{
 		std::cout << "(" << it->first << ";" << it->second << ")";
-		for (++it; it != Moves.end(); ++it)
+		for (++it; it != vMoves.end(); ++it)
 			std::cout << ", (" << it->first << ";" << it->second << ")";
 		std::cout << "." << std::endl;
 	}
@@ -214,18 +214,18 @@ void Board::RemoveTile(const int index)
 {
 	mIndexToTile.erase(index);
 
-	std::vector<DominoIndex>::iterator it = LogicalBoard.begin();
-	for (; it != LogicalBoard.end() && it->index != index; ++it);
-	auto coord = arrIndexToCoord[it->index];
+	std::vector<TileAndIndex>::iterator it = vLogicalBoard.begin();
+	for (; it != vLogicalBoard.end() && it->Index != index; ++it);
+	auto coord = arrIndexToCoord[it->Index];
 	double x = coord.x;
 	double y = coord.y;
 	double z = coord.z;
-	LogicalBoard.erase(it);
+	vLogicalBoard.erase(it);
 	mOccupationBoard.erase(coord);
 
-	auto itWL = std::find(WhatsLeft.begin(), WhatsLeft.end(), index);
-	if (itWL != WhatsLeft.end())
-		WhatsLeft.erase(itWL);
+	auto itWL = std::find(vWhatsLeft.begin(), vWhatsLeft.end(), index);
+	if (itWL != vWhatsLeft.end())
+		vWhatsLeft.erase(itWL);
 
 	arrRemovable[index] = false;
 
@@ -277,62 +277,62 @@ bool Board::RemovePairOfTiles(const int first, const int second)
 		RemoveTile(second);
 		SetMoves();
 		bRetour = true;
-		History.emplace_back(std::pair(first, second));
+		vHistory.emplace_back(std::pair(first, second));
 	}
 	return bRetour;
 }
 
-void Board::BuildMoves(std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::iterator& itFirst, std::vector<std::pair<int, int>>& Moves)
+void Board::BuildMoves(std::vector<TileAndIndex>& vRemovableBoard, std::vector<TileAndIndex>::iterator& itFirst, std::vector<std::pair<int, int>>& vMoves)
 {
-	if (itFirst != RemovableBoard.end())
+	if (itFirst != vRemovableBoard.end())
 	{
-		auto domino = (*itFirst).domino;
+		auto domino = (*itFirst).TileObject;
 		auto itNext = itFirst;
 		do
 		{
 			++itNext;
-			itNext = std::find_if(itNext, RemovableBoard.end(),
-				[domino](const DominoIndex& in)
+			itNext = std::find_if(itNext, vRemovableBoard.end(),
+				[domino](const TileAndIndex& in)
 				{
-					return in.domino.Pairing == domino.Pairing;
+					return in.TileObject.Pairing == domino.Pairing;
 				}
 			);
-			if (itNext != RemovableBoard.end())
+			if (itNext != vRemovableBoard.end())
 			{
-				int indexFirst = (*itFirst).index;
-				Moves.emplace_back(std::pair((*itFirst).index, (*itNext).index));
+				int indexFirst = (*itFirst).Index;
+				vMoves.emplace_back(std::pair((*itFirst).Index, (*itNext).Index));
 			}
-		} while (itNext != RemovableBoard.end());
+		} while (itNext != vRemovableBoard.end());
 
-		BuildMoves(RemovableBoard, ++itFirst, Moves);
+		BuildMoves(vRemovableBoard, ++itFirst, vMoves);
 	}
 }
 
-bool Board::CompRemovableBoard(const DominoIndex& left, const DominoIndex& right)
+bool Board::CompRemovableBoard(const TileAndIndex& left, const TileAndIndex& right)
 {
-	return left.domino < right.domino;
+	return left.TileObject < right.TileObject;
 }
 
 void Board::SetMoves()
 {
-	std::vector<DominoIndex> RemovableBoard; // (domino, index)
-	for (const auto& pair : LogicalBoard)
+	std::vector<TileAndIndex> RemovableBoard; // (TileObject, Index)
+	for (const auto& pair : vLogicalBoard)
 	{
-		if (arrRemovable[pair.index]) RemovableBoard.emplace_back(pair);
+		if (arrRemovable[pair.Index]) RemovableBoard.emplace_back(pair);
 	}
 
-	Moves.clear();
+	vMoves.clear();
 	std::sort(RemovableBoard.begin(), RemovableBoard.end(), Board::CompRemovableBoard);
 	auto itFirst = RemovableBoard.begin();
-	BuildMoves(RemovableBoard, itFirst, Moves);
+	BuildMoves(RemovableBoard, itFirst, vMoves);
 }
 
 bool Board::Solve()
 {
-	if (SolveRecInit(*this, Moves, LogicalBoard, arrRemovable, mIndexToTile, WhatsLeft, mOccupationBoard, Solution))
+	if (SolveRecInit(*this, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution))
 	{
 #ifdef _DEBUG
-		for (auto& move : Solution)
+		for (auto& move : vSolution)
 			std::cout << move.first << ";" << move.second << std::endl;
 #endif
 		return true;

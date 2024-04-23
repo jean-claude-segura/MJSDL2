@@ -8,73 +8,73 @@
 #include <map>
 #include <sstream>
 
-class Domino
+class Tile
 {
 private:
-	Domino() : Rank(-1), Pairing(-1) {}
+	Tile() : Rank(-1), Pairing(-1) {}
 public:
 
 	const int Rank;
 	const int Pairing;
-	Domino(const int _domino) : Rank(_domino), Pairing(34 <= _domino && _domino < 38 ? 34 : 38 <= _domino && _domino < 42 ? 38 : _domino) {}
+	Tile(const int rank) : Rank(rank), Pairing(34 <= rank && rank < 38 ? 34 : 38 <= rank && rank < 42 ? 38 : rank) {}
 
 	// Copy constructor
-	Domino(const Domino& _domino) : Rank(_domino.Rank), Pairing(_domino.Pairing) {}
+	Tile(const Tile& tile) : Rank(tile.Rank), Pairing(tile.Pairing) {}
 
 	// Move constructor
-	Domino(Domino&& _domino) noexcept : Rank(_domino.Rank), Pairing(_domino.Pairing) {}
+	Tile(Tile&& tile) noexcept : Rank(tile.Rank), Pairing(tile.Pairing) {}
 
 	// Assignment operator
-	// Damn sort on LogicalBoard was messing with the values...
+	// Damn sort on vLogicalBoard was messing with the values...
 	// https://stackoverflow.com/questions/4136156/const-member-and-assignment-operator-how-to-avoid-the-undefined-behavior/63489092#63489092
-	Domino& operator=(Domino&& other) noexcept
+	Tile& operator=(Tile&& other) noexcept
 	{
 		*const_cast<int*> (&Rank) = other.Rank;
 		*const_cast<int*> (&Pairing) = other.Pairing;
 		return *this;
 	}
 
-	//Domino(const int _domino, const int _appairage) : Rank(_domino), Pairing(_appairage) {}
+	//Tile(const int rank, const int _appairage) : Rank(rank), Pairing(_appairage) {}
 
-	bool operator==(const Domino& other) const
+	bool operator==(const Tile& other) const
 	{
 		return Rank == other.Rank && Pairing == other.Pairing;
 	}
 
-	Domino operator=(const Domino& other) const
+	Tile operator=(const Tile& other) const
 	{
-		return Domino(other);
+		return Tile(other);
 	}
 
-	bool operator<(const Domino& other) const
+	bool operator<(const Tile& other) const
 	{
 		return Rank < other.Rank || Rank == other.Rank && Pairing < other.Pairing;
 	}
 }; 
 
-class DominoIndex
+class TileAndIndex
 {
 private:
-	DominoIndex() : domino(Domino(-1)), index(-1) {}
+	TileAndIndex() : TileObject(Tile(-1)), Index(-1) {}
 public:
-	Domino domino;
-	int index;
-	DominoIndex(const Domino & _domino, int _index) : domino(Domino(_domino)), index(_index) {}
+	Tile TileObject;
+	int Index;
+	TileAndIndex(const Tile & tile, int index) : TileObject(Tile(tile)), Index(index) {}
 
-	bool operator==(const DominoIndex& other) const
+	bool operator==(const TileAndIndex& other) const
 	{
-		return domino == other.domino && index == other.index;
+		return TileObject == other.TileObject && Index == other.Index;
 	}
 
 	// copy constructor
-	//DominoIndex(const DominoIndex& dominoindex) : domino(Domino(dominoindex.domino)), index(dominoindex.index) {}
+	//TileAndIndex(const TileAndIndex& dominoindex) : TileObject(Tile(dominoindex.TileObject)), Index(dominoindex.Index) {}
 	// Move constructor
-	//DominoIndex(DominoIndex&& dominoindex) noexcept : domino(Domino(dominoindex.domino)), index(dominoindex.index) {}
+	//TileAndIndex(TileAndIndex&& dominoindex) noexcept : TileObject(Tile(dominoindex.TileObject)), Index(dominoindex.Index) {}
 	// Assignment operator
-	/*DominoIndex& operator=(DominoIndex&& other) noexcept
+	/*TileAndIndex& operator=(TileAndIndex&& other) noexcept
 	{
-		*const_cast<int*> (&Domino) = other.Domino;
-		*const_cast<int*> (&index) = other.index;
+		*const_cast<int*> (&Tile) = other.Tile;
+		*const_cast<int*> (&Index) = other.Index;
 		return *this;
 	}*/
 };
@@ -102,9 +102,9 @@ public:
 	}
 };
 
-constexpr std::array<Coordinates, 144> InitIndexToCoord(const std::array<std::array<std::array<bool, 4>, 8>, 12> & BasePattern)
+constexpr std::array<Coordinates, 144> InitIndexToCoord(const std::array<std::array<std::array<bool, 4>, 8>, 12> & arrBasePattern)
 {
-	std::array<Coordinates, 144> InitIndexToCoord;
+	std::array<Coordinates, 144> arrInitIndexToCoord;
 	int index = 0;
 	for (int z = 0; z < 4; ++z)
 	{
@@ -112,19 +112,19 @@ constexpr std::array<Coordinates, 144> InitIndexToCoord(const std::array<std::ar
 		{
 			for (int x = 0; x < 12; ++x)
 			{
-				if (BasePattern[x][y][z]) {
-					InitIndexToCoord[index++] = { double(x), double(y), double(z) };
+				if (arrBasePattern[x][y][z]) {
+					arrInitIndexToCoord[index++] = { double(x), double(y), double(z) };
 				}
 			}
 		}
 	}
 
-	InitIndexToCoord[index++] = { -1., 3.5, 0. };
-	InitIndexToCoord[index++] = { 12., 3.5, 0. };
-	InitIndexToCoord[index++] = { 13., 3.5, 0. };
-	InitIndexToCoord[index++] = { 5.5, 3.5, 4. };
+	arrInitIndexToCoord[index++] = { -1., 3.5, 0. };
+	arrInitIndexToCoord[index++] = { 12., 3.5, 0. };
+	arrInitIndexToCoord[index++] = { 13., 3.5, 0. };
+	arrInitIndexToCoord[index++] = { 5.5, 3.5, 4. };
 
-	return InitIndexToCoord;
+	return arrInitIndexToCoord;
 }
 
 constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> InitBasePattern()
@@ -221,49 +221,49 @@ constexpr std::array<Coordinates, 144> arrIndexToCoord = InitIndexToCoord(arrBas
 class Board
 {
 private:
-	static bool CompLogicalBoardDownLeft(const DominoIndex& left, const DominoIndex& right);
-	static bool CompLogicalBoardUpLeft(const DominoIndex& left, const DominoIndex& right);
-	static bool CompLogicalBoardUpRight(const DominoIndex& left, const DominoIndex& right);
-	static bool CompLogicalBoardDownRight(const DominoIndex& left, const DominoIndex& right);
-	static bool CompRemovableBoard(const DominoIndex& left, const DominoIndex& right);
+	static bool CompLogicalBoardDownLeft(const TileAndIndex& left, const TileAndIndex& right);
+	static bool CompLogicalBoardUpLeft(const TileAndIndex& left, const TileAndIndex& right);
+	static bool CompLogicalBoardUpRight(const TileAndIndex& left, const TileAndIndex& right);
+	static bool CompLogicalBoardDownRight(const TileAndIndex& left, const TileAndIndex& right);
+	static bool CompRemovableBoard(const TileAndIndex& left, const TileAndIndex& right);
 
 public:
 	Board();
 	void InitBoard();
-	const Domino getDominoFromIndex(const int index) { return mIndexToTile.find(index)->second; }
+	const Tile getDominoFromIndex(const int index) { return mIndexToTile.find(index)->second; }
 	const bool getRemovableFromIndex(const int index) { return arrRemovable[index]; }
 	bool RemovePairOfTiles(const int, const int);
-	const bool IsLocked() { return Moves.size() == 0; }
-	const int HowManyMovesLeft() { return Moves.size(); }
-	const std::vector<std::pair<int, int>>& GetMovesLeft() { return Moves; }
-	bool IsEmpty() { return WhatsLeft.empty(); }
-	int getNumberOfTilesLeft() { return WhatsLeft.size(); }
-	const std::vector<int>& getWhatsLeft() { return WhatsLeft; }
-	const std::vector<DominoIndex>& getLogicalBoard() { return LogicalBoard; }
+	const bool IsLocked() { return vMoves.size() == 0; }
+	const int HowManyMovesLeft() { return vMoves.size(); }
+	const std::vector<std::pair<int, int>>& GetMovesLeft() { return vMoves; }
+	bool IsEmpty() { return vWhatsLeft.empty(); }
+	int getNumberOfTilesLeft() { return vWhatsLeft.size(); }
+	const std::vector<int>& getWhatsLeft() { return vWhatsLeft; }
+	const std::vector<TileAndIndex>& getLogicalBoard() { return vLogicalBoard; }
 	void SortBoard(const uint8_t direction);
 	bool Solve();
 #ifdef _DEBUG
 	bool Test();
 	bool TestLocked();
 #endif
-	const std::vector<std::pair<int, int>>& GetSolution() { return Solution; }
-	const std::vector<std::pair<int, int>>& GetHistory() { return History; }
+	const std::vector<std::pair<int, int>>& GetSolution() { return vSolution; }
+	const std::vector<std::pair<int, int>>& GetHistory() { return vHistory; }
 
 	// For the brute force.
-	const std::map<int, Domino> & getTilesMap() { return mIndexToTile; }
+	const std::map<int, Tile> & getTilesMap() { return mIndexToTile; }
 	const std::array<bool, 144> & getRemovable() { return arrRemovable; }
 	const std::map<Coordinates, int> & getOccupationBoard() { return mOccupationBoard; }
 
 private:
-	std::vector<std::pair<int, int>> Solution;
-	std::vector<std::pair<int, int>> History;
-	std::vector<int> WhatsLeft; // Index
-	std::map<int, Domino> mIndexToTile; // index -> domino
-	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> index
-	std::vector<DominoIndex> LogicalBoard; // (domino, index)
+	std::vector<std::pair<int, int>> vSolution;
+	std::vector<std::pair<int, int>> vHistory;
+	std::vector<int> vWhatsLeft; // Index
+	std::map<int, Tile> mIndexToTile; // Index -> TileObject
+	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> Index
+	std::vector<TileAndIndex> vLogicalBoard; // (TileObject, Index)
 	std::array<bool, 144> arrRemovable = InitRemovable();
 	void RemoveTile(int);
-	void BuildMoves(std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::iterator& itFirst, std::vector<std::pair<int, int>>& Moves);
-	std::vector<std::pair<int, int>> Moves;
+	void BuildMoves(std::vector<TileAndIndex>& vRemovableBoard, std::vector<TileAndIndex>::iterator& itFirst, std::vector<std::pair<int, int>>& vMoves);
+	std::vector<std::pair<int, int>> vMoves;
 	void SetMoves();
 };
