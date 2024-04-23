@@ -271,7 +271,7 @@ bool Board::RemovePairOfTiles(const int first, const int second)
 	bool bRetour = false;
 	auto left = mIndexToTile.find(first)->second;
 	auto right = mIndexToTile.find(second)->second;
-	if (left.appairage == right.appairage)
+	if (left.Pairing == right.Pairing)
 	{
 		RemoveTile(first);
 		RemoveTile(second);
@@ -294,7 +294,7 @@ void Board::BuildMoves(std::vector<DominoIndex>& RemovableBoard, std::vector<Dom
 			itNext = std::find_if(itNext, RemovableBoard.end(),
 				[domino](const DominoIndex& in)
 				{
-					return in.domino.appairage == domino.appairage;
+					return in.domino.Pairing == domino.Pairing;
 				}
 			);
 			if (itNext != RemovableBoard.end())

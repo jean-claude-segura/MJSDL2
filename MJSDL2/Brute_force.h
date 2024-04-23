@@ -210,7 +210,7 @@ inline int BuildEvalMoves(const std::vector<DominoIndex>& vRemovableBoard, std::
 			itNext = std::find_if(itNext, vRemovableBoard.end(),
 				[domino](const DominoIndex& in)
 				{
-					return in.domino.appairage == domino.appairage;
+					return in.domino.Pairing == domino.Pairing;
 				}
 			);
 			if (itNext != vRemovableBoard.end())
@@ -264,7 +264,7 @@ inline void BuildMoves(const std::vector<DominoIndex>& RemovableBoard, std::vect
 			itNext = std::find_if(itNext, RemovableBoard.end(),
 				[domino](const DominoIndex& in)
 				{
-					return in.domino.appairage == domino.appairage;
+					return in.domino.Pairing == domino.Pairing;
 				}
 			);
 			if (itNext != RemovableBoard.end())
@@ -325,7 +325,7 @@ inline uint64_t getFNV1(const std::map<int, Domino>& mIndexToTile)
 
 	for (auto& item : mIndexToTile)
 	{
-		tileTab[item.first] = uint64_t(item.second.rang);
+		tileTab[item.first] = uint64_t(item.second.Rank);
 	}
 
 	uint64_t hash = FNV_offset_basis;
@@ -347,7 +347,7 @@ inline uint64_t getFNV1a(const std::map<int, Domino>& mIndexToTile)
 
 	for (auto& item : mIndexToTile)
 	{
-		tileTab[item.first] = uint64_t(item.second.rang);
+		tileTab[item.first] = uint64_t(item.second.Rank);
 	}
 
 	uint64_t hash = FNV_offset_basis;
@@ -371,7 +371,7 @@ inline bool stopNow(const std::map<int, Domino>& mIndexToTile
 
 	for (auto& item : mIndexToTile)
 	{
-		tileTab[item.first] = uint64_t(item.second.rang);
+		tileTab[item.first] = uint64_t(item.second.Rank);
 	}
 
 	std::array<uint64_t, 144 / 8> boardDescription;
@@ -580,7 +580,7 @@ inline bool isCenterLocked(int index, std::map<int, Domino>& mIndexToTile)
 	dominos.emplace_back(mIndexToTile.find(index - 0x1B - dec2)->second);
 	dominos.emplace_back(mIndexToTile.find(index - 0x3F - dec2)->second);
 
-	return (dominos[0].appairage == dominos[1].appairage && dominos[0].appairage == dominos[2].appairage && dominos[0].appairage == dominos[3].appairage);
+	return (dominos[0].Pairing == dominos[1].Pairing && dominos[0].Pairing == dominos[2].Pairing && dominos[0].Pairing == dominos[3].Pairing);
 }
 
 
@@ -639,7 +639,7 @@ inline bool CheckIfLockedFromStart(const std::map<int, Domino>& mIndexToTile)
 	if (mIndexToTile.size() < 144)
 		return false;
 
-	auto bestPadlock = mIndexToTile.find(0x8F)->second.appairage;
+	auto bestPadlock = mIndexToTile.find(0x8F)->second.Pairing;
 
 	std::vector<int> vStartPos;
 	vStartPos.emplace_back(0x88);
@@ -656,40 +656,40 @@ inline bool CheckIfLockedFromStart(const std::map<int, Domino>& mIndexToTile)
 		auto y = std::get<1>(c);
 		auto z = std::get<2>(c);
 
-		auto firstPadlock = mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second.appairage;
+		auto firstPadlock = mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second.Pairing;
 		if (bestPadlock == firstPadlock) ++pairs;
 		if (pairs == 3)
 			return true;
-		if (bestPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 1])->second.appairage) ++pairs;
+		if (bestPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 1])->second.Pairing) ++pairs;
 		if (pairs == 3)
 			return true;
-		if (bestPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 2])->second.appairage) ++pairs;
+		if (bestPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 2])->second.Pairing) ++pairs;
 		if (pairs == 3)
 			return true;
-		if (bestPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 3])->second.appairage) ++pairs;
+		if (bestPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 3])->second.Pairing) ++pairs;
 		if (pairs == 3)
 			return true;
 
 		// Pure vertical lock
 		// All of this can be harcoded. I keep it like this for a probable future copy and paste.
 		if (
-			firstPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 1])->second.appairage &&
-			firstPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 2])->second.appairage &&
-			firstPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 3])->second.appairage
+			firstPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 1])->second.Pairing &&
+			firstPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 2])->second.Pairing &&
+			firstPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 3])->second.Pairing
 			)
 			return true;
 
 		if (itIndex < vStartPos.end() - 1)
 		{
 			auto itRef = itIndex;
-			auto refAppairage = mIndexToTile.find(*itRef)->second.appairage;
+			auto refAppairage = mIndexToTile.find(*itRef)->second.Pairing;
 			auto refBoardCoord = arrIndexToBoardCoord[*itRef];
 			int refX = std::get<0>(refBoardCoord);
 			int refY = std::get<1>(refBoardCoord);
 			int refZ = std::get<2>(refBoardCoord);
 			for (auto itSecond = itRef + 1; itSecond != vStartPos.end(); ++itSecond)
 			{
-				auto secondAppairage = mIndexToTile.find(*itSecond)->second.appairage;
+				auto secondAppairage = mIndexToTile.find(*itSecond)->second.Pairing;
 				auto secondBoardCoord = arrIndexToBoardCoord[*itSecond];
 				int secondX = std::get<0>(secondBoardCoord);
 				int secondY = std::get<1>(secondBoardCoord);
@@ -697,10 +697,10 @@ inline bool CheckIfLockedFromStart(const std::map<int, Domino>& mIndexToTile)
 				auto secondCount = 0;
 				for (int z = refZ; z >= 0; --z)
 				{
-					auto compAppairage = mIndexToTile.find(arrBoardCoordToIndex[refX][refY][z])->second.appairage;
+					auto compAppairage = mIndexToTile.find(arrBoardCoordToIndex[refX][refY][z])->second.Pairing;
 					if (refAppairage == compAppairage) ++refCount;
 					if (secondAppairage == compAppairage) ++secondCount;
-					compAppairage = mIndexToTile.find(arrBoardCoordToIndex[secondX][secondY][z])->second.appairage;
+					compAppairage = mIndexToTile.find(arrBoardCoordToIndex[secondX][secondY][z])->second.Pairing;
 					if (refAppairage == compAppairage) ++refCount;
 					if (secondAppairage == compAppairage) ++secondCount;
 					if (secondCount == 4 && refCount == secondCount)
@@ -712,30 +712,30 @@ inline bool CheckIfLockedFromStart(const std::map<int, Domino>& mIndexToTile)
 
 	/**/
 	/**/
-	auto first = mIndexToTile.find(0x8C)->second.appairage;
-	auto last = mIndexToTile.find(0x8D)->second.appairage;
+	auto first = mIndexToTile.find(0x8C)->second.Pairing;
+	auto last = mIndexToTile.find(0x8D)->second.Pairing;
 	if (first != last)
 	{
 		auto firstCount = 0;
-		auto lastCount = last == mIndexToTile.find(0x8E)->second.appairage ? 1 : 0;
+		auto lastCount = last == mIndexToTile.find(0x8E)->second.Pairing ? 1 : 0;
 		for (int x = 0; x < 12; ++x)
 		{
-			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.appairage == first) ++firstCount;
-			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.appairage == last) ++lastCount;
+			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == first) ++firstCount;
+			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == last) ++lastCount;
 		}
 		if (lastCount == 3 && firstCount == lastCount)
 			return true;
 	}
 
-	last = mIndexToTile.find(0x8E)->second.appairage;
+	last = mIndexToTile.find(0x8E)->second.Pairing;
 	if (first != last)
 	{
 		auto firstCount = 0;
-		auto lastCount = last == mIndexToTile.find(0x8D)->second.appairage ? 1 : 0;
+		auto lastCount = last == mIndexToTile.find(0x8D)->second.Pairing ? 1 : 0;
 		for (int x = 0; x < 12; ++x)
 		{
-			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.appairage == first) ++firstCount;
-			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.appairage == last) ++lastCount;
+			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == first) ++firstCount;
+			if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == last) ++lastCount;
 		}
 		if (lastCount == 3 && firstCount == lastCount)
 			return true;
@@ -760,8 +760,8 @@ inline bool CheckIfLockedFromStart(const std::map<int, Domino>& mIndexToTile)
 					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
 					{
 						// A ....A/B ..... A/B ..... A/B ..... B
-						if (mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second.appairage == first.appairage) ++firstCount;
-						if (mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second.appairage == last.appairage) ++lastCount;
+						if (mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second.Pairing == first.Pairing) ++firstCount;
+						if (mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second.Pairing == last.Pairing) ++lastCount;
 					}
 					if (lastCount == 4 && firstCount == lastCount)
 						return true;

@@ -11,34 +11,34 @@
 class Domino
 {
 private:
-	Domino() : rang(-1), appairage(-1) {}
+	Domino() : Rank(-1), Pairing(-1) {}
 public:
 
-	const int rang;
-	const int appairage;
-	Domino(const int _domino) : rang(_domino), appairage(34 <= _domino && _domino < 38 ? 34 : 38 <= _domino && _domino < 42 ? 38 : _domino) {}
+	const int Rank;
+	const int Pairing;
+	Domino(const int _domino) : Rank(_domino), Pairing(34 <= _domino && _domino < 38 ? 34 : 38 <= _domino && _domino < 42 ? 38 : _domino) {}
 
 	// Copy constructor
-	Domino(const Domino& _domino) : rang(_domino.rang), appairage(_domino.appairage) {}
+	Domino(const Domino& _domino) : Rank(_domino.Rank), Pairing(_domino.Pairing) {}
 
 	// Move constructor
-	Domino(Domino&& _domino) noexcept : rang(_domino.rang), appairage(_domino.appairage) {}
+	Domino(Domino&& _domino) noexcept : Rank(_domino.Rank), Pairing(_domino.Pairing) {}
 
 	// Assignment operator
 	// Damn sort on LogicalBoard was messing with the values...
 	// https://stackoverflow.com/questions/4136156/const-member-and-assignment-operator-how-to-avoid-the-undefined-behavior/63489092#63489092
 	Domino& operator=(Domino&& other) noexcept
 	{
-		*const_cast<int*> (&rang) = other.rang;
-		*const_cast<int*> (&appairage) = other.appairage;
+		*const_cast<int*> (&Rank) = other.Rank;
+		*const_cast<int*> (&Pairing) = other.Pairing;
 		return *this;
 	}
 
-	//Domino(const int _domino, const int _appairage) : rang(_domino), appairage(_appairage) {}
+	//Domino(const int _domino, const int _appairage) : Rank(_domino), Pairing(_appairage) {}
 
 	bool operator==(const Domino& other) const
 	{
-		return rang == other.rang && appairage == other.appairage;
+		return Rank == other.Rank && Pairing == other.Pairing;
 	}
 
 	Domino operator=(const Domino& other) const
@@ -48,7 +48,7 @@ public:
 
 	bool operator<(const Domino& other) const
 	{
-		return rang < other.rang || rang == other.rang && appairage < other.appairage;
+		return Rank < other.Rank || Rank == other.Rank && Pairing < other.Pairing;
 	}
 }; 
 
