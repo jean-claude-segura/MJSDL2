@@ -162,7 +162,7 @@ void Board::InitBoard()
 #endif
 	std::uniform_int_distribution<int> uniform_dist(0, 41);
 	LogicalBoard.clear();
-	TilesMap.clear();
+	mIndexToTile.clear();
 	mOccupationBoard.clear();
 
 	int tempDominos[42] = {
@@ -186,7 +186,7 @@ void Board::InitBoard()
 		--tempDominos[domino];
 		mOccupationBoard[IndexToCoord[index]] = index;
 		LogicalBoard.emplace_back(DominoIndex(domino, index));
-		TilesMap.emplace(index, Domino(domino));
+		mIndexToTile.emplace(index, Domino(domino));
 	}
 
 	for(int index = 0; index < 144; ++index) Removable[index] = false;
@@ -245,7 +245,7 @@ void Board::InitBoard()
 
 void Board::RemoveTile(const int index)
 {
-	TilesMap.erase(index);
+	mIndexToTile.erase(index);
 
 	std::vector<DominoIndex>::iterator it = LogicalBoard.begin();
 	for (; it != LogicalBoard.end() && it->index != index; ++it);
@@ -302,8 +302,8 @@ void Board::RemoveTile(const int index)
 bool Board::RemovePairOfTiles(const int first, const int second)
 {
 	bool bRetour = false;
-	auto left = TilesMap.find(first)->second;
-	auto right = TilesMap.find(second)->second;
+	auto left = mIndexToTile.find(first)->second;
+	auto right = mIndexToTile.find(second)->second;
 	if (left.appairage == right.appairage)
 	{
 		RemoveTile(first);
@@ -362,7 +362,7 @@ void Board::SetMoves()
 
 bool Board::Solve()
 {
-	if (SolveRecInit(*this, Moves, LogicalBoard, Removable, TilesMap, WhatsLeft, mOccupationBoard, Solution))
+	if (SolveRecInit(*this, Moves, LogicalBoard, Removable, mIndexToTile, WhatsLeft, mOccupationBoard, Solution))
 	{
 #ifdef _DEBUG
 		for (auto& move : Solution)
@@ -385,7 +385,7 @@ bool Board::Test()
 	do
 	{
 		InitBoard();
-		if (CheckIfLockedFromStart(TilesMap))
+		if (CheckIfLockedFromStart(mIndexToTile))
 		{
 			Locked.emplace_back(i++);
 			continue;
@@ -494,7 +494,7 @@ bool Board::TestLocked()
 	for (int i = 0; i < 99; ++i)
 	{
 		InitBoard();
-		if (CheckIfLockedFromStart(TilesMap))
+		if (CheckIfLockedFromStart(mIndexToTile))
 			Locked.emplace_back(i);
 	}
 

@@ -184,7 +184,7 @@ private:
 public:
 	Board();
 	void InitBoard();
-	const Domino getDominoFromIndex(const int index) { return TilesMap.find(index)->second; }
+	const Domino getDominoFromIndex(const int index) { return mIndexToTile.find(index)->second; }
 	const bool getRemovableFromIndex(const int index) { return Removable[index]; }
 	bool RemovePairOfTiles(const int, const int);
 	const bool IsLocked() { return Moves.size() == 0; }
@@ -204,7 +204,7 @@ public:
 	const std::vector<std::pair<int, int>>& GetHistory() { return History; }
 
 	// For the brute force.
-	const std::map<int, Domino> & getTilesMap() { return TilesMap; }
+	const std::map<int, Domino> & getTilesMap() { return mIndexToTile; }
 	const std::array<bool, 144> & getRemovable() { return Removable; }
 	const std::map<Coordinates, int> & getOccupationBoard() { return mOccupationBoard; }
 
@@ -212,7 +212,7 @@ private:
 	std::vector<std::pair<int, int>> Solution;
 	std::vector<std::pair<int, int>> History;
 	std::vector<int> WhatsLeft; // Index
-	std::map<int, Domino> TilesMap; // index -> domino
+	std::map<int, Domino> mIndexToTile; // index -> domino
 	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> index
 	std::vector<DominoIndex> LogicalBoard; // (domino, index)
 	std::array<bool, 144> Removable = {
