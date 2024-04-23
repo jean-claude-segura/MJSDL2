@@ -770,7 +770,7 @@ void GraphicBoard::RefreshMouseMap()
 
 		for (auto& tile : plateau.getLogicalBoard())
 		{
-			auto temp = IndexToCoord[tile.index];
+			auto temp = arrIndexToCoord[tile.index];
 			auto x = temp.x;
 			auto y = temp.y;
 			auto z = temp.z;
@@ -1195,7 +1195,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 
 		for (const auto& tile : plateau.getLogicalBoard())
 		{
-			auto temp = IndexToCoord[tile.index];
+			auto temp = arrIndexToCoord[tile.index];
 			auto x = temp.x;
 			auto y = temp.y;
 			auto z = temp.z;
@@ -1465,7 +1465,7 @@ void GraphicBoard::Loop()
 							std::vector<int> relevantTiles;
 							for (const auto& tile : plateau.getLogicalBoard())
 							{
-								auto temp = IndexToCoord[tile.index];
+								auto temp = arrIndexToCoord[tile.index];
 								auto x = temp.x;
 								auto y = temp.y;
 								auto z = temp.z;

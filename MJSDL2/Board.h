@@ -129,48 +129,94 @@ constexpr std::array<Coordinates, 144> InitIndexToCoord(const std::array<std::ar
 
 constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> InitBasePattern()
 {
-	std::array<std::array<std::array<bool, 4>, 8>, 12> BasePattern;
+	std::array<std::array<std::array<bool, 4>, 8>, 12> arrBasePattern;
 	for (int z = 0; z < 4; ++z)
 		for (int y = 0; y < 8; ++y)
 			for (int x = 0; x < 12; ++x)
-				BasePattern[x][y][z] = false;
+				arrBasePattern[x][y][z] = false;
 	for (int x = 0; x < 12; ++x)
 	{
-		BasePattern[x][0][0] = true;
-		BasePattern[x][7][0] = true;
-		BasePattern[x][3][0] = true;
-		BasePattern[x][4][0] = true;
+		arrBasePattern[x][0][0] = true;
+		arrBasePattern[x][7][0] = true;
+		arrBasePattern[x][3][0] = true;
+		arrBasePattern[x][4][0] = true;
 	}
 
 	for (int x = 2; x < 10; ++x)
 	{
-		BasePattern[x][1][0] = true;
-		BasePattern[x][6][0] = true;
+		arrBasePattern[x][1][0] = true;
+		arrBasePattern[x][6][0] = true;
 	}
 	for (int x = 1; x < 11; ++x)
 	{
-		BasePattern[x][2][0] = true;
-		BasePattern[x][5][0] = true;
+		arrBasePattern[x][2][0] = true;
+		arrBasePattern[x][5][0] = true;
 	}
 	for (int x = 3; x < 9; ++x)
 		for (int y = 1; y < 7; ++y)
-			BasePattern[x][y][1] = true;
+			arrBasePattern[x][y][1] = true;
 
 	for (int x = 4; x < 8; ++x)
 		for (int y = 2; y < 6; ++y)
-			BasePattern[x][y][2] = true;
+			arrBasePattern[x][y][2] = true;
 
 	for (int x = 5; x < 7; ++x)
 		for (int y = 3; y < 5; ++y)
-			BasePattern[x][y][3] = true;
+			arrBasePattern[x][y][3] = true;
 
-	return BasePattern;
+	return arrBasePattern;
+}
+
+constexpr std::array<bool, 144> InitRemovable()
+{
+	std::array<bool, 144> arrRemovable;
+
+	for (int i = 0; i < 144; ++i)
+		arrRemovable[i] = false;
+
+	arrRemovable[0x0] = true;
+	arrRemovable[0xb] = true;
+	arrRemovable[0xc] = true;
+	arrRemovable[0x13] = true;
+	arrRemovable[0x14] = true;
+	arrRemovable[0x1d] = true;
+	arrRemovable[0x36] = true;
+	arrRemovable[0x3f] = true;
+	arrRemovable[0x40] = true;
+	arrRemovable[0x47] = true;
+	arrRemovable[0x48] = true;
+	arrRemovable[0x53] = true;
+	arrRemovable[0x54] = true;
+	arrRemovable[0x59] = true;
+	arrRemovable[0x5a] = true;
+	arrRemovable[0x5f] = true;
+	arrRemovable[0x60] = true;
+	arrRemovable[0x65] = true;
+	arrRemovable[0x66] = true;
+	arrRemovable[0x6b] = true;
+	arrRemovable[0x6c] = true;
+	arrRemovable[0x71] = true;
+	arrRemovable[0x72] = true;
+	arrRemovable[0x77] = true;
+	arrRemovable[0x78] = true;
+	arrRemovable[0x7b] = true;
+	arrRemovable[0x7c] = true;
+	arrRemovable[0x7f] = true;
+	arrRemovable[0x80] = true;
+	arrRemovable[0x83] = true;
+	arrRemovable[0x84] = true;
+	arrRemovable[0x87] = true;
+	arrRemovable[0x8c] = true;
+	arrRemovable[0x8e] = true;
+	arrRemovable[0x8f] = true;
+
+	return arrRemovable;
 }
 
 // Available initial positions in the turtles.
-constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> BasePattern = InitBasePattern();
+constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> arrBasePattern = InitBasePattern();
 // Index to coordinates (x, y, z as Double) of available initial positions in the turtles.
-constexpr std::array<Coordinates, 144> IndexToCoord = InitIndexToCoord(BasePattern);
+constexpr std::array<Coordinates, 144> arrIndexToCoord = InitIndexToCoord(arrBasePattern);
 
 class Board
 {
@@ -185,7 +231,7 @@ public:
 	Board();
 	void InitBoard();
 	const Domino getDominoFromIndex(const int index) { return mIndexToTile.find(index)->second; }
-	const bool getRemovableFromIndex(const int index) { return Removable[index]; }
+	const bool getRemovableFromIndex(const int index) { return arrRemovable[index]; }
 	bool RemovePairOfTiles(const int, const int);
 	const bool IsLocked() { return Moves.size() == 0; }
 	const int HowManyMovesLeft() { return Moves.size(); }
@@ -205,7 +251,7 @@ public:
 
 	// For the brute force.
 	const std::map<int, Domino> & getTilesMap() { return mIndexToTile; }
-	const std::array<bool, 144> & getRemovable() { return Removable; }
+	const std::array<bool, 144> & getRemovable() { return arrRemovable; }
 	const std::map<Coordinates, int> & getOccupationBoard() { return mOccupationBoard; }
 
 private:
@@ -215,19 +261,7 @@ private:
 	std::map<int, Domino> mIndexToTile; // index -> domino
 	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> index
 	std::vector<DominoIndex> LogicalBoard; // (domino, index)
-	std::array<bool, 144> Removable = {
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false, false, false, false, false, false, false, false, false, false, false,
-		false, false, false, false
-	};
+	std::array<bool, 144> arrRemovable = InitRemovable();
 	void RemoveTile(int);
 	void BuildMoves(std::vector<DominoIndex>& RemovableBoard, std::vector<DominoIndex>::iterator& itFirst, std::vector<std::pair<int, int>>& Moves);
 	std::vector<std::pair<int, int>> Moves;

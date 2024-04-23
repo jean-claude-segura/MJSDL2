@@ -9,15 +9,15 @@ bool Board::CompLogicalBoardDownLeft(const DominoIndex& left, const DominoIndex&
 {
 	return
 		(
-			IndexToCoord[left.index].z <= IndexToCoord[right.index].z &&
+			arrIndexToCoord[left.index].z <= arrIndexToCoord[right.index].z &&
 			(
-				(IndexToCoord[left.index].z != IndexToCoord[right.index].z) ||
-				(IndexToCoord[left.index].y >= IndexToCoord[right.index].y) && (IndexToCoord[left.index].y != IndexToCoord[right.index].y || IndexToCoord[left.index].x <= IndexToCoord[right.index].x)
+				(arrIndexToCoord[left.index].z != arrIndexToCoord[right.index].z) ||
+				(arrIndexToCoord[left.index].y >= arrIndexToCoord[right.index].y) && (arrIndexToCoord[left.index].y != arrIndexToCoord[right.index].y || arrIndexToCoord[left.index].x <= arrIndexToCoord[right.index].x)
 				)
 			);
-	/*return !(std::get<2>(IndexToCoord[left.index]) > std::get<2>(right) ||
-		std::get<2>(IndexToCoord[left.index]) == std::get<2>(right) &&
-		(std::get<1>(IndexToCoord[left.index]) < std::get<1>(right) || std::get<1>(IndexToCoord[left.index]) == std::get<1>(right) && std::get<0>(IndexToCoord[left.index]) > std::get<0>(right)));*/
+	/*return !(std::get<2>(arrIndexToCoord[left.index]) > std::get<2>(right) ||
+		std::get<2>(arrIndexToCoord[left.index]) == std::get<2>(right) &&
+		(std::get<1>(arrIndexToCoord[left.index]) < std::get<1>(right) || std::get<1>(arrIndexToCoord[left.index]) == std::get<1>(right) && std::get<0>(arrIndexToCoord[left.index]) > std::get<0>(right)));*/
 }
 
 
@@ -25,10 +25,10 @@ bool Board::CompLogicalBoardDownRight(const DominoIndex& left, const DominoIndex
 {
 	return
 		(
-			IndexToCoord[left.index].z <= IndexToCoord[right.index].z &&
+			arrIndexToCoord[left.index].z <= arrIndexToCoord[right.index].z &&
 			(
-				(IndexToCoord[left.index].z != IndexToCoord[right.index].z) ||
-				(IndexToCoord[left.index].y >= IndexToCoord[right.index].y) && (IndexToCoord[left.index].y != IndexToCoord[right.index].y || IndexToCoord[left.index].x > IndexToCoord[right.index].x)
+				(arrIndexToCoord[left.index].z != arrIndexToCoord[right.index].z) ||
+				(arrIndexToCoord[left.index].y >= arrIndexToCoord[right.index].y) && (arrIndexToCoord[left.index].y != arrIndexToCoord[right.index].y || arrIndexToCoord[left.index].x > arrIndexToCoord[right.index].x)
 				)
 			);
 }
@@ -36,10 +36,10 @@ bool Board::CompLogicalBoardUpLeft(const DominoIndex& left, const DominoIndex& r
 {
 	return
 		(
-			IndexToCoord[left.index].z <= IndexToCoord[right.index].z &&
+			arrIndexToCoord[left.index].z <= arrIndexToCoord[right.index].z &&
 			(
-				(IndexToCoord[left.index].z != IndexToCoord[right.index].z) ||
-				(IndexToCoord[left.index].y <= IndexToCoord[right.index].y) && (IndexToCoord[left.index].y != IndexToCoord[right.index].y || IndexToCoord[left.index].x <= IndexToCoord[right.index].x)
+				(arrIndexToCoord[left.index].z != arrIndexToCoord[right.index].z) ||
+				(arrIndexToCoord[left.index].y <= arrIndexToCoord[right.index].y) && (arrIndexToCoord[left.index].y != arrIndexToCoord[right.index].y || arrIndexToCoord[left.index].x <= arrIndexToCoord[right.index].x)
 				)
 			);
 }
@@ -48,10 +48,10 @@ bool Board::CompLogicalBoardUpRight(const DominoIndex& left, const DominoIndex& 
 {
 	return
 		(
-			IndexToCoord[left.index].z <= IndexToCoord[right.index].z &&
+			arrIndexToCoord[left.index].z <= arrIndexToCoord[right.index].z &&
 			(
-				(IndexToCoord[left.index].z != IndexToCoord[right.index].z) ||
-				(IndexToCoord[left.index].y <= IndexToCoord[right.index].y) && (IndexToCoord[left.index].y != IndexToCoord[right.index].y || IndexToCoord[left.index].x > IndexToCoord[right.index].x)
+				(arrIndexToCoord[left.index].z != arrIndexToCoord[right.index].z) ||
+				(arrIndexToCoord[left.index].y <= arrIndexToCoord[right.index].y) && (arrIndexToCoord[left.index].y != arrIndexToCoord[right.index].y || arrIndexToCoord[left.index].x > arrIndexToCoord[right.index].x)
 				)
 			);
 }
@@ -184,51 +184,18 @@ void Board::InitBoard()
 		} while (tempDominos[domino] == 0);
 		int debugdom = tempDominos[domino];
 		--tempDominos[domino];
-		mOccupationBoard[IndexToCoord[index]] = index;
+		mOccupationBoard[arrIndexToCoord[index]] = index;
 		LogicalBoard.emplace_back(DominoIndex(domino, index));
 		mIndexToTile.emplace(index, Domino(domino));
 	}
 
-	for(int index = 0; index < 144; ++index) Removable[index] = false;
-	Removable[0x0] = true;
-	Removable[0xb] = true;
-	Removable[0xc] = true;
-	Removable[0x13] = true;
-	Removable[0x14] = true;
-	Removable[0x1d] = true;
-	Removable[0x36] = true;
-	Removable[0x3f] = true;
-	Removable[0x40] = true;
-	Removable[0x47] = true;
-	Removable[0x48] = true;
-	Removable[0x53] = true;
-	Removable[0x54] = true;
-	Removable[0x59] = true;
-	Removable[0x5a] = true;
-	Removable[0x5f] = true;
-	Removable[0x60] = true;
-	Removable[0x65] = true;
-	Removable[0x66] = true;
-	Removable[0x6b] = true;
-	Removable[0x6c] = true;
-	Removable[0x71] = true;
-	Removable[0x72] = true;
-	Removable[0x77] = true;
-	Removable[0x78] = true;
-	Removable[0x7b] = true;
-	Removable[0x7c] = true;
-	Removable[0x7f] = true;
-	Removable[0x80] = true;
-	Removable[0x83] = true;
-	Removable[0x84] = true;
-	Removable[0x87] = true;
-	Removable[0x8c] = true;
-	Removable[0x8e] = true;
-	Removable[0x8f] = true;
+	arrRemovable = InitRemovable();
 
 	WhatsLeft.clear();
 	for (int i = 0; i < 144; ++i) WhatsLeft.emplace_back(i);
+
 	SetMoves();
+
 #ifdef _DEBUG
 	std::cout << std::dec << WhatsLeft.size() << " tile" << (WhatsLeft.size() > 1 ? "s" : "") << " left." << std::endl;
 	std::cout << std::dec << Moves.size() << " move" << (Moves.size() > 1 ? "s" : "") << " left." << std::endl;
@@ -249,7 +216,7 @@ void Board::RemoveTile(const int index)
 
 	std::vector<DominoIndex>::iterator it = LogicalBoard.begin();
 	for (; it != LogicalBoard.end() && it->index != index; ++it);
-	auto coord = IndexToCoord[it->index];
+	auto coord = arrIndexToCoord[it->index];
 	double x = coord.x;
 	double y = coord.y;
 	double z = coord.z;
@@ -260,41 +227,41 @@ void Board::RemoveTile(const int index)
 	if (itWL != WhatsLeft.end())
 		WhatsLeft.erase(itWL);
 
-	Removable[index] = false;
+	arrRemovable[index] = false;
 
 	if (index == 0x8F)
 	{
-		Removable[0x88] = true;
-		Removable[0x89] = true;
-		Removable[0x8A] = true;
-		Removable[0x8B] = true;
+		arrRemovable[0x88] = true;
+		arrRemovable[0x89] = true;
+		arrRemovable[0x8A] = true;
+		arrRemovable[0x8B] = true;
 	}
 	else if (index == 0x8C)
 	{
-		Removable[0x1E] = true;
-		Removable[0x2A] = true;
+		arrRemovable[0x1E] = true;
+		arrRemovable[0x2A] = true;
 	}
 	else if (index == 0x8E)
 	{
-		Removable[0x8D] = true;
+		arrRemovable[0x8D] = true;
 	}
 	else if (index == 0x8D)
 	{
-		Removable[0x29] = true;
-		Removable[0x35] = true;
+		arrRemovable[0x29] = true;
+		arrRemovable[0x35] = true;
 	}
 	else
 	{
 		if (x < 11 && mOccupationBoard.contains(Coordinates(x + 1, y, z)) && (z > 3 || !mOccupationBoard.contains(Coordinates(x + 1, y, z + 1))))
-			Removable[mOccupationBoard[Coordinates(x + 1, y, z)]] = true;
+			arrRemovable[mOccupationBoard[Coordinates(x + 1, y, z)]] = true;
 		if (x > 0 && mOccupationBoard.contains(Coordinates(x - 1, y, z)) && (z > 3 || !mOccupationBoard.contains(Coordinates(x - 1, y, z + 1))))
-			Removable[mOccupationBoard[Coordinates(x - 1, y, z)]] = true;
+			arrRemovable[mOccupationBoard[Coordinates(x - 1, y, z)]] = true;
 		if (z > 0) // mOccupationBoard[Coordinates(x, y, z-1)] DOIT exister.
 		{
 			if (x < 11 && !mOccupationBoard.contains(Coordinates(x + 1, y, z - 1)))
-				Removable[mOccupationBoard[Coordinates(x, y, z - 1)]] = true;
+				arrRemovable[mOccupationBoard[Coordinates(x, y, z - 1)]] = true;
 			if (x > 0 && !mOccupationBoard.contains(Coordinates(x - 1, y, z - 1)))
-				Removable[mOccupationBoard[Coordinates(x, y, z - 1)]] = true;
+				arrRemovable[mOccupationBoard[Coordinates(x, y, z - 1)]] = true;
 		}
 	}
 }
@@ -351,7 +318,7 @@ void Board::SetMoves()
 	std::vector<DominoIndex> RemovableBoard; // (domino, index)
 	for (const auto& pair : LogicalBoard)
 	{
-		if (Removable[pair.index]) RemovableBoard.emplace_back(pair);
+		if (arrRemovable[pair.index]) RemovableBoard.emplace_back(pair);
 	}
 
 	Moves.clear();
@@ -362,7 +329,7 @@ void Board::SetMoves()
 
 bool Board::Solve()
 {
-	if (SolveRecInit(*this, Moves, LogicalBoard, Removable, mIndexToTile, WhatsLeft, mOccupationBoard, Solution))
+	if (SolveRecInit(*this, Moves, LogicalBoard, arrRemovable, mIndexToTile, WhatsLeft, mOccupationBoard, Solution))
 	{
 #ifdef _DEBUG
 		for (auto& move : Solution)
