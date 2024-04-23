@@ -91,6 +91,8 @@ inline uint8_t EvalMoveMaxBlock(
 	const std::vector<int>& vMove,
 	std::map<int, Tile>& mIndexToTile);
 
+inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToTileRemoved, const std::vector<int>& vMove);
+
 inline void RemoveTile(
 	const int index,
 	std::vector<TileAndIndex>& vLogicalBoard,
@@ -503,7 +505,7 @@ inline bool SolveRec(
 	auto ret = vLogicalBoard.empty();
 	if (!ret)
 	{
-		if (!vNewMoves.empty())
+		if (!CheckIfLocked(vLogicalBoard, mIndexToTileRemoved, vMove) && !vNewMoves.empty())
 		{
 			if (!stopNow(mIndexToTile
 #ifdef _DEBUG
@@ -583,6 +585,39 @@ inline bool isCenterLocked(int index, std::map<int, Tile>& mIndexToTile)
 	return (dominos[0].Pairing == dominos[1].Pairing && dominos[0].Pairing == dominos[2].Pairing && dominos[0].Pairing == dominos[3].Pairing);
 }
 
+inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToTileRemoved, const std::vector<int>& vMove)
+{
+	if (vMove.size() == 4)
+		return false;
+
+	const auto pairing = mIndexToTileRemoved.find(vMove[0])->second.Pairing;
+
+	std::vector<int> vPairedIndex;
+	auto it = vLogicalBoard.begin();
+	for (; it != vLogicalBoard.end(); ++it)
+	{
+		if (it->TileObject.Pairing == pairing)
+		{
+			vPairedIndex.emplace_back(it->Index);
+			break;
+		}
+	}
+	for (++it; it != vLogicalBoard.end(); ++it)
+	{
+		if (it->TileObject.Pairing == pairing)
+		{
+			vPairedIndex.emplace_back(it->Index);
+			break;
+		}
+	}
+	// Pure vertical lock.
+	auto c1 = arrIndexToCoord[vMove[0]];
+	auto c2 = arrIndexToCoord[vMove[1]];
+	if (c1.x == c2.x && c1.y == c2.y)
+		return true;
+
+	return false;
+}
 
 inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard)
 {
@@ -597,6 +632,7 @@ inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard)
 	{
 		if (arrCountOnPairing[pairing] != 2)
 			continue;
+		/* Partie réutilisable : début */
 		std::vector<int> vPairedIndex;
 		auto it = vLogicalBoard.begin();
 		for (; it != vLogicalBoard.end(); ++it)
@@ -621,6 +657,7 @@ inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard)
 		auto c2 = arrIndexToCoord[vPairedIndex[1]];
 		if (c1.x == c2.x && c1.y == c2.y)
 			return true;
+		/* Partie réutilisable : fin */
 	}
 	/*
 	if (z == 3)

@@ -345,6 +345,11 @@ bool Board::IsLockedFromStart()
 	return CheckIfLockedFromStart(mIndexToTile);
 }
 
+bool Board::IsLockedFromMove()
+{
+	return CheckIfLocked(vLogicalBoard);
+}
+
 #ifdef _DEBUG
 bool Board::Test()
 {
