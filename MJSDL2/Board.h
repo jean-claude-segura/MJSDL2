@@ -242,6 +242,7 @@ public:
 	const std::vector<TileAndIndex>& getLogicalBoard() { return vLogicalBoard; }
 	void SortBoard(const uint8_t direction);
 	bool Solve();
+	bool IsLockedFromStart();
 #ifdef _DEBUG
 	bool Test();
 	bool TestLocked();

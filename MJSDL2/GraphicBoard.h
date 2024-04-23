@@ -70,6 +70,7 @@ private:
 	SDL_Texture
 		* textureBackground,
 		* textureBackgroundVictory,
+		* textureGreyedBackground,
 		* RestartBtn,
 		* HintBtn,
 		* TurnBtn,

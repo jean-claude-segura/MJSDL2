@@ -340,6 +340,11 @@ bool Board::Solve()
 	return false;
 }
 
+bool Board::IsLockedFromStart()
+{
+	return CheckIfLockedFromStart(mIndexToTile);
+}
+
 #ifdef _DEBUG
 bool Board::Test()
 {

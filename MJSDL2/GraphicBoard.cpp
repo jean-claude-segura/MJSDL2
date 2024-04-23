@@ -19,6 +19,7 @@ GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height(0), Width(0)
 	Inverted = NULL;
 	textureMouseMap = NULL;
 	textureBackgroundVictory = NULL;
+	textureGreyedBackground = NULL;
 }
 
 GraphicBoard::~GraphicBoard()
@@ -69,6 +70,8 @@ GraphicBoard::~GraphicBoard()
 		SDL_DestroyTexture(textureBackground);
 	if (textureBackgroundVictory != NULL)
 		SDL_DestroyTexture(textureBackgroundVictory);
+	if (textureGreyedBackground != NULL)
+		SDL_DestroyTexture(textureGreyedBackground);
 
 	// Renderer :
 	if (renderer != NULL)
@@ -296,6 +299,8 @@ void GraphicBoard::LoadBackground(const std::string& path)
 			ThrowException(1);
 		}
 		SDL_ResizeTexture(renderer, textureBackground, Width, Height);
+		SDL_GreyscaleTexture(renderer, textureBackground, textureGreyedBackground);
+		SDL_RenderCopy(renderer, textureGreyedBackground, NULL, NULL);
 	}
 	SDL_FreeSurface(background);
 	SDL_FreeSurface(temp);
@@ -1177,27 +1182,21 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 	}
 	SDL_RenderClear(renderer);
 
+	SDL_Texture* currTextureBackground = NULL;
 	// Copie du fond :
-	if (false)
+	if (plateau.IsLockedFromStart())
 	{
-		SDL_Texture* temp = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, Width, Height);
-		SDL_SetRenderTarget(renderer, temp);
-		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
-		SDL_SetRenderTarget(renderer, renderTargetOrg);
-		SDL_Texture* greyedBackground = NULL;
-		SDL_GreyscaleTexture(renderer, temp, greyedBackground);
-		SDL_RenderCopy(renderer, greyedBackground, NULL, NULL);
-		SDL_DestroyTexture(greyedBackground);
-		SDL_DestroyTexture(temp);
+		currTextureBackground = textureGreyedBackground;
 	}
 	else
 	{
-		// Copie du fond :
-		if (SDL_RenderCopy(renderer, textureBackground, NULL, NULL) < 0)
-		{
-			std::cout << stderr << "could not copy background: " << SDL_GetError() << std::endl;
-			ThrowException(1);
-		}
+		currTextureBackground = textureBackground;
+	}
+	// Copie du fond :
+	if (SDL_RenderCopy(renderer, currTextureBackground, NULL, NULL) < 0)
+	{
+		std::cout << stderr << "could not copy background: " << SDL_GetError() << std::endl;
+		ThrowException(1);
 	}
 	if(oneByOne)
 		DisplayInterface();
@@ -1321,7 +1320,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 				break;
 			}
 			SDL_SetRenderTarget(renderer, renderTargetOrg);
-			SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
+			SDL_RenderCopy(renderer, currTextureBackground, NULL, NULL);
 		}
 		else
 		{
