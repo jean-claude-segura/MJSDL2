@@ -1627,7 +1627,7 @@ inline bool SolveRecInit(const Board& plateau,
 
 	std::vector<std::pair<bool (*)(Board plateau, std::vector<std::pair<int, int>>& vSolution), std::string>> vTries;
 
-	vTries.push_back({tryAlwaysFirst, "tryAlwaysFirst"});
+	vTries.push_back({ tryAlwaysFirst, "tryAlwaysFirst" });
 	vTries.push_back({ tryRandomHeuristics, "tryRandomHeuristics" });
 	vTries.push_back({ tryGreedy, "tryGreedy" });
 	vTries.push_back({ tryPseudoMultipleFirst, "tryPseudoMultipleFirst" });
@@ -1710,45 +1710,15 @@ inline bool SolveRecInit(const Board& plateau,
 	uint64_t positions = 0ULL;
 #endif
 
-
-	/**/
-	std::array < std::vector<std::pair<int, int>>, 2> vvSolutions;
-	for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
+	for (const auto& move : vSortedMoves)
 	{
-		std::vector< std::future<bool>> vSolvers;
-		for (int i = 0; i < 2; ++i)
-		{
-			if (itMove != vSortedMoves.end())
-			{
-				vSolvers.emplace_back(std::async(&SolveRecThr, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, std::ref(vvSolutions[i])
-#ifdef _DEBUG
-					, positions
-#endif
-				));
-				++itMove;
-			}
-		}
-
-		for (auto & solver : vSolvers)
-		{
-			auto retSolver = solver.get();
-			ret |= retSolver;
-		}
-		if (ret) break;
-	}
-	/**/
-	/*
-	for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
-	{
-		std::future<bool > solver = std::async(&SolveRecThr, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
+		ret = SolveRec(move.first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
 #ifdef _DEBUG
 			, positions
 #endif
 		);
-		ret |= solver.get();
 		if (ret) break;
 	}
-	/**/
 
 #ifdef _DEBUG
 	bool LogicalBoardOk = LogicalBoardRefForDebug.size() == vLogicalBoard.size();
