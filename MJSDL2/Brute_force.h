@@ -602,21 +602,27 @@ inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard, const 
 			break;
 		}
 	}
-	for (++it; it != vLogicalBoard.end(); ++it)
+	if (it != vLogicalBoard.end())
 	{
-		if (it->TileObject.Pairing == pairing)
+		for (++it; it != vLogicalBoard.end(); ++it)
 		{
-			vPairedIndex.emplace_back(it->Index);
-			break;
+			if (it->TileObject.Pairing == pairing)
+			{
+				vPairedIndex.emplace_back(it->Index);
+				break;
+			}
 		}
+		// Pure vertical lock.
+		auto c1 = arrIndexToCoord[vMove[0]];
+		auto c2 = arrIndexToCoord[vMove[1]];
+		if (c1.x == c2.x && c1.y == c2.y)
+			return true;
+		return false;
 	}
-	// Pure vertical lock.
-	auto c1 = arrIndexToCoord[vMove[0]];
-	auto c2 = arrIndexToCoord[vMove[1]];
-	if (c1.x == c2.x && c1.y == c2.y)
-		return true;
-
-	return false;
+	else
+	{
+		return false;
+	}
 }
 
 inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard)
