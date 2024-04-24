@@ -40,7 +40,7 @@ GraphicBoard::~GraphicBoard()
 	for (int i = 0; i < 3; ++i)
 		for (int j = 0; j < 42; ++j)
 		{
-			if (dominoscache[i] != NULL)
+			if (dominoscache[i][j] != NULL)
 				SDL_DestroyTexture(dominoscache[i][j]);
 		}
 
@@ -385,6 +385,28 @@ void GraphicBoard::LoadTiles()
 	LoadRamdomTileSet(38, 42, "./tiles/Fleurs/");
 }
 
+void GraphicBoard::ReloadTiles()
+{
+	for (int i = 0; i < 42; ++i)
+	{
+		if (faces[i] != NULL)
+		{
+			SDL_DestroyTexture(faces[i]);
+			faces[i] = NULL;
+		}
+	}
+	for (int i = 0; i < 3; ++i)
+		for (int j = 0; j < 42; ++j)
+		{
+			if (dominoscache[i][j] != NULL)
+			{
+				SDL_DestroyTexture(dominoscache[i][j]);
+				dominoscache[i][j] = NULL;
+			}
+		}
+	LoadTiles();
+}
+
 void GraphicBoard::LoadRandomBackground()
 {
 	LoadRandomBackground("./background/");
@@ -493,7 +515,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			itNextMove = plateau.GetMovesLeft().begin();
 			itPrevMove = plateau.GetMovesLeft().end();
 
-			LoadTiles();
+			ReloadTiles();
 			LoadRandomBackground();
 
 			Refresh(true, true);
