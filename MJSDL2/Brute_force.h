@@ -620,12 +620,9 @@ inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard, const 
 		auto c2 = arrIndexToCoord[vMove[1]];
 		if (c1.x == c2.x && c1.y == c2.y)
 			return true;
-		return false;
 	}
-	else
-	{
-		return false;
-	}
+
+	return false;
 }
 
 inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard)
