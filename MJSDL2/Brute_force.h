@@ -787,132 +787,83 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 		}
 	}
 
-	/**/
-	/**/
-	// Blocked by left and right padlocks.
+	// For left and right padlocks : funny blocking...
+	// Doesn't work if not a starting pos. There could be padlocks missing.
+	// First pass : check potential issues
+	std::map<int, int> mPairingCount;
+	std::map<int, int> mPairingFirst;
+	std::map<int, int> mPairingLast;
+
+	// Forced entries for the padlocks.
+	auto leftPadlockPairing = mIndexToTile.find(0x8C)->second.Pairing;
+	++mPairingCount[leftPadlockPairing];
+	mPairingFirst[leftPadlockPairing] = -1;
+	mPairingLast[leftPadlockPairing] = -1;
+
+	auto rightPadlockPairing = mIndexToTile.find(0x8D)->second.Pairing;
+	++mPairingCount[rightPadlockPairing];
+	if (!mPairingFirst.contains(rightPadlockPairing))
+		mPairingFirst[rightPadlockPairing] = 12 + 12;
+	mPairingLast[rightPadlockPairing] = 12 + 12;
+
+	auto rightRightPadlockPairing = mIndexToTile.find(0x8D)->second.Pairing;
+	++mPairingCount[rightRightPadlockPairing];
+	if (!mPairingFirst.contains(rightRightPadlockPairing))
+		mPairingFirst[rightRightPadlockPairing] = 13 + 12;
+	mPairingLast[rightRightPadlockPairing] = 13 + 12;
+
+	// Creating a fake 24 tiles line to include the padlocks obstruction from the beginning to the end.
+	for (int x = 0; x < 12; ++x)
 	{
-		auto first = mIndexToTile.find(0x8C)->second.Pairing;
-		std::vector<int> lasts;
-		lasts.emplace_back(mIndexToTile.find(0x8D)->second.Pairing);
-		lasts.emplace_back(mIndexToTile.find(0x8E)->second.Pairing);
-		int run = 0;
-		for (const auto& last : lasts)
+		// First get the tile.
+		const auto& object = mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second;
+		// Get the first occurence
+		if (!mPairingFirst.contains(object.Pairing))
+			mPairingFirst[object.Pairing] = x;
+		// Get the last occurence
+		mPairingLast[object.Pairing] = x;
+		// Get the count of occurences
+		++mPairingCount[object.Pairing];
+	}
+	for (int x = 0; x < 12; ++x)
+	{
+		// First get the tile.
+		const auto& object = mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second;
+		// Get the first occurence
+		if (!mPairingFirst.contains(object.Pairing))
+			mPairingFirst[object.Pairing] = x + 12;
+		// Get the last occurence
+		mPairingLast[object.Pairing] = x + 12;
+		// Get the count of occurences
+		++mPairingCount[object.Pairing];
+	}
+	// Remove the useless ones :
+	for (const auto& item : mPairingCount)
+	{
+		if (item.second != 4)
 		{
-			if (first != last)
-			{
-				auto firstCount = 1;
-				auto lastCount = 1 + lasts[0] == lasts[1] ? 1 : 0;
-				for (int x = 0; x < 12; ++x)
-				{
-					if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == first) ++firstCount;
-					if (mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second.Pairing == last) ++lastCount;
-
-					if (mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second.Pairing == first) ++firstCount;
-					if (mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second.Pairing == last) ++lastCount;
-
-					if (lastCount == 4 && firstCount == lastCount)
-					{
-						if (cause != NULL) { *cause = 4 + run; }; return true;
-					}
-				}
-			}
-
-			if (lasts[0] == lasts[1]) break;
-			++run;
+			mPairingFirst.erase(item.first);
+			mPairingLast.erase(item.first);
 		}
 	}
-	/**/
-	// Blocked by left padlock.
+	if (mPairingFirst.size() > 1) // Ok, now we have an issue...
 	{
-		auto leftPadlockPairing = mIndexToTile.find(0x8C)->second.Pairing;
-
-		// First pass : check potential issues
-		std::map<int, int> mPairingCount;
-		std::map<int, int> mPairingFirst;
-		std::map<int, int> mPairingLast;
-
-		mPairingFirst[leftPadlockPairing] = -1;
-		mPairingLast[leftPadlockPairing] = -1;
-		int run = 0;
-		for (int y = 3; y < 5; ++y, ++run)
+		auto itEnd = mPairingFirst.end();
+		--itEnd;
+		for (auto it = mPairingFirst.begin(); it != itEnd; ++it)
 		{
-			for (int x = 0; x < 12; ++x)
+			auto itNext = it;
+			for (++itNext; itNext != mPairingFirst.end(); ++itNext)
 			{
-				// First get the tile.
-				const auto& object = mIndexToTile.find(arrBoardCoordToIndex[x][y][0])->second;
-				// Get the first occurence
-				if (!mPairingFirst.contains(object.Pairing))
-					mPairingFirst[object.Pairing] = x;
-				// Get the last occurence
-				mPairingLast[object.Pairing] = x;
-				// Get the count of occurences
-				++mPairingCount[object.Pairing];
-			}
-			// Remove the useless ones :
-			for (const auto& item : mPairingCount)
-			{
-				if (item.second != 4)
-				{
-					mPairingFirst.erase(item.first);
-					mPairingLast.erase(item.first);
-				}
-			}
-			// If the padlock is not in the list or if the padlock is the last, no issue caused by the padlock.
-			if (mPairingFirst.size() > 1 && mPairingFirst.contains(leftPadlockPairing) && mPairingLast.find(leftPadlockPairing)->second != 11) // Ok, now we have an issue...
-			{
-				std::vector<std::pair<int, int>> vPairingFirst;
-
-				for (const auto pairingFirst : mPairingFirst)
-				{
-					if (pairingFirst.first != leftPadlockPairing)
-						vPairingFirst.emplace_back(std::make_pair(pairingFirst.first, pairingFirst.second));
-				}
-				
-				for (auto itNext = vPairingFirst.begin(); itNext != vPairingFirst.end(); ++itNext)
-				{
-					// fAx < fBx && lAx < lBx
-					if (mPairingLast.find(leftPadlockPairing)->second < mPairingLast.find(itNext->first)->second)
-						if (cause != NULL) { *cause = 6 + run; }; return true;
-				}
+				// fAx < fBx && lAx < lBx
+				if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
+					if (cause != NULL) { *cause = 4; }; return true;
+				// fBx < fAx && lBx < lAx
+				/*if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
+					if (cause != NULL) { *cause = 5; }; return true;*/
 			}
 		}
 	}
-	/**/
-	// Blocked by right padlocks.
-	{
-		std::vector<int> firsts;
-		firsts.emplace_back(mIndexToTile.find(arrBoardCoordToIndex[0][3][0])->second.Pairing);
-		firsts.emplace_back(mIndexToTile.find(arrBoardCoordToIndex[0][4][0])->second.Pairing);
-		std::vector<int> lasts;
-		lasts.emplace_back(mIndexToTile.find(0x8D)->second.Pairing);
-		lasts.emplace_back(mIndexToTile.find(0x8E)->second.Pairing);
-		for (const auto& first : firsts)
-		{
-			int run = 0;
-			for (const auto& last : lasts)
-			{
-				if (first != last)
-				{
-					auto firstCount = 1;
-					auto lastCount = 1 + lasts[0] == lasts[1] ? 1 : 0;
-					for (int x = 1; x < 12; ++x)
-					{
-						if (mIndexToTile.find(arrBoardCoordToIndex[x][3+run][0])->second.Pairing == first) ++firstCount;
-						if (mIndexToTile.find(arrBoardCoordToIndex[x][3+run][0])->second.Pairing == last) ++lastCount;
-
-						if (lastCount == 4 && firstCount == lastCount)
-						{
-							if (cause != NULL) { *cause = 8 + run; }; return true;
-						}
-					}
-				}
-
-				if (lasts[0] == lasts[1]) break;
-				++run;
-			}
-		}
-	}
-	/**/
 
 	// Doesn't work if not a starting pos. There could be holes in the lines.
 	for(int z = 3; z >= 0; --z)
@@ -927,6 +878,38 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 				std::map<int, int> mPairingCount;
 				std::map<int, int> mPairingFirst;
 				std::map<int, int> mPairingLast;
+
+				if (3 <= y && y <= 4 && z == 0)
+				{
+					// Fake entries for the padlocks.
+					auto leftPadlockPairing = mIndexToTile.find(0x8C)->second.Pairing;
+					++mPairingCount[leftPadlockPairing];
+					mPairingFirst[leftPadlockPairing] = -1;
+					mPairingLast[leftPadlockPairing] = -1;
+
+					auto rightPadlockPairing = mIndexToTile.find(0x8D)->second.Pairing;
+					++mPairingCount[rightPadlockPairing];
+					if (!mPairingFirst.contains(rightPadlockPairing))
+						mPairingFirst[rightPadlockPairing] = 12;
+					mPairingLast[rightPadlockPairing] = 12;
+
+					auto rightRightPadlockPairing = mIndexToTile.find(0x8D)->second.Pairing;
+					++mPairingCount[rightRightPadlockPairing];
+					if (!mPairingFirst.contains(rightRightPadlockPairing))
+						mPairingFirst[rightRightPadlockPairing] = 13;
+					mPairingLast[rightRightPadlockPairing] = 13;
+
+					// Ponder
+					int yPonder = y == 3 ? 4 : 3;
+					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+					{
+						// First get the tile.
+						const auto pairing = mIndexToTile.find(arrBoardCoordToIndex[x][yPonder][0])->second.Pairing;
+						if (pairing == leftPadlockPairing || pairing == rightPadlockPairing || pairing == rightRightPadlockPairing)
+							++mPairingCount[pairing];
+					}
+				}
+
 				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
 				{
 					// First get the tile.
@@ -935,7 +918,8 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 					if (!mPairingFirst.contains(object.Pairing))
 						mPairingFirst[object.Pairing] = x;
 					// Get the last occurence
-					mPairingLast[object.Pairing] = x;
+					if(!mPairingLast.contains(object.Pairing) || mPairingLast.find(object.Pairing)->second < x) // Because of the left and right blocker fake init before...
+						mPairingLast[object.Pairing] = x;
 					// Get the count of occurences
 					++mPairingCount[object.Pairing];
 				}
@@ -959,10 +943,10 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 						{
 							// fAx < fBx && lAx < lBx
 							if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
-								if (cause != NULL) { *cause = 10; }; return true;
+								if (cause != NULL) { *cause = 6; }; return true;
 							// fBx < fAx && lBx < lAx
-							if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
-								if (cause != NULL) { *cause = 10; }; return true;
+							/*if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
+								if (cause != NULL) { *cause = 7; }; return true;*/
 						}
 					}
 				}

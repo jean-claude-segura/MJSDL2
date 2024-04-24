@@ -182,7 +182,9 @@ void Board::InitBoard()
 		{
 			domino = uniform_dist(e1);
 		} while (tempDominos[domino] == 0);
+#ifdef _DEBUG
 		int debugdom = tempDominos[domino];
+#endif
 		--tempDominos[domino];
 		mOccupationBoard[arrIndexToCoord[index]] = index;
 		vLogicalBoard.emplace_back(TileAndIndex(domino, index));
@@ -489,13 +491,26 @@ void Board::InitBoardLockedHorizontal(int test)
 	};
 
 	int index = 0;
-
-	if (test == 0)
+	switch (test)
 	{
+	default:
+		for (; index < 144; ++index)
+		{
+			int domino = 0;
+			do
+			{
+				domino = uniform_dist(e1);
+			} while (tempDominos[domino] == 0);
+			--tempDominos[domino];
+			mOccupationBoard[arrIndexToCoord[index]] = index;
+			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+			mIndexToTile.emplace(index, Tile(domino));
+		}
+		break;
+	case 0:
 		for (; index < 4; ++index)
 		{
 			int domino = 0;
-			int debugdom = tempDominos[domino];
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
@@ -505,20 +520,16 @@ void Board::InitBoardLockedHorizontal(int test)
 		for (; index < 8; ++index)
 		{
 			int domino = 1;
-			int debugdom = tempDominos[domino];
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
-	}
-
-	if (test == 1)
-	{
+		break;
+	case 1:
 		for (; index < 4; ++index)
 		{
 			int domino = 0;
-			int debugdom = tempDominos[domino];
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
@@ -532,7 +543,6 @@ void Board::InitBoardLockedHorizontal(int test)
 			{
 				domino = uniform_dist(e1);
 			} while (domino == 1 || tempDominos[domino] == 0);
-			int debugdom = tempDominos[domino];
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
@@ -541,16 +551,13 @@ void Board::InitBoardLockedHorizontal(int test)
 		for (; index < 12; ++index)
 		{
 			int domino = 1;
-			int debugdom = tempDominos[domino];
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
-	}
-
-	if (test == 2)
-	{
+		break;
+	case 2:
 		for (; index < 4; ++index)
 		{
 			int domino = 0;
@@ -558,7 +565,6 @@ void Board::InitBoardLockedHorizontal(int test)
 			{
 				domino = uniform_dist(e1);
 			} while (domino == 1 || domino == 0 || tempDominos[domino] == 0);
-			int debugdom = tempDominos[domino];
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
@@ -567,7 +573,6 @@ void Board::InitBoardLockedHorizontal(int test)
 		for (; index < 8; ++index)
 		{
 			int domino = 0;
-			int debugdom = tempDominos[domino];
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
@@ -577,32 +582,124 @@ void Board::InitBoardLockedHorizontal(int test)
 		for (; index < 12; ++index)
 		{
 			int domino = 1;
-			int debugdom = tempDominos[domino];
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
+		break;
+	case 3:
+		for (; index < 144; ++index)
+		{
+			int domino = 0;
+			//if (index == 0x8C || index == 0x8D || index == 0x8E || index == 0x2B)
+			if (index == 0x8C || index == 0x2B || index == 0x21 || index == 0x2D)
+			{
+				domino = 1;
+			}
+			else if (index == 0x1E || index == 0x1F || index == 0x23 || index == 0x24)
+			{
+				domino = 2;
+			}
+			else if (index == 0x20 || index == 0x22 || index == 0x26 || index == 0x28)
+			{
+				domino = 3;
+			}
+			else
+			{
+				do
+				{
+					domino = uniform_dist(e1);
+				} while (domino == 1 || domino == 2 || domino == 3 || tempDominos[domino] == 0);
+			}
+			--tempDominos[domino];
+			mOccupationBoard[arrIndexToCoord[index]] = index;
+			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+			mIndexToTile.emplace(index, Tile(domino));
+		}
+		break;
+	case 4:
+		for (; index < 144; ++index)
+		{
+			int domino = 0;
+			//if (index == 0x8C || index == 0x8D || index == 0x8E || index == 0x2B)
+			if (index == 0x8C || index == 0x2B || index == 0x21 || index == 0x2D)
+			{
+				domino = 1;
+			}
+			else if (index == 0x1E || index == 0x1F || index == 0x23 || index == 0x2A)
+			{
+				domino = 2;
+			}
+			else if (index == 0x20 || index == 0x22 || index == 0x2C || index == 0x2E)
+			{
+				domino = 3;
+			}
+			else
+			{
+				do
+				{
+					domino = uniform_dist(e1);
+				} while (domino == 1 || domino == 2 || domino == 3 || tempDominos[domino] == 0);
+			}
+			--tempDominos[domino];
+			mOccupationBoard[arrIndexToCoord[index]] = index;
+			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+			mIndexToTile.emplace(index, Tile(domino));
+		}
+		break;
+	case 5:
+		for (; index < 144; ++index)
+		{
+			int domino = 0;
+			//if (index == 0x8C || index == 0x8D || index == 0x8E || index == 0x2B)
+			if (index == 0x8C || index == 0x2B || index == 0x21 || index == 0x2D)
+			{
+				domino = 1;
+			}
+			else if (index == 0x1E || index == 0x1F || index == 0x23 || index == 0x2A)
+			{
+				domino = 2;
+			}
+			else if (index == 0x20 || index == 0x22 || index == 0x2C || index == 0x2E)
+			{
+				domino = 3;
+			}
+			else
+			{
+				do
+				{
+					domino = uniform_dist(e1);
+				} while (domino == 1 || domino == 2 || domino == 3 || tempDominos[domino] == 0);
+			}
+			--tempDominos[domino];
+			mOccupationBoard[arrIndexToCoord[index]] = index;
+			vLogicalBoard.emplace_back(TileAndIndex(domino, index));
+			mIndexToTile.emplace(index, Tile(domino));
+		}
+		break;
 	}
 
-	for (/*int index = 0*/; index < 144; ++index)
+	/*
+	for (; index < 144; ++index)
 	{
 		int domino = 0;
 		do
 		{
 			domino = uniform_dist(e1);
 		} while (tempDominos[domino] == 0);
-		int debugdom = tempDominos[domino];
 		--tempDominos[domino];
 		mOccupationBoard[arrIndexToCoord[index]] = index;
 		vLogicalBoard.emplace_back(TileAndIndex(domino, index));
 		mIndexToTile.emplace(index, Tile(domino));
 	}
+	/**/
 
 	arrRemovable = InitRemovable();
 
 	vWhatsLeft.clear();
-	for (int i = 0; i < 144; ++i) vWhatsLeft.emplace_back(i);
+	for(const auto & item : vLogicalBoard)
+		vWhatsLeft.emplace_back(item.Index);
 
 	SetMoves();
 }
@@ -612,10 +709,11 @@ bool Board::TestLocked()
 	std::vector<std::pair<int, int>> Locked;
 	std::map<int, int> causes;
 	int cause;
-	for (int i = 0; i < 10000; ++i)
+	//for (int i = 0; i < 10000; ++i)
+	int i = 2;
 	{
-		//InitBoardLockedHorizontal(i%3);
-		InitBoard();
+		InitBoardLockedHorizontal(i);
+		//InitBoard();
 		if (CheckIfLockedFromStart(mIndexToTile, &cause))
 		{
 			Locked.emplace_back(std::make_pair(i, cause));

@@ -92,6 +92,11 @@ void GraphicBoard::ThrowException(const int i)
 
 void GraphicBoard::Init()
 {
+#ifdef _DEBUG	
+	//plateau.Test();
+	//plateau.TestLocked();
+#endif
+
 	SDL_SetMainReady();
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -146,10 +151,12 @@ void GraphicBoard::Init()
 	SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0xFF, 0xFF, 0xFF));*/
 	//SDL_UpdateWindowSurface(window);
 
-#ifdef _DEBUG	
-	//plateau.Test();
-#endif
+#ifdef _DEBUG
 	plateau.InitBoard();
+	//plateau.InitBoardLockedHorizontal(2);
+#else
+	plateau.InitBoard();
+#endif
 	plateau.SortBoard(direction);
 	itNextMove = plateau.GetMovesLeft().begin();
 	itPrevMove = plateau.GetMovesLeft().end();
