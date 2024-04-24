@@ -1,5 +1,7 @@
 #pragma once
 #include "Board.h"
+#include <thread>
+#include <future>
 
 constexpr std::array<std::array<std::array<int, 4>, 8>, 12> InitBoardCoordToIndex(const std::array<std::array<std::array<bool, 4>, 8>, 12>& arrBasePattern)
 {
@@ -87,6 +89,7 @@ constexpr std::array<std::tuple<int, int, int>, 140> arrIndexToBoardCoord = Init
 // Limits on horizontal lines (Padlocks not in).
 constexpr std::array < std::array < std::pair<int, int>, 4>, 8> arrHorizontalLimits = InitHorizontalLimits(arrBoardCoordToIndex);
 
+std::atomic<bool> stopSolverNow;
 inline uint8_t EvalMoveMaxBlock(
 	const std::vector<int>& vMove,
 	std::map<int, Tile>& mIndexToTile);
@@ -1582,6 +1585,27 @@ inline bool tryBruteForceOrderingFreedPadlocksFirst(Board plateau, std::vector<s
 	return plateau.IsEmpty();
 }
 
+bool SolveRecThr(
+	const std::vector<int> vMove,
+	std::vector<TileAndIndex> vLogicalBoard,
+	std::array<bool, 144> arrRemovable,
+	std::map<int, Tile> mIndexToTile,
+	std::vector<int> vWhatsLeft,
+	std::map<Coordinates, int> mOccupationBoard,
+	std::vector<std::pair<int, int>> &vSolution
+#ifdef _DEBUG
+	, uint64_t positions
+#endif
+)
+{
+	auto ret = SolveRec(vMove, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
+#ifdef _DEBUG
+		, positions
+#endif
+	);
+	return ret;
+}
+
 // Just to work on a copy.
 inline bool SolveRecInit(const Board& plateau,
 	std::vector<std::pair<int, int>> vOldMoves,
@@ -1652,7 +1676,7 @@ inline bool SolveRecInit(const Board& plateau,
 		return false;
 	}
 
-	return true;
+	//return true;
 	vSolution.clear();
 	bool ret = false;
 
@@ -1686,15 +1710,45 @@ inline bool SolveRecInit(const Board& plateau,
 	uint64_t positions = 0ULL;
 #endif
 
-	for (const auto& move : vSortedMoves)
+
+	/**/
+	std::array < std::vector<std::pair<int, int>>, 2> vvSolutions;
+	for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
 	{
-		ret = SolveRec(move.first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
+		std::vector< std::future<bool>> vSolvers;
+		for (int i = 0; i < 2; ++i)
+		{
+			if (itMove != vSortedMoves.end())
+			{
+				vSolvers.emplace_back(std::async(&SolveRecThr, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, std::ref(vvSolutions[i])
+#ifdef _DEBUG
+					, positions
+#endif
+				));
+				++itMove;
+			}
+		}
+
+		for (auto & solver : vSolvers)
+		{
+			auto retSolver = solver.get();
+			ret |= retSolver;
+		}
+		if (ret) break;
+	}
+	/**/
+	/*
+	for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
+	{
+		std::future<bool > solver = std::async(&SolveRecThr, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
 #ifdef _DEBUG
 			, positions
 #endif
 		);
+		ret |= solver.get();
 		if (ret) break;
 	}
+	/**/
 
 #ifdef _DEBUG
 	bool LogicalBoardOk = LogicalBoardRefForDebug.size() == vLogicalBoard.size();
@@ -1722,6 +1776,100 @@ inline bool SolveRecInit(const Board& plateau,
 	return ret;
 }
 
+// Just to work on a copy.
+// Note for this one : concurrence issues with the transposition table to prevent.
+inline bool SolveRecInitAsync(const Board& plateau,
+	std::vector<std::pair<int, int>> vOldMoves,
+	std::vector<TileAndIndex> vLogicalBoard,
+	std::array<bool, 144> arrRemovable,
+	std::map<int, Tile> mIndexToTile,
+	std::vector<int> vWhatsLeft,
+	std::map<Coordinates, int> mOccupationBoard,
+	std::vector<std::pair<int, int>>& vSolution)
+{
+	if (CheckIfLockedFromStart(mIndexToTile))
+	{
+		return false;
+	}
+
+	//return true;
+	vSolution.clear();
+	bool ret = false;
+
+	// New move container to remove the tiles 2 at once or 4 at once.
+	std::vector<std::vector<int>> vMoves;
+	ConvertMovesToVector(vOldMoves, vMoves);
+
+	std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
+	for (const auto& move : vMoves)
+	{
+		auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard);
+		auto jouables = evalBruteForceOrderingEval.first;
+		auto debloques = evalBruteForceOrderingEval.second;
+		auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
+		vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock)));
+	}
+
+	std::sort(vSortedMoves.begin(), vSortedMoves.end(),
+		[](const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& left, const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& right)
+		{
+			return
+				left.first.size() > right.first.size() ||
+				left.first.size() == right.first.size() && std::get<0>(left.second) > std::get<0>(right.second) ||
+				(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) > std::get<1>(right.second)) ||
+				(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
+		});
+
+#ifdef _DEBUG
+	uint64_t positions = 0ULL;
+#endif
+
+
+	/**/
+	std::array < std::vector<std::pair<int, int>>, 2> vvSolutions;
+	for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
+	{
+		std::vector< std::future<bool>> vSolvers;
+		for (int i = 0; i < 2; ++i)
+		{
+			if (itMove != vSortedMoves.end())
+			{
+				vSolvers.emplace_back(std::async(&SolveRecThr, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, std::ref(vvSolutions[i])
+#ifdef _DEBUG
+					, positions
+#endif
+				));
+				++itMove;
+			}
+		}
+
+		for (auto& solver : vSolvers)
+		{
+			auto retSolver = solver.get();
+			ret |= retSolver;
+		}
+		if (ret) break;
+	}
+	/**/
+	/*
+	for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
+	{
+		std::future<bool > solver = std::async(&SolveRecThr, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
+#ifdef _DEBUG
+			, positions
+#endif
+		);
+		ret |= solver.get();
+		if (ret) break;
+	}
+	/**/
+
+	// Transposition table must be cleared. The hash just means the positions has been seen at least once before. It doesn't mean it was in a lost game.
+	// And the start position is always different.
+	mTranspositionsTable.clear();
+
+	return ret;
+}
 #ifdef _DEBUG
 int64_t testAll(const Board& plateau)
 {
