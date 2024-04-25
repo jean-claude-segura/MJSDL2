@@ -338,7 +338,7 @@ void Board::SetMoves()
 
 bool Board::Solve()
 {
-	if (SolveRecInit(*this, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution))
+	if (SolveRecInit/*Async*/(*this, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution))
 	{
 #ifdef _DEBUG
 		for (auto& move : vSolution)
@@ -371,6 +371,56 @@ bool Board::IsLockedFromMove()
 		
 		bIsLockedFromMove = bIsLockedFromMove ? true : CheckIfLockedFromMove(vLogicalBoard, mIndexToTileRemoved, vMove);
 		return bIsLockedFromMove;
+	}
+}
+
+bool Board::TakeBack()
+{
+	if (vHistory.empty())
+	{
+		return false;
+	}
+	else
+	{
+		auto it = vHistory.end();
+		--it;
+		const auto firstTile = mIndexToTileRemoved.find(it->first)->second;
+		const auto secondTile = mIndexToTileRemoved.find(it->second)->second;
+
+		auto coord = arrIndexToBoardCoord[it->first];
+		vLogicalBoard.emplace_back(TileAndIndex(firstTile.Rank, it->first, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+
+		coord = arrIndexToBoardCoord[it->second];
+		vLogicalBoard.emplace_back(TileAndIndex(secondTile.Rank, it->second, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+
+		mOccupationBoard.emplace(arrIndexToCoord[it->first], it->first);
+		mOccupationBoard.emplace(arrIndexToCoord[it->first], it->second);
+
+		// Issue here...
+		arrRemovable[it->first] = true;
+		arrRemovable[it->second] = true;
+
+		// And here if used by the heuristic.
+		vMoves.emplace_back(std::make_pair(it->first, it->second));
+
+		bIsLockedFromMove = CheckIfLocked(vLogicalBoard);
+
+		return true;
+	}
+}
+
+// For the graphic board.
+bool Board::TakeBack(const uint8_t direction)
+{
+	if (TakeBack())
+	{
+		void SortBoard(const uint8_t direction);
+
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
 

@@ -343,6 +343,73 @@ inline uint64_t getFNV1a(const std::map<int, Tile>& mIndexToTile)
 	return hash;
 }
 
+std::mutex mtxStopNow;
+
+inline bool stopNowParallel(const std::map<int, Tile>& mIndexToTile
+#ifdef _DEBUG
+	, uint64_t& positions
+#endif
+)
+{
+	uint64_t tileTab[144];
+	memset(tileTab, 0, 144 * sizeof(uint64_t));
+
+	for (auto& item : mIndexToTile)
+	{
+		tileTab[item.first] = uint64_t(item.second.Rank);
+	}
+
+	std::array<uint64_t, 144 / 8> boardDescription;
+
+	// All numbers are 8 bits.
+	// Stored 8 by 8 in 18 slides of 64 bits.
+	for (int i = 0; i < 144; i += 8)
+	{
+		uint64_t temp = tileTab[i] << 56;
+		temp |= tileTab[i + 1] << 48;
+		temp |= tileTab[i + 2] << 40;
+		temp |= tileTab[i + 3] << 32;
+		temp |= tileTab[i + 4] << 24;
+		temp |= tileTab[i + 5] << 16;
+		temp |= tileTab[i + 6] << 8;
+		temp |= tileTab[i + 7];
+		boardDescription[i >> 3] = temp;
+	}
+
+	uint64_t hash = FNV_offset_basis;
+	for (int i = 0; i < 144; ++i)
+	{
+		hash ^= tileTab[i];
+		hash *= FNV_prime;
+	}
+	mtxStopNow.lock();
+	if (mTranspositionsTable.contains(hash))
+	{
+		auto boardDescriptionInHashtable = mTranspositionsTable[hash];
+		for (int i = 0; i < 144 / 8; ++i)
+		{
+			if (boardDescriptionInHashtable[i] != boardDescription[i])
+			{
+#ifdef _DEBUG
+				std::cout << "Collision de hash, " << positions << std::endl;
+#endif
+				mTranspositionsTable[hash] = boardDescription;
+				mtxStopNow.unlock();
+				return false;
+			}
+		}
+		mtxStopNow.unlock();
+		return true;
+	}
+	else
+	{
+		auto temp = std::make_pair(hash, boardDescription);
+		mTranspositionsTable.emplace(temp);
+		mtxStopNow.unlock();
+		return false;
+	}
+}
+
 inline bool stopNow(const std::map<int, Tile>& mIndexToTile
 #ifdef _DEBUG
 	, uint64_t& positions
@@ -441,6 +508,113 @@ inline std::pair<int, int> BruteForceOrderingEval(
 	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 
 	return moveEval;
+}
+
+inline bool SolveRecParallel(
+	const std::vector<int>& vMove,
+	std::vector<TileAndIndex>& vLogicalBoard,
+	std::array<bool, 144>& arrRemovable,
+	std::map<int, Tile>& mIndexToTile,
+	std::vector<int>& vWhatsLeft,
+	std::map<Coordinates, int>& mOccupationBoard,
+	std::vector<std::pair<int, int>>& vSolution
+#ifdef _DEBUG
+	, uint64_t& positions
+#endif
+)
+{
+	std::vector<std::vector<int>> vNewMoves;
+
+	std::vector<TileAndIndex> vLogicalBoardRemoved;
+	std::vector<int> vRemovableWasTrue;
+	std::vector<int> vRemovableWasFalse;
+	std::map<int, Tile> mIndexToTileRemoved;
+	std::vector<int> vWhatsLeftRemoved;
+	std::map<Coordinates, int> mOccupationBoardRemoved;
+	bool full = false;
+	for (const auto& move : vMove)
+	{
+		RemoveTile(move,
+			vLogicalBoard,
+			arrRemovable,
+			mIndexToTile,
+			vWhatsLeft,
+			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToTileRemoved, vWhatsLeftRemoved, mOccupationBoardRemoved);
+	}
+	vSolution.emplace_back(std::make_pair(vMove[0], vMove[1]));
+	if (vMove.size() == 4)
+	{
+		full = true;
+		vSolution.emplace_back(std::make_pair(vMove[2], vMove[3]));
+	}
+
+	SetMoves(vLogicalBoard, arrRemovable, vNewMoves);
+
+	auto ret = vLogicalBoard.empty();
+	if (!ret)
+	{
+		if (!CheckIfLockedFromMove(vLogicalBoard, mIndexToTileRemoved, vMove) && !vNewMoves.empty())
+		{
+			if (!stopNowParallel(mIndexToTile
+#ifdef _DEBUG
+				, positions
+#endif
+			))
+			{
+				std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
+				for (const auto& move : vNewMoves)
+				{
+					auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard);
+					auto jouables = evalBruteForceOrderingEval.first;
+					auto debloques = evalBruteForceOrderingEval.second;
+					auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
+					vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock)));
+					//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, jouables, evalEvalMoveMaxBlock)));
+					//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, evalEvalMoveMaxBlock, debloques)));
+				}
+
+				std::sort(vSortedMoves.begin(), vSortedMoves.end(),
+					[](const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& left, const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& right)
+					{
+						return
+							left.first.size() > right.first.size() ||
+							left.first.size() == right.first.size() && std::get<0>(left.second) > std::get<0>(right.second) ||
+							(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) > std::get<1>(right.second)) ||
+							(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
+					});
+
+				for (const auto& move : vSortedMoves)
+				{
+					ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
+#ifdef _DEBUG
+						, ++positions
+#endif
+					);
+
+					if (ret)
+						stopSolverNow = true;
+					if (stopSolverNow)
+						break;
+				}
+			}
+		}
+		if (!ret)
+		{
+			if (full)
+				vSolution.pop_back();
+			vSolution.pop_back();
+		}
+	}
+	/**/
+	for (auto& item : vLogicalBoardRemoved) vLogicalBoard.emplace_back(item);
+	for (auto& item : vRemovableWasTrue) arrRemovable[item] = true;
+	for (auto& item : vRemovableWasFalse) arrRemovable[item] = false;
+	for (auto& item : mIndexToTileRemoved) mIndexToTile.emplace(item.first, item.second);
+	for (auto& item : vWhatsLeftRemoved) vWhatsLeft.emplace_back(item);
+	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
+	/**/
+
+	return ret;
 }
 
 inline bool SolveRec(
@@ -1572,7 +1746,7 @@ bool SolveRecThr(
 #endif
 )
 {
-	auto ret = SolveRec(vMove, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
+	auto ret = SolveRecParallel(vMove, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
 #ifdef _DEBUG
 		, positions
 #endif
@@ -1770,6 +1944,7 @@ inline bool SolveRecInitAsync(const Board& plateau,
 
 
 	/**/
+	stopSolverNow = false;
 	std::array < std::vector<std::pair<int, int>>, 2> vvSolutions;
 	for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
 	{

@@ -276,6 +276,8 @@ public:
 	bool Solve();
 	bool IsLockedFromStart();
 	bool IsLockedFromMove();
+	bool TakeBack();
+	bool TakeBack(const uint8_t direction);
 #ifdef _DEBUG
 	bool Test();
 	void InitBoardLockedHorizontal(int test);
