@@ -41,9 +41,10 @@ public:
 		return Rank == other.Rank && Pairing == other.Pairing;
 	}
 
-	Tile operator=(const Tile& other) const
+	void operator=(const Tile& other) const
 	{
-		return Tile(other);
+		*const_cast<int*> (&Rank) = other.Rank;
+		*const_cast<int*> (&Pairing) = other.Pairing;
 	}
 
 	bool operator<(const Tile& other) const
@@ -172,52 +173,6 @@ constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> InitBasePattern()
 	return arrBasePattern;
 }
 
-constexpr std::array<bool, 144> InitRemovable()
-{
-	std::array<bool, 144> arrRemovable;
-
-	for (int i = 0; i < 144; ++i)
-		arrRemovable[i] = false;
-
-	arrRemovable[0x0] = true;
-	arrRemovable[0xb] = true;
-	arrRemovable[0xc] = true;
-	arrRemovable[0x13] = true;
-	arrRemovable[0x14] = true;
-	arrRemovable[0x1d] = true;
-	arrRemovable[0x36] = true;
-	arrRemovable[0x3f] = true;
-	arrRemovable[0x40] = true;
-	arrRemovable[0x47] = true;
-	arrRemovable[0x48] = true;
-	arrRemovable[0x53] = true;
-	arrRemovable[0x54] = true;
-	arrRemovable[0x59] = true;
-	arrRemovable[0x5a] = true;
-	arrRemovable[0x5f] = true;
-	arrRemovable[0x60] = true;
-	arrRemovable[0x65] = true;
-	arrRemovable[0x66] = true;
-	arrRemovable[0x6b] = true;
-	arrRemovable[0x6c] = true;
-	arrRemovable[0x71] = true;
-	arrRemovable[0x72] = true;
-	arrRemovable[0x77] = true;
-	arrRemovable[0x78] = true;
-	arrRemovable[0x7b] = true;
-	arrRemovable[0x7c] = true;
-	arrRemovable[0x7f] = true;
-	arrRemovable[0x80] = true;
-	arrRemovable[0x83] = true;
-	arrRemovable[0x84] = true;
-	arrRemovable[0x87] = true;
-	arrRemovable[0x8c] = true;
-	arrRemovable[0x8e] = true;
-	arrRemovable[0x8f] = true;
-
-	return arrRemovable;
-}
-
 constexpr std::array<std::tuple<int, int, int, int, int>, 144> InitIndexToBoardCoord(const std::array<std::array<std::array<bool, 4>, 8>, 12>& arrBasePattern)
 {
 	std::array<std::tuple<int, int, int, int, int>, 144> arrBaseTurtlePatternToCoord;
@@ -243,12 +198,75 @@ constexpr std::array<std::tuple<int, int, int, int, int>, 144> InitIndexToBoardC
 	return arrBaseTurtlePatternToCoord;
 }
 
+constexpr std::array<std::array<std::array<int, 4>, 8>, 12> InitBoardCoordToIndex(const std::array<std::array<std::array<bool, 4>, 8>, 12>& arrBasePattern)
+{
+	std::array<std::array<std::array<int, 4>, 8>, 12> arrBaseTurtlePattern;
+	int index = 0;
+	for (int z = 0; z < 4; ++z)
+	{
+		for (int y = 0; y < 8; ++y)
+		{
+			for (int x = 0; x < 12; ++x)
+			{
+				if (arrBasePattern[x][y][z]) {
+					arrBaseTurtlePattern[x][y][z] = index++;
+				}
+				else
+				{
+					arrBaseTurtlePattern[x][y][z] = -1;
+				}
+			}
+		}
+	}
+
+	return arrBaseTurtlePattern;
+}
+
+constexpr std::array < std::array < std::pair<int, int>, 4>, 8> InitHorizontalLimits(std::array<std::array<std::array<int, 4>, 8>, 12> arrBaseTurtlePattern)
+{
+	std::array < std::array < std::pair<int, int>, 4>, 8> arrHorizontalLimits;
+
+	for (int z = 0; z < 4; ++z)
+	{
+		for (int y = 0; y < 8; ++y)
+		{
+			int x = 0;
+			int first = -1;
+			int second = -1;
+			for (; x < 12; ++x)
+			{
+				if (arrBaseTurtlePattern[x][y][z] != -1) {
+					first = x;
+					break;
+				}
+			}
+			for (; x < 12; ++x)
+			{
+				second = x;
+				if (arrBaseTurtlePattern[x][y][z] == -1)
+				{
+					--second;
+					break;
+				}
+			}
+
+			arrHorizontalLimits[y][z] = std::make_pair(first, second);
+		}
+	}
+
+	return arrHorizontalLimits;
+}
+
 // Available initial positions in the turtles.
 constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> arrBasePattern = InitBasePattern();
 // Index to coordinates (x, y, z as Double) of available initial positions in the turtles.
 constexpr std::array<Coordinates, 144> arrIndexToCoord = InitIndexToCoord(arrBasePattern);
 // Gets position from the Index
 constexpr std::array<std::tuple<int, int, int, int, int>, 144> arrIndexToBoardCoord = InitIndexToBoardCoord(arrBasePattern);
+// Gets Index from position (Padlocks not in).
+constexpr std::array<std::array<std::array<int, 4>, 8>, 12> arrBoardCoordToIndex = InitBoardCoordToIndex(arrBasePattern);
+// Limits on horizontal lines (Padlocks not in).
+constexpr std::array < std::array < std::pair<int, int>, 4>, 8> arrHorizontalLimits = InitHorizontalLimits(arrBoardCoordToIndex);
 
 class Board
 {
@@ -299,7 +317,8 @@ private:
 	std::map<int, Tile> mIndexToTileRemoved;
 	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> Index
 	std::vector<TileAndIndex> vLogicalBoard; // (TileObject, Index)
-	std::array<bool, 144> arrRemovable = InitRemovable();
+	std::array<bool, 144> arrRemovable = {};
+	std::array<bool, 144> InitRemovable();
 	void RemoveTile(int);
 	void BuildMoves(std::vector<TileAndIndex>& vRemovableBoard, std::vector<TileAndIndex>::iterator& itFirst, std::vector<std::pair<int, int>>& vMoves);
 	std::vector<std::pair<int, int>> vMoves;

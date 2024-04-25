@@ -24,6 +24,7 @@
 #define	SOUTH		0xF9
 #define	EAST		0xF8
 #define	WEST		0xF7
+#define	TAKEBACK	0xF6
 
 void LoadRandomBackgroundAsync(SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height);
 void LoadRandomBackground(const std::string& path, SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height);
@@ -88,6 +89,7 @@ private:
 		* OuestBtn,
 		* NordBtn,
 		* ExitBtn,
+		* TakeBackBtn,
 		* Inverted,
 		* FaceMask,
 		* textureMouseMap,

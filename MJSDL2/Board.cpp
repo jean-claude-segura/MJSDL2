@@ -148,6 +148,69 @@ void Board::SortBoard(const uint8_t direction)
 		}
 }
 
+std::array<bool, 144> Board::InitRemovable()
+{
+	for (int i = 0; i < 144; ++i)
+		arrRemovable[i] = false;
+
+	std::array<std::array<std::array<Tile, 4>, 8>, 12> arrBoard = {};
+
+	for (const auto& tileAndIndex : vLogicalBoard)
+	{
+		if (tileAndIndex.Index < 140)
+			arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex.TileObject;
+		else
+			arrRemovable[tileAndIndex.Index] = true;
+	}
+
+	bool unlockPadlock = true;
+	// I want to be able to sort anytime so two loops.
+	for (const auto& tileAndIndex : vLogicalBoard)
+	{
+		if (tileAndIndex.Index < 140)
+		{
+			const auto x = tileAndIndex.X;
+			const auto y = tileAndIndex.Y;
+			const auto z = tileAndIndex.Z;
+			if ((z == 3 || arrBoard[x][y][z + 1].Pairing == -1) && (x == arrHorizontalLimits[y][z].first || x == arrHorizontalLimits[y][z].second || arrBoard[x - 1][y][z].Pairing == -1 || arrBoard[x + 1][y][z].Pairing == -1))
+				arrRemovable[tileAndIndex.Index] = true;
+
+			if (tileAndIndex.Index == 0x29 || tileAndIndex.Index == 0x35) unlockPadlock = false;
+		}
+	}
+
+	// I want to be able to sort anytime so two loops.
+	for (const auto& tileAndIndex : vLogicalBoard)
+	{
+		if (tileAndIndex.Index >= 140)
+		{
+			if (tileAndIndex.Index == 0x8F)
+			{
+				arrRemovable[0x88] = false;
+				arrRemovable[0x89] = false;
+				arrRemovable[0x8A] = false;
+				arrRemovable[0x8B] = false;
+			}
+			else if (tileAndIndex.Index == 0x8C)
+			{
+				arrRemovable[0x1E] = false;
+				arrRemovable[0x2A] = false;
+			}
+			else if (tileAndIndex.Index == 0x8E)
+			{
+				arrRemovable[0x8D] = unlockPadlock;
+			}
+			else if (tileAndIndex.Index == 0x8D)
+			{
+				arrRemovable[0x29] = false;
+				arrRemovable[0x35] = false;
+			}
+		}
+	}
+
+	return arrRemovable;
+}
+
 void Board::InitBoard()
 {
 #ifdef _DEBUG
@@ -197,7 +260,7 @@ void Board::InitBoard()
 		mIndexToTile.emplace(index, Tile(domino));
 	}
 
-	arrRemovable = InitRemovable();
+	InitRemovable();
 
 	vWhatsLeft.clear();
 	for (int i = 0; i < 144; ++i) vWhatsLeft.emplace_back(i);
@@ -389,19 +452,23 @@ bool Board::TakeBack()
 
 		auto coord = arrIndexToBoardCoord[it->first];
 		vLogicalBoard.emplace_back(TileAndIndex(firstTile.Rank, it->first, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+		mIndexToTile.emplace(it->first, firstTile);
+		mIndexToTileRemoved.erase(it->first);
 
 		coord = arrIndexToBoardCoord[it->second];
 		vLogicalBoard.emplace_back(TileAndIndex(secondTile.Rank, it->second, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+		mIndexToTile.emplace(it->second, secondTile);
+		mIndexToTileRemoved.erase(it->second);
 
 		mOccupationBoard.emplace(arrIndexToCoord[it->first], it->first);
 		mOccupationBoard.emplace(arrIndexToCoord[it->first], it->second);
 
-		// Issue here...
-		arrRemovable[it->first] = true;
-		arrRemovable[it->second] = true;
+		InitRemovable();
 
-		// And here if used by the heuristic.
+		// Issue here if used by the heuristic.
 		vMoves.emplace_back(std::make_pair(it->first, it->second));
+
+		vHistory.erase(it);
 
 		bIsLockedFromMove = CheckIfLocked(vLogicalBoard);
 
@@ -414,7 +481,7 @@ bool Board::TakeBack(const uint8_t direction)
 {
 	if (TakeBack())
 	{
-		void SortBoard(const uint8_t direction);
+		SortBoard(direction);
 
 		return true;
 	}

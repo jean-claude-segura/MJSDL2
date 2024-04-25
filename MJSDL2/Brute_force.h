@@ -3,70 +3,6 @@
 #include <thread>
 #include <future>
 
-constexpr std::array<std::array<std::array<int, 4>, 8>, 12> InitBoardCoordToIndex(const std::array<std::array<std::array<bool, 4>, 8>, 12>& arrBasePattern)
-{
-	std::array<std::array<std::array<int, 4>, 8>, 12> arrBaseTurtlePattern;
-	int index = 0;
-	for (int z = 0; z < 4; ++z)
-	{
-		for (int y = 0; y < 8; ++y)
-		{
-			for (int x = 0; x < 12; ++x)
-			{
-				if (arrBasePattern[x][y][z]) {
-					arrBaseTurtlePattern[x][y][z] = index++;
-				}
-				else
-				{
-					arrBaseTurtlePattern[x][y][z] = -1;
-				}
-			}
-		}
-	}
-
-	return arrBaseTurtlePattern;
-}
-
-constexpr std::array < std::array < std::pair<int, int>, 4>, 8> InitHorizontalLimits(std::array<std::array<std::array<int, 4>, 8>, 12> arrBaseTurtlePattern)
-{
-	std::array < std::array < std::pair<int, int>, 4>, 8> arrHorizontalLimits;
-
-	for (int z = 0; z < 4; ++z)
-	{
-		for (int y = 0; y < 8; ++y)
-		{
-			int x = 0;
-			int first = -1;
-			int second = -1;
-			for (; x < 12; ++x)
-			{
-				if (arrBaseTurtlePattern[x][y][z] != -1) {
-					first = x;
-					break;
-				}
-			}
-			for (; x < 12; ++x)
-			{
-				second = x;
-				if (arrBaseTurtlePattern[x][y][z] == -1)
-				{
-					--second;
-					break;
-				}
-			}
-
-			arrHorizontalLimits[y][z] = std::make_pair(first, second);
-		}
-	}
-
-	return arrHorizontalLimits;
-}
-
-// Gets Index from position (Padlocks not in).
-constexpr std::array<std::array<std::array<int, 4>, 8>, 12> arrBoardCoordToIndex = InitBoardCoordToIndex(arrBasePattern);
-// Limits on horizontal lines (Padlocks not in).
-constexpr std::array < std::array < std::pair<int, int>, 4>, 8> arrHorizontalLimits = InitHorizontalLimits(arrBoardCoordToIndex);
-
 std::atomic<bool> stopSolverNow;
 inline uint8_t EvalMoveMaxBlock(
 	const std::vector<int>& vMove,
@@ -1824,7 +1760,7 @@ inline bool SolveRecInit(const Board& plateau,
 		return false;
 	}
 
-	//return true;
+	return true;
 	vSolution.clear();
 	bool ret = false;
 
