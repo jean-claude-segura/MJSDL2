@@ -1309,10 +1309,10 @@ void GraphicBoard::DisplayInterface()
 	// TakeBack
 	coordonnees.x = Width / 2 - size.y;
 	coordonnees.y = Height - size.x;
-	SDL_RenderCopyEx(renderer, TurnBtn, NULL, &coordonnees, 90, NULL, SDL_FLIP_NONE);
-	coordonnees.x = Width / 2 - 20;
+	SDL_RenderCopyEx(renderer, TakeBackBtn, NULL, &coordonnees, 90, NULL, SDL_FLIP_HORIZONTAL);
+	/*coordonnees.x = Width / 2 - 20;
 	coordonnees.y = Height - size.x;
-	SDL_RenderCopyEx(renderer, TurnBtn, NULL, &coordonnees, 90, NULL, SDL_FLIP_NONE);
+	SDL_RenderCopyEx(renderer, TakeBackBtn, NULL, &coordonnees, 90, NULL, SDL_FLIP_HORIZONTAL);*/
 	/**/
 }
 
