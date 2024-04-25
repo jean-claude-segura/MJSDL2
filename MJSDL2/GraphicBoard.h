@@ -10,6 +10,7 @@
 #include <filesystem>
 #include "SDL_Tools.h"
 #include "Tools.h"
+#include <future>
 
 // https://github.com/libsdl-org/SDL_ttf/tree/main/external
 // https://stackoverflow.com/questions/4998974/visual-studio-2008-moving-files-at-build-to-bin
@@ -23,6 +24,11 @@
 #define	SOUTH		0xF9
 #define	EAST		0xF8
 #define	WEST		0xF7
+
+void LoadRandomBackgroundAsync(SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height);
+void LoadRandomBackground(const std::string& path, SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height);
+void LoadBackground(const std::string& path, SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height);
+
 
 class GraphicBoard
 {

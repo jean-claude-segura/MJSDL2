@@ -318,6 +318,53 @@ void GraphicBoard::LoadBackground(const std::string& path)
 	SDL_FreeSurface(temp);
 }
 
+void LoadBackground(const std::string& path, SDL_Renderer*& renderer, SDL_Texture *& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height)
+{
+	if (textureBackground != NULL)
+		SDL_DestroyTexture(textureBackground);
+	if (textureGreyedBackground != NULL)
+		SDL_DestroyTexture(textureGreyedBackground);
+
+	auto temp = IMG_Load(path.c_str());
+	auto background = SDL_ConvertSurfaceFormat(temp, SDL_PIXELFORMAT_ARGB8888, 0);
+	if (background == NULL) {
+		SDL_FreeSurface(temp);
+		std::cout << stderr << "could not create background: " << SDL_GetError() << std::endl;
+		throw (1);
+	}
+	else
+	{
+		textureBackground = SDL_CreateTextureFromSurface(renderer, background);
+		if (textureBackground == NULL)
+		{
+			SDL_FreeSurface(background);
+			SDL_FreeSurface(temp);
+			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
+			throw(1);
+		}
+		SDL_ResizeTexture(renderer, textureBackground, Width, Height);
+		SDL_GreyscaleTexture(renderer, textureBackground, textureGreyedBackground);
+		SDL_RenderCopy(renderer, textureGreyedBackground, NULL, NULL);
+	}
+	SDL_FreeSurface(background);
+	SDL_FreeSurface(temp);
+}
+
+void LoadRandomBackground(const std::string& path, SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height)
+{
+	std::vector<std::string> vPaths;
+	for (const auto& entry : std::filesystem::directory_iterator(path))
+	{
+		if (!entry.is_directory())
+			vPaths.emplace_back(entry.path().string());
+	}
+	std::sort(vPaths.begin(), vPaths.end());
+	std::random_device r;
+	std::default_random_engine e1(r());
+	std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
+	LoadBackground(vPaths[uniform_dist(e1)], renderer, textureBackground, textureGreyedBackground, Width, Height);
+}
+
 void GraphicBoard::LoadRandomBackgroundVictory(const std::string& path)
 {
 	std::vector<std::string> vPaths;
@@ -410,6 +457,11 @@ void GraphicBoard::ReloadTiles()
 void GraphicBoard::LoadRandomBackground()
 {
 	LoadRandomBackground("./background/");
+}
+
+void LoadRandomBackgroundAsync(SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height)
+{
+	LoadRandomBackground("./background/", renderer, textureBackground, textureGreyedBackground, Width, Height);
 }
 
 void GraphicBoard::LoadRandomBackgroundVictory()
@@ -515,9 +567,13 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			itNextMove = plateau.GetMovesLeft().begin();
 			itPrevMove = plateau.GetMovesLeft().end();
 
+			// I assume the async call attempt on the mass storage is the issue here. Or the tiles are loaded much faster than the background to see a difference.
+			// Thread or async don't increase speed that much.
+			std::thread thrLoadRandomBackground (LoadRandomBackgroundAsync, std::ref(renderer), std::ref(textureBackground), std::ref(textureGreyedBackground), Width, Height);
+			//std::future<void > futureLoadRandomBackground = std::async(&LoadRandomBackgroundAsync, std::ref(renderer), std::ref(textureBackground), std::ref(textureGreyedBackground), Width, Height);
 			ReloadTiles();
-			LoadRandomBackground();
-
+			thrLoadRandomBackground.join();
+			//futureLoadRandomBackground.get();
 			Refresh(true, true);
 		}
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
