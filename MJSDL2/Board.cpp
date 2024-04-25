@@ -267,6 +267,8 @@ void Board::InitBoard()
 
 	SetMoves();
 
+	bIsLockedFromStart = CheckIfLockedFromStart(mIndexToTile);
+
 #ifdef _DEBUG
 	std::cout << std::dec << vWhatsLeft.size() << " tile" << (vWhatsLeft.size() > 1 ? "s" : "") << " left." << std::endl;
 	std::cout << std::dec << vMoves.size() << " move" << (vMoves.size() > 1 ? "s" : "") << " left." << std::endl;
@@ -414,7 +416,7 @@ bool Board::Solve()
 
 bool Board::IsLockedFromStart()
 {
-	return CheckIfLockedFromStart(mIndexToTile);
+	return bIsLockedFromStart;
 }
 
 bool Board::IsLockedFromMove()

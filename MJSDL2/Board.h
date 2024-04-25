@@ -325,4 +325,5 @@ private:
 	std::vector<std::pair<int, int>> vMoves;
 	void SetMoves();
 	bool bIsLockedFromMove;
+	bool bIsLockedFromStart;
 };

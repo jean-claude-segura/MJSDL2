@@ -879,7 +879,7 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 			}
 		}
 	}
-
+	
 	// For left and right padlocks : funny blocking...
 	// Doesn't work if not a starting pos. There could be padlocks missing.
 	// First pass : check potential issues
@@ -899,7 +899,7 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 		mPairingFirst[rightPadlockPairing] = 12 + 12;
 	mPairingLast[rightPadlockPairing] = 12 + 12;
 
-	auto rightRightPadlockPairing = mIndexToTile.find(0x8D)->second.Pairing;
+	auto rightRightPadlockPairing = mIndexToTile.find(0x8E)->second.Pairing;
 	++mPairingCount[rightRightPadlockPairing];
 	if (!mPairingFirst.contains(rightRightPadlockPairing))
 		mPairingFirst[rightRightPadlockPairing] = 13 + 12;
@@ -939,21 +939,25 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 			mPairingLast.erase(item.first);
 		}
 	}
-	if (mPairingFirst.size() > 1) // Ok, now we have an issue...
+	// Specific to padlocks. They have to be involved or the test is not relevant.
+	if (mPairingFirst.contains(0x8C) || mPairingFirst.contains(0x8D) || mPairingFirst.contains(0x8E))
 	{
-		auto itEnd = mPairingFirst.end();
-		--itEnd;
-		for (auto it = mPairingFirst.begin(); it != itEnd; ++it)
+		if (mPairingFirst.size() > 1) // Ok, now we have an issue...
 		{
-			auto itNext = it;
-			for (++itNext; itNext != mPairingFirst.end(); ++itNext)
+			auto itEnd = mPairingFirst.end();
+			--itEnd;
+			for (auto it = mPairingFirst.begin(); it != itEnd; ++it)
 			{
-				// fAx < fBx && lAx < lBx
-				if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
-					if (cause != NULL) { *cause = 4; }; return true;
-				// fBx < fAx && lBx < lAx
-				/*if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
-					if (cause != NULL) { *cause = 5; }; return true;*/
+				auto itNext = it;
+				for (++itNext; itNext != mPairingFirst.end(); ++itNext)
+				{
+					// fAx < fBx && lAx < lBx
+					if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
+						if (cause != NULL) { *cause = 4; }; return true;
+					// fBx < fAx && lBx < lAx
+					/*if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
+						if (cause != NULL) { *cause = 5; }; return true;*/
+				}
 			}
 		}
 	}
@@ -1685,12 +1689,15 @@ inline bool SolveRecInit(const Board& plateau,
 	vSolution.clear();
 	std::vector<std::pair<int, int>> vSolutionTemp;
 
+	bool bSolutionFound = false;
+
 	for (const auto& func : vTries)
 	{
 		if (func.first(plateau, vSolutionTemp))
 		{
 			vSolution.clear();
 			vSolution = vSolutionTemp;
+			bSolutionFound = true,
 #ifdef _DEBUG
 			std::cout << "vSolution : " << func.second << std::endl;
 #else
@@ -1711,6 +1718,8 @@ inline bool SolveRecInit(const Board& plateau,
 	for (const auto& move : vSolution)
 		std::cout << move.first << ";" << move.second << std::endl;
 #endif
+	if (bSolutionFound)
+		return true;
 	if (CheckIfLockedFromStart(mIndexToTile))
 	{
 #ifdef _DEBUG
