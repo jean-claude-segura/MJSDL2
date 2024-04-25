@@ -11,9 +11,9 @@
 class Tile
 {
 private:
-	Tile() : Rank(-1), Pairing(-1) {}
+	//Tile() : Rank(-1), Pairing(-1) {}
 public:
-
+	Tile() : Rank(-1), Pairing(-1) {}
 	const int Rank;
 	const int Pairing;
 	Tile(const int rank) : Rank(rank), Pairing(34 <= rank && rank < 38 ? 34 : 38 <= rank && rank < 42 ? 38 : rank) {}
@@ -59,11 +59,16 @@ private:
 public:
 	Tile TileObject;
 	int Index;
-	TileAndIndex(const Tile & tile, int index) : TileObject(Tile(tile)), Index(index) {}
+	int X; 
+	int Y;
+	int Z;
+	int DecX;
+	int DecY;
+	TileAndIndex(const Tile & tile, int index, int x, int y, int z, int decX, int decY) : TileObject(Tile(tile)), Index(index), X(x), Y(y), Z(z), DecX(decX), DecY(decY) {}
 
 	bool operator==(const TileAndIndex& other) const
 	{
-		return TileObject == other.TileObject && Index == other.Index;
+		return TileObject == other.TileObject && Index == other.Index && X == other.X && Y == other.Y && Z == other.Z && DecX == other.DecX && DecY == other.DecY;
 	}
 
 	// copy constructor
@@ -213,10 +218,37 @@ constexpr std::array<bool, 144> InitRemovable()
 	return arrRemovable;
 }
 
+constexpr std::array<std::tuple<int, int, int, int, int>, 144> InitIndexToBoardCoord(const std::array<std::array<std::array<bool, 4>, 8>, 12>& arrBasePattern)
+{
+	std::array<std::tuple<int, int, int, int, int>, 144> arrBaseTurtlePatternToCoord;
+	int index = 0;
+	for (int z = 0; z < 4; ++z)
+	{
+		for (int y = 0; y < 8; ++y)
+		{
+			for (int x = 0; x < 12; ++x)
+			{
+				if (arrBasePattern[x][y][z]) {
+					arrBaseTurtlePatternToCoord[index++] = { x, y, z, 0, 0 };
+				}
+			}
+		}
+	}
+
+	arrBaseTurtlePatternToCoord[index++] = { -1, 3, 0, 0, 1 };
+	arrBaseTurtlePatternToCoord[index++] = { 12, 3, 0, 0, 1 };
+	arrBaseTurtlePatternToCoord[index++] = { 13, 3, 0, 0, 1 };
+	arrBaseTurtlePatternToCoord[index++] = { 5, 3, 4, 1, 1 };
+
+	return arrBaseTurtlePatternToCoord;
+}
+
 // Available initial positions in the turtles.
 constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> arrBasePattern = InitBasePattern();
 // Index to coordinates (x, y, z as Double) of available initial positions in the turtles.
 constexpr std::array<Coordinates, 144> arrIndexToCoord = InitIndexToCoord(arrBasePattern);
+// Gets position from the Index
+constexpr std::array<std::tuple<int, int, int, int, int>, 144> arrIndexToBoardCoord = InitIndexToBoardCoord(arrBasePattern);
 
 class Board
 {
@@ -262,6 +294,7 @@ private:
 	std::vector<std::pair<int, int>> vHistory;
 	std::vector<int> vWhatsLeft; // Index
 	std::map<int, Tile> mIndexToTile; // Index -> TileObject
+	std::map<int, Tile> mIndexToTileRemoved;
 	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> Index
 	std::vector<TileAndIndex> vLogicalBoard; // (TileObject, Index)
 	std::array<bool, 144> arrRemovable = InitRemovable();
@@ -269,4 +302,5 @@ private:
 	void BuildMoves(std::vector<TileAndIndex>& vRemovableBoard, std::vector<TileAndIndex>::iterator& itFirst, std::vector<std::pair<int, int>>& vMoves);
 	std::vector<std::pair<int, int>> vMoves;
 	void SetMoves();
+	bool bIsLockedFromMove;
 };
