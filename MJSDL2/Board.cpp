@@ -227,7 +227,7 @@ void Board::InitBoard()
 	std::uniform_int_distribution<int> uniform_dist(0, 41);
 	vLogicalBoard.clear();
 	mIndexToTile.clear();
-	mIndexToTileRemoved.clear();
+	mIndexToRemovedTile.clear();
 	mOccupationBoard.clear();
 	vHistory.clear();
 	vSolution.clear();
@@ -283,7 +283,7 @@ void Board::InitBoard()
 
 void Board::RemoveTile(const int index)
 {
-	mIndexToTileRemoved.emplace(index, mIndexToTile.find(index)->second);
+	mIndexToRemovedTile.emplace(index, mIndexToTile.find(index)->second);
 	mIndexToTile.erase(index);
 
 	std::vector<TileAndIndex>::iterator it = vLogicalBoard.begin();
@@ -432,7 +432,7 @@ bool Board::IsLockedFromMove()
 		vMove.emplace_back(it->first);
 		vMove.emplace_back(it->second);
 		
-		bIsLockedFromMove = bIsLockedFromMove ? true : CheckIfLockedFromMove(vLogicalBoard, mIndexToTileRemoved, vMove);
+		bIsLockedFromMove = bIsLockedFromMove ? true : CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, vMove);
 		return bIsLockedFromMove;
 	}
 }
@@ -447,18 +447,18 @@ bool Board::TakeBack()
 	{
 		auto it = vHistory.end();
 		--it;
-		const auto firstTile = mIndexToTileRemoved.find(it->first)->second;
-		const auto secondTile = mIndexToTileRemoved.find(it->second)->second;
+		const auto firstTile = mIndexToRemovedTile.find(it->first)->second;
+		const auto secondTile = mIndexToRemovedTile.find(it->second)->second;
 
 		auto coord = arrIndexToBoardCoord[it->first];
 		vLogicalBoard.emplace_back(TileAndIndex(firstTile.Rank, it->first, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 		mIndexToTile.emplace(it->first, firstTile);
-		mIndexToTileRemoved.erase(it->first);
+		mIndexToRemovedTile.erase(it->first);
 
 		coord = arrIndexToBoardCoord[it->second];
 		vLogicalBoard.emplace_back(TileAndIndex(secondTile.Rank, it->second, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 		mIndexToTile.emplace(it->second, secondTile);
-		mIndexToTileRemoved.erase(it->second);
+		mIndexToRemovedTile.erase(it->second);
 
 		mOccupationBoard.emplace(arrIndexToCoord[it->first], it->first);
 		mOccupationBoard.emplace(arrIndexToCoord[it->first], it->second);

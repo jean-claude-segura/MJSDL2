@@ -8,7 +8,7 @@ inline uint8_t EvalMoveMaxBlock(
 	const std::vector<int>& vMove,
 	std::map<int, Tile>& mIndexToTile);
 
-inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToTileRemoved, const std::vector<int>& vMove);
+inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToRemovedTile, const std::vector<int>& vMove);
 
 inline void RemoveTile(
 	const int index,
@@ -21,12 +21,12 @@ inline void RemoveTile(
 	std::vector<TileAndIndex>& vLogicalBoardRemoved,
 	std::vector<int>& vRemovableWasTrue,
 	std::vector<int>& vRemovableWasFalse,
-	std::map<int, Tile>& mIndexToTileRemoved,
+	std::map<int, Tile>& mIndexToRemovedTile,
 	std::vector<int>& vWhatsLeftRemoved,
 	std::map<Coordinates, int>& mOccupationBoardRemoved
 )
 {
-	mIndexToTileRemoved.emplace(index, mIndexToTile.find(index)->second);
+	mIndexToRemovedTile.emplace(index, mIndexToTile.find(index)->second);
 	mIndexToTile.erase(index);
 
 	std::vector<TileAndIndex>::iterator it = vLogicalBoard.begin();
@@ -420,7 +420,7 @@ inline std::pair<int, int> BruteForceOrderingEval(
 	std::vector<TileAndIndex> vLogicalBoardRemoved;
 	std::vector<int> vRemovableWasTrue;
 	std::vector<int> vRemovableWasFalse;
-	std::map<int, Tile> mIndexToTileRemoved;
+	std::map<int, Tile> mIndexToRemovedTile;
 	std::vector<int> WhatsLeftRemoved;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 	bool full = false;
@@ -431,7 +431,7 @@ inline std::pair<int, int> BruteForceOrderingEval(
 			arrRemovable,
 			mIndexToTile,
 			vWhatsLeft,
-			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToTileRemoved, WhatsLeftRemoved, mOccupationBoardRemoved);
+			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, WhatsLeftRemoved, mOccupationBoardRemoved);
 	}
 
 	auto moveEval = EvalMoves(vLogicalBoard, arrRemovable);
@@ -439,7 +439,7 @@ inline std::pair<int, int> BruteForceOrderingEval(
 	for (auto& item : vLogicalBoardRemoved) vLogicalBoard.emplace_back(item);
 	for (auto& item : vRemovableWasTrue) arrRemovable[item] = true;
 	for (auto& item : vRemovableWasFalse) arrRemovable[item] = false;
-	for (auto& item : mIndexToTileRemoved) mIndexToTile.emplace(item.first, item.second);
+	for (auto& item : mIndexToRemovedTile) mIndexToTile.emplace(item.first, item.second);
 	for (auto& item : WhatsLeftRemoved) vWhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 
@@ -464,7 +464,7 @@ inline bool SolveRecParallel(
 	std::vector<TileAndIndex> vLogicalBoardRemoved;
 	std::vector<int> vRemovableWasTrue;
 	std::vector<int> vRemovableWasFalse;
-	std::map<int, Tile> mIndexToTileRemoved;
+	std::map<int, Tile> mIndexToRemovedTile;
 	std::vector<int> vWhatsLeftRemoved;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 	bool full = false;
@@ -475,7 +475,7 @@ inline bool SolveRecParallel(
 			arrRemovable,
 			mIndexToTile,
 			vWhatsLeft,
-			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToTileRemoved, vWhatsLeftRemoved, mOccupationBoardRemoved);
+			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, vWhatsLeftRemoved, mOccupationBoardRemoved);
 	}
 	vSolution.emplace_back(std::make_pair(vMove[0], vMove[1]));
 	if (vMove.size() == 4)
@@ -489,7 +489,7 @@ inline bool SolveRecParallel(
 	auto ret = vLogicalBoard.empty();
 	if (!ret)
 	{
-		if (!CheckIfLockedFromMove(vLogicalBoard, mIndexToTileRemoved, vMove) && !vNewMoves.empty())
+		if (!CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, vMove) && !vNewMoves.empty())
 		{
 			if (!stopNowParallel(mIndexToTile
 #ifdef _DEBUG
@@ -545,7 +545,7 @@ inline bool SolveRecParallel(
 	for (auto& item : vLogicalBoardRemoved) vLogicalBoard.emplace_back(item);
 	for (auto& item : vRemovableWasTrue) arrRemovable[item] = true;
 	for (auto& item : vRemovableWasFalse) arrRemovable[item] = false;
-	for (auto& item : mIndexToTileRemoved) mIndexToTile.emplace(item.first, item.second);
+	for (auto& item : mIndexToRemovedTile) mIndexToTile.emplace(item.first, item.second);
 	for (auto& item : vWhatsLeftRemoved) vWhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 	/**/
@@ -571,7 +571,7 @@ inline bool SolveRec(
 	std::vector<TileAndIndex> vLogicalBoardRemoved;
 	std::vector<int> vRemovableWasTrue;
 	std::vector<int> vRemovableWasFalse;
-	std::map<int, Tile> mIndexToTileRemoved;
+	std::map<int, Tile> mIndexToRemovedTile;
 	std::vector<int> vWhatsLeftRemoved;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 	bool full = false;
@@ -582,7 +582,7 @@ inline bool SolveRec(
 			arrRemovable,
 			mIndexToTile,
 			vWhatsLeft,
-			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToTileRemoved, vWhatsLeftRemoved, mOccupationBoardRemoved);
+			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, vWhatsLeftRemoved, mOccupationBoardRemoved);
 	}
 	vSolution.emplace_back(std::make_pair(vMove[0], vMove[1]));
 	if (vMove.size() == 4)
@@ -596,7 +596,7 @@ inline bool SolveRec(
 	auto ret = vLogicalBoard.empty();
 	if (!ret)
 	{
-		if (!CheckIfLockedFromMove(vLogicalBoard, mIndexToTileRemoved, vMove) && !vNewMoves.empty())
+		if (!CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, vMove) && !vNewMoves.empty())
 		{
 			if (!stopNow(mIndexToTile
 #ifdef _DEBUG
@@ -649,7 +649,7 @@ inline bool SolveRec(
 	for (auto& item : vLogicalBoardRemoved) vLogicalBoard.emplace_back(item);
 	for (auto& item : vRemovableWasTrue) arrRemovable[item] = true;
 	for (auto& item : vRemovableWasFalse) arrRemovable[item] = false;
-	for (auto& item : mIndexToTileRemoved) mIndexToTile.emplace(item.first, item.second);
+	for (auto& item : mIndexToRemovedTile) mIndexToTile.emplace(item.first, item.second);
 	for (auto& item : vWhatsLeftRemoved) vWhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 	/**/
@@ -657,7 +657,7 @@ inline bool SolveRec(
 	return ret;
 }
 
-inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToTileRemoved, const std::vector<int>& vMove)
+inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToRemovedTile, const std::vector<int>& vMove)
 {
 	if (vMove.size() == 4)
 		return false;
@@ -670,7 +670,7 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 			arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex.TileObject;
 	}
 
-	const auto pairing = mIndexToTileRemoved.find(vMove[0])->second.Pairing;
+	const auto pairing = mIndexToRemovedTile.find(vMove[0])->second.Pairing;
 
 	std::vector<TileAndIndex> vPairedIndex;
 	auto it = vLogicalBoard.begin();
@@ -1208,6 +1208,41 @@ inline uint8_t EvalMoveMaxBlock(
 	return lockingValue;
 }
 
+// std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
+// std::vector<std::pair<std::vector<int>, int>>
+template <class T>
+inline void playAndPruneSortedMoves(Board & plateau, std::vector<std::pair<int, int>>& vSolution, std::vector<std::pair<std::vector<int>, T>>& vSortedMoves)
+{
+	auto itSortedMove = vSortedMoves.begin();
+	std::vector<int> vTile = itSortedMove->first;
+	do
+	{
+		vTile = itSortedMove->first;
+		if (vTile.size() == 2)
+		{
+			plateau.RemovePairOfTiles(vTile[0], vTile[1]);
+		}
+		if (vTile.size() == 4)
+		{
+			plateau.RemovePairOfTiles(vTile[2], vTile[3]);
+		}
+		++itSortedMove;
+	} while (
+		itSortedMove != vSortedMoves.end() &&
+		CheckIfLockedFromMove(plateau.getLogicalBoard(), plateau.getRemovedTilesMap(), vTile) &&
+		plateau.TakeBack()
+		);
+
+	if (vTile.size() == 2)
+	{
+		vSolution.emplace_back(std::make_pair(vTile[0], vTile[1]));
+	}
+	if (vTile.size() == 4)
+	{
+		vSolution.emplace_back(std::make_pair(vTile[2], vTile[3]));
+	}
+}
+
 // Max locking value to the rescue.
 // Used when there is no choice meeting the requirements for the heuristic running.
 // Section 3.3 from :
@@ -1235,17 +1270,7 @@ inline bool tryMaxBlock(Board plateau, std::vector<std::pair<int, int>>& vSoluti
 				return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
 			});
 
-		auto vTile = vSortedMoves.begin()->first;
-		if (vTile.size() == 2)
-		{
-			plateau.RemovePairOfTiles(vTile[0], vTile[1]);
-			vSolution.emplace_back(std::make_pair(vTile[0], vTile[1]));
-		}
-		if (vTile.size() == 4)
-		{
-			plateau.RemovePairOfTiles(vTile[2], vTile[3]);
-			vSolution.emplace_back(std::make_pair(vTile[2], vTile[3]));
-		}
+		playAndPruneSortedMoves(plateau, vSolution, vSortedMoves);
 
 		vMoves.clear();
 		ConvertMovesToVector(plateau.GetMovesLeft(), vMoves);
@@ -1306,17 +1331,7 @@ inline bool tryRandomHeuristics(Board plateau, std::vector<std::pair<int, int>>&
 					(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
 			});
 
-		auto vTile = vSortedMoves.begin()->first;
-		if (vTile.size() == 2)
-		{
-			plateau.RemovePairOfTiles(vTile[0], vTile[1]);
-			vSolution.emplace_back(std::make_pair(vTile[0], vTile[1]));
-		}
-		if (vTile.size() == 4)
-		{
-			plateau.RemovePairOfTiles(vTile[2], vTile[3]);
-			vSolution.emplace_back(std::make_pair(vTile[2], vTile[3]));
-		}
+		playAndPruneSortedMoves(plateau, vSolution, vSortedMoves);
 
 		vMoves.clear();
 		ConvertMovesToVector(plateau.GetMovesLeft(), vMoves);
@@ -1335,7 +1350,7 @@ inline uint8_t EvalMoveGreedy(
 	std::vector<TileAndIndex> vLogicalBoardRemoved;
 	std::vector<int> vRemovableWasTrue;
 	std::vector<int> vRemovableWasFalse;
-	std::map<int, Tile> mIndexToTileRemoved;
+	std::map<int, Tile> mIndexToRemovedTile;
 	std::vector<int> vWhatsLeftRemoved;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 
@@ -1346,7 +1361,7 @@ inline uint8_t EvalMoveGreedy(
 			arrRemovable,
 			mIndexToTile,
 			vWhatsLeft,
-			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToTileRemoved, vWhatsLeftRemoved, mOccupationBoardRemoved);
+			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, vWhatsLeftRemoved, mOccupationBoardRemoved);
 	}
 
 	int removables = 0;
@@ -1356,7 +1371,7 @@ inline uint8_t EvalMoveGreedy(
 	for (auto& item : vLogicalBoardRemoved) vLogicalBoard.emplace_back(item);
 	for (auto& item : vRemovableWasTrue) arrRemovable[item] = true;
 	for (auto& item : vRemovableWasFalse) arrRemovable[item] = false;
-	for (auto& item : mIndexToTileRemoved) mIndexToTile.emplace(item.first, item.second);
+	for (auto& item : mIndexToRemovedTile) mIndexToTile.emplace(item.first, item.second);
 	for (auto& item : vWhatsLeftRemoved) vWhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 
@@ -1390,17 +1405,7 @@ inline bool tryGreedy(Board plateau, std::vector<std::pair<int, int>>& vSolution
 				return left.second > right.second || (left.second == right.second && left.first.size() > right.first.size());
 			});
 
-		auto vTile = vSortedMoves.begin()->first;
-		if (vTile.size() == 2)
-		{
-			plateau.RemovePairOfTiles(vTile[0], vTile[1]);
-			vSolution.emplace_back(std::make_pair(vTile[0], vTile[1]));
-		}
-		if (vTile.size() == 4)
-		{
-			plateau.RemovePairOfTiles(vTile[2], vTile[3]);
-			vSolution.emplace_back(std::make_pair(vTile[2], vTile[3]));
-		}
+		playAndPruneSortedMoves(plateau, vSolution, vSortedMoves);
 
 		vMoves.clear();
 		ConvertMovesToVector(plateau.GetMovesLeft(), vMoves);
@@ -1419,18 +1424,14 @@ inline bool tryPseudoMultipleFirst(Board plateau, std::vector<std::pair<int, int
 
 	while (!vMoves.empty())
 	{
+		std::vector<std::pair<std::vector<int>, int>> vSortedMoves;
+
 		std::sort(vMoves.begin(), vMoves.end(), [](const std::vector<int>& left, const std::vector<int>& right) {return left.size() > right.size(); });
-		auto vTile = *vMoves.begin();
-		if (vTile.size() == 2)
-		{
-			plateau.RemovePairOfTiles(vTile[0], vTile[1]);
-			vSolution.emplace_back(std::make_pair(vTile[0], vTile[1]));
-		}
-		if (vTile.size() == 4)
-		{
-			plateau.RemovePairOfTiles(vTile[2], vTile[3]);
-			vSolution.emplace_back(std::make_pair(vTile[2], vTile[3]));
-		}
+
+		for (const auto& move : vMoves)
+			vSortedMoves.emplace_back(std::make_pair(move, move.size()));
+
+		playAndPruneSortedMoves(plateau, vSolution, vSortedMoves);
 
 		vMoves.clear();
 		ConvertMovesToVector(plateau.GetMovesLeft(), vMoves);
@@ -1466,17 +1467,7 @@ inline bool tryBruteForceOrderingPlayable(Board plateau, std::vector<std::pair<i
 					((left.first.size() == right.first.size() && left.second.first == right.second.first && left.second.second > right.second.second));
 			});
 
-		auto vTile = vSortedMoves.begin()->first;
-		if (vTile.size() == 2)
-		{
-			plateau.RemovePairOfTiles(vTile[0], vTile[1]);
-			vSolution.emplace_back(std::make_pair(vTile[0], vTile[1]));
-		}
-		if (vTile.size() == 4)
-		{
-			plateau.RemovePairOfTiles(vTile[2], vTile[3]);
-			vSolution.emplace_back(std::make_pair(vTile[2], vTile[3]));
-		}
+		playAndPruneSortedMoves(plateau, vSolution, vSortedMoves);
 
 		vMoves.clear();
 		ConvertMovesToVector(plateau.GetMovesLeft(), vMoves);
@@ -1536,17 +1527,7 @@ inline bool tryBruteForceOrderingPlayablePadlocksFirst(Board plateau, std::vecto
 					;
 			});
 
-		auto vTile = vSortedMoves.begin()->first;
-		if (vTile.size() == 2)
-		{
-			plateau.RemovePairOfTiles(vTile[0], vTile[1]);
-			vSolution.emplace_back(std::make_pair(vTile[0], vTile[1]));
-		}
-		if (vTile.size() == 4)
-		{
-			plateau.RemovePairOfTiles(vTile[2], vTile[3]);
-			vSolution.emplace_back(std::make_pair(vTile[2], vTile[3]));
-		}
+		playAndPruneSortedMoves(plateau, vSolution, vSortedMoves);
 
 		vMoves.clear();
 		ConvertMovesToVector(plateau.GetMovesLeft(), vMoves);
@@ -1582,17 +1563,7 @@ inline bool tryBruteForceOrderingFreed(Board plateau, std::vector<std::pair<int,
 						((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first > right.second.first));
 			});
 
-		auto vTile = vSortedMoves.begin()->first;
-		if (vTile.size() == 2)
-		{
-			plateau.RemovePairOfTiles(vTile[0], vTile[1]);
-			vSolution.emplace_back(std::make_pair(vTile[0], vTile[1]));
-		}
-		if (vTile.size() == 4)
-		{
-			plateau.RemovePairOfTiles(vTile[2], vTile[3]);
-			vSolution.emplace_back(std::make_pair(vTile[2], vTile[3]));
-		}
+		playAndPruneSortedMoves(plateau, vSolution, vSortedMoves);
 
 		vMoves.clear();
 		ConvertMovesToVector(plateau.GetMovesLeft(), vMoves);
@@ -1651,17 +1622,7 @@ inline bool tryBruteForceOrderingFreedPadlocksFirst(Board plateau, std::vector<s
 					;
 			});
 
-		auto vTile = vSortedMoves.begin()->first;
-		if (vTile.size() == 2)
-		{
-			plateau.RemovePairOfTiles(vTile[0], vTile[1]);
-			vSolution.emplace_back(std::make_pair(vTile[0], vTile[1]));
-		}
-		if (vTile.size() == 4)
-		{
-			plateau.RemovePairOfTiles(vTile[2], vTile[3]);
-			vSolution.emplace_back(std::make_pair(vTile[2], vTile[3]));
-		}
+		playAndPruneSortedMoves(plateau, vSolution, vSortedMoves);
 
 		vMoves.clear();
 		ConvertMovesToVector(plateau.GetMovesLeft(), vMoves);

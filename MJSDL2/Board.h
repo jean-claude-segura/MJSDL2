@@ -306,6 +306,7 @@ public:
 
 	// For the brute force.
 	const std::map<int, Tile> & getTilesMap() { return mIndexToTile; }
+	const std::map<int, Tile>& getRemovedTilesMap() { return mIndexToRemovedTile; }
 	const std::array<bool, 144> & getRemovable() { return arrRemovable; }
 	const std::map<Coordinates, int> & getOccupationBoard() { return mOccupationBoard; }
 
@@ -314,7 +315,7 @@ private:
 	std::vector<std::pair<int, int>> vHistory;
 	std::vector<int> vWhatsLeft; // Index
 	std::map<int, Tile> mIndexToTile; // Index -> TileObject
-	std::map<int, Tile> mIndexToTileRemoved;
+	std::map<int, Tile> mIndexToRemovedTile;
 	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> Index
 	std::vector<TileAndIndex> vLogicalBoard; // (TileObject, Index)
 	std::array<bool, 144> arrRemovable = {};
