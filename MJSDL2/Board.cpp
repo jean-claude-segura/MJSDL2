@@ -453,18 +453,23 @@ bool Board::TakeBack()
 		const auto firstIndex = it.first;
 		const auto secondIndex = it.second;
 
-		const auto firstTile = mIndexToRemovedTile.find(it.first)->second;
-		const auto secondTile = mIndexToRemovedTile.find(it.second)->second;
+		const auto firstTile = mIndexToRemovedTile.find(firstIndex)->second;
+		const auto secondTile = mIndexToRemovedTile.find(secondIndex)->second;
 
 		auto coord = arrIndexToBoardCoord[firstIndex];
 		vLogicalBoard.emplace_back(TileAndIndex(firstTile.Rank, firstIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
-		mIndexToTile.emplace(firstIndex, firstTile);
-		mIndexToRemovedTile.erase(firstIndex);
 
 		coord = arrIndexToBoardCoord[secondIndex];
 		vLogicalBoard.emplace_back(TileAndIndex(secondTile.Rank, secondIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+
+		mIndexToTile.emplace(firstIndex, firstTile);
+		mIndexToRemovedTile.erase(firstIndex);
+
 		mIndexToTile.emplace(secondIndex, secondTile);
 		mIndexToRemovedTile.erase(secondIndex);
+
+		vWhatsLeft.emplace_back(firstIndex);
+		vWhatsLeft.emplace_back(secondIndex);
 
 		mOccupationBoard.emplace(arrIndexToCoord[firstIndex], firstIndex);
 		mOccupationBoard.emplace(arrIndexToCoord[secondIndex], secondIndex);
