@@ -58,15 +58,22 @@ class TileAndIndex
 private:
 	//TileAndIndex() : TileObject(Tile(-1)), Index(-1) {}
 public:
-	TileAndIndex() : TileObject(Tile(-1)), Index(-1) {}
+	TileAndIndex() :
+		TileObject(Tile(-1)),
+		Index(-1),
+		X(-1),
+		Y(-1),
+		Z(-1),
+		DecX(-1),
+		DecY(-1) {}
 
-	Tile TileObject;
-	int Index;
-	int X; 
-	int Y;
-	int Z;
-	int DecX;
-	int DecY;
+	const Tile TileObject;
+	const int Index;
+	const int X;
+	const int Y;
+	const int Z;
+	const int DecX;
+	const int DecY;
 	TileAndIndex(const Tile & tile, int index, int x, int y, int z, int decX, int decY) : TileObject(Tile(tile)), Index(index), X(x), Y(y), Z(z), DecX(decX), DecY(decY) {}
 
 	bool operator==(const TileAndIndex& other) const
@@ -75,25 +82,49 @@ public:
 	}
 
 	// copy constructor
-	//TileAndIndex(const TileAndIndex& dominoindex) : TileObject(Tile(dominoindex.TileObject)), Index(dominoindex.Index) {}
+	TileAndIndex(const TileAndIndex& tileIndex) :
+		TileObject(Tile(tileIndex.TileObject)),
+		Index(tileIndex.Index),
+		X(tileIndex.X),
+		Y(tileIndex.Y),
+		Z (tileIndex.Z),
+		DecX(tileIndex.DecX),
+		DecY(tileIndex.DecY) {}
 	// Move constructor
-	//TileAndIndex(TileAndIndex&& dominoindex) noexcept : TileObject(Tile(dominoindex.TileObject)), Index(dominoindex.Index) {}
+	TileAndIndex(TileAndIndex&& tileIndex) noexcept :
+		TileObject(Tile(tileIndex.TileObject)),
+		Index(tileIndex.Index),
+		X(tileIndex.X),
+		Y(tileIndex.Y),
+		Z(tileIndex.Z),
+		DecX(tileIndex.DecX),
+		DecY(tileIndex.DecY) {}
+
 	// Assignment operator
-	/*TileAndIndex& operator=(TileAndIndex&& other) noexcept
+	/**/
+	TileAndIndex& operator=(TileAndIndex&& other) noexcept
 	{
-		*const_cast<int*> (&TileObject) = other.TileObject;
+		*const_cast<Tile*> (&TileObject) = other.TileObject;
+		*const_cast<int*> (&Index) = other.Index;
+		*const_cast<int*> (&X) = other.X;
+		*const_cast<int*> (&Y) = other.Y;
+		*const_cast<int*> (&Z) = other.Z;
+		*const_cast<int*> (&DecX) = other.DecX;
+		*const_cast<int*> (&DecY) = other.DecY;
 		*const_cast<int*> (&Index) = other.Index;
 		return *this;
-	}*/
+	}
+	/**/
 	void operator=(const TileAndIndex& other) noexcept
 	{
-		TileObject = other.TileObject;
-		Index = other.Index;
-		X = other.X;
-		Y = other.Y;
-		Z = other.Z;
-		DecX = other.DecX;
-		DecY = other.DecY;
+		*const_cast<Tile*> (&TileObject) = other.TileObject;
+		*const_cast<int*> (&Index) = other.Index;
+		*const_cast<int*> (&X) = other.X;
+		*const_cast<int*> (&Y) = other.Y;
+		*const_cast<int*> (&Z) = other.Z;
+		*const_cast<int*> (&DecX) = other.DecX;
+		*const_cast<int*> (&DecY) = other.DecY;
+		*const_cast<int*> (&Index) = other.Index;
 	}
 };
 
