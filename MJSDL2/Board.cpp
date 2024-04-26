@@ -475,7 +475,7 @@ bool Board::TakeBack()
 
 		vHistory.pop_back();
 
-		IsLockedFromMove();
+		bIsLockedFromMove = CheckIfLockedAfterStart(vLogicalBoard);
 
 		return true;
 	}

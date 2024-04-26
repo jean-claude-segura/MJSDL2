@@ -657,6 +657,86 @@ inline bool SolveRec(
 	return ret;
 }
 
+inline bool CheckIfLockedAfterStart(const std::vector<TileAndIndex>& vLogicalBoard)
+{
+	std::array<std::array<std::array<Tile, 4>, 8>, 12> arrBoard = {};
+
+	for (const auto& tileAndIndex : vLogicalBoard)
+	{
+		if (tileAndIndex.Index < 140)
+			arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex.TileObject;
+	}
+
+	std::array<int, 42> arrCountOnPairing;
+	for (int i = 0; i < 42; ++i) arrCountOnPairing[i] = 0;
+	for (const auto& tileAndIndex : vLogicalBoard)
+	{
+		++arrCountOnPairing[tileAndIndex.TileObject.Pairing];
+	}
+
+	for (int pairing = 0; pairing < 42; ++pairing)
+	{
+		if (arrCountOnPairing[pairing] != 2)
+			continue;
+
+		std::vector<TileAndIndex> vPairedIndex;
+		auto it = vLogicalBoard.begin();
+		for (; it != vLogicalBoard.end(); ++it)
+		{
+			if (it->TileObject.Pairing == pairing)
+			{
+				vPairedIndex.emplace_back(*it);
+				break;
+			}
+		}
+		if (it != vLogicalBoard.end())
+		{
+			for (++it; it != vLogicalBoard.end(); ++it)
+			{
+				if (it->TileObject.Pairing == pairing)
+				{
+					vPairedIndex.emplace_back(*it);
+					break;
+				}
+			}
+			// Pure vertical lock.
+			auto c1 = vPairedIndex[0];
+			auto c2 = vPairedIndex[1];
+			if (c1.X == c2.X && c1.Y == c2.Y && c1.DecX == c2.DecX && c1.DecY == c2.DecY)
+				return true;
+		}
+	}
+	/*
+	if (z == 3)
+	{
+		// z = {z .. z - 3} <=> z = {0 .. 3}
+		// To check A/X/X/X & B/X/X/X with 3 A and 3 B among X when there are 4 A and 4 B left.
+		// Among all z = 3
+		// A/A when there are only 2 A left.
+		// A/.../A/... when there are only 2 A left : generalisation.
+		// A/.../B/.../ & B/.../A/... when there are only 2 A and 2 B left : generalisation.
+	}
+	if (z > 1)
+	{
+		// z = { z .. z - 2 }
+		// No idea yet about what I need to look for on 3 tiles high pile.
+	}
+	if (z > 0)
+	{
+		// z = { z .. z - 1 }
+		// To check A/B B/A when 2 A and 2 B are left
+	}
+
+	{
+		// Whatever needs to be check horizontaly
+		// AAAA****BBBB
+		// AA****BBBB and BBBB****AA when only 2 A are left
+		// AA****BB when there are only 2 A and 2 B left
+	}
+	*/
+	return false;
+}
+
 inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToRemovedTile, const std::vector<int>& vMove)
 {
 	if (vMove.size() == 4)
@@ -751,7 +831,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 {
 	// Index -> TileObject
 	// std::map<int, Tile>& mIndexToTile
-	
+
 	if (mIndexToTile.size() < 144)
 		return false;
 
@@ -780,7 +860,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 		auto y = std::get<1>(c);
 
 		int currPairs = 0;
-		
+
 		for (int z = 0; z <= std::get<2>(c); ++z)
 		{
 			if (centerPadlock == arrBoard[x][y][z].TileObject.Pairing) ++pairs, ++currPairs;
@@ -881,19 +961,20 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	std::map<int, int> mPairingFirst;
 	std::map<int, int> mPairingLast;
 
-	// Forced entries for the padlocks.
 	auto leftPadlockPairing = mIndexToTile.find(0x8C)->second.Pairing;
+	auto rightPadlockPairing = mIndexToTile.find(0x8D)->second.Pairing;
+	auto rightRightPadlockPairing = mIndexToTile.find(0x8E)->second.Pairing;
+
+	// Forced entries for the padlocks.
 	++mPairingCount[leftPadlockPairing];
 	mPairingFirst[leftPadlockPairing] = -1;
 	mPairingLast[leftPadlockPairing] = -1;
 
-	auto rightPadlockPairing = mIndexToTile.find(0x8D)->second.Pairing;
 	++mPairingCount[rightPadlockPairing];
 	if (!mPairingFirst.contains(rightPadlockPairing))
 		mPairingFirst[rightPadlockPairing] = 12 + 12;
 	mPairingLast[rightPadlockPairing] = 12 + 12;
 
-	auto rightRightPadlockPairing = mIndexToTile.find(0x8E)->second.Pairing;
 	++mPairingCount[rightRightPadlockPairing];
 	if (!mPairingFirst.contains(rightRightPadlockPairing))
 		mPairingFirst[rightRightPadlockPairing] = 13 + 12;
@@ -903,7 +984,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	for (int x = 0; x < 12; ++x)
 	{
 		// First get the tile.
-		const auto& object = arrBoard[x][3][0].TileObject;
+		auto& object = arrBoard[x][3][0].TileObject;
 		// Get the first occurence
 		if (!mPairingFirst.contains(object.Pairing))
 			mPairingFirst[object.Pairing] = x;
@@ -911,11 +992,9 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 		mPairingLast[object.Pairing] = x;
 		// Get the count of occurences
 		++mPairingCount[object.Pairing];
-	}
-	for (int x = 0; x < 12; ++x)
-	{
+
 		// First get the tile.
-		const auto& object = arrBoard[x][4][0].TileObject;
+		object = arrBoard[x][4][0].TileObject;
 		// Get the first occurence
 		if (!mPairingFirst.contains(object.Pairing))
 			mPairingFirst[object.Pairing] = x + 12;
@@ -957,7 +1036,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	}
 
 	// Doesn't work if not a starting pos. There could be holes in the lines.
-	for(int z = 3; z >= 0; --z)
+	for (int z = 3; z >= 0; --z)
 	{
 		for (int y = 0; y < 8; ++y)
 		{
@@ -966,25 +1045,22 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 			if (horizontalLimits.second - horizontalLimits.first + 1 > 7)
 			{
 				// First pass : check potential issues
-				std::map<int, int> mPairingCount;
-				std::map<int, int> mPairingFirst;
-				std::map<int, int> mPairingLast;
+				mPairingCount.clear();
+				mPairingFirst.clear();
+				mPairingLast.clear();
 
 				if (3 <= y && y <= 4 && z == 0)
 				{
 					// Fake entries for the padlocks.
-					auto leftPadlockPairing = mIndexToTile.find(0x8C)->second.Pairing;
 					++mPairingCount[leftPadlockPairing];
 					mPairingFirst[leftPadlockPairing] = -1;
 					mPairingLast[leftPadlockPairing] = -1;
 
-					auto rightPadlockPairing = mIndexToTile.find(0x8D)->second.Pairing;
 					++mPairingCount[rightPadlockPairing];
 					if (!mPairingFirst.contains(rightPadlockPairing))
 						mPairingFirst[rightPadlockPairing] = 12;
 					mPairingLast[rightPadlockPairing] = 12;
 
-					auto rightRightPadlockPairing = mIndexToTile.find(0x8D)->second.Pairing;
 					++mPairingCount[rightRightPadlockPairing];
 					if (!mPairingFirst.contains(rightRightPadlockPairing))
 						mPairingFirst[rightRightPadlockPairing] = 13;
@@ -995,7 +1071,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
 					{
 						// First get the tile.
-						const auto pairing = mIndexToTile.find(arrBoardCoordToIndex[x][yPonder][0])->second.Pairing;
+						const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
 						if (pairing == leftPadlockPairing || pairing == rightPadlockPairing || pairing == rightRightPadlockPairing)
 							++mPairingCount[pairing];
 					}
@@ -1004,12 +1080,12 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
 				{
 					// First get the tile.
-					const auto& object = mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second;
+					const auto& object = arrBoard[x][y][z].TileObject;
 					// Get the first occurence
 					if (!mPairingFirst.contains(object.Pairing))
 						mPairingFirst[object.Pairing] = x;
 					// Get the last occurence
-					if(!mPairingLast.contains(object.Pairing) || mPairingLast.find(object.Pairing)->second < x) // Because of the left and right blocker fake init before...
+					if (!mPairingLast.contains(object.Pairing) || mPairingLast.find(object.Pairing)->second < x) // Because of the left and right blocker fake init before...
 						mPairingLast[object.Pairing] = x;
 					// Get the count of occurences
 					++mPairingCount[object.Pairing];
@@ -1080,7 +1156,7 @@ inline uint8_t EvalMoveMaxBlock(
 		if (index == 0x8C)
 		{
 			// Horizontal locking value
-			uint8_t tempLockingValue = 0; 
+			uint8_t tempLockingValue = 0;
 
 			// Droite haut
 			for (int x = 0; x < 12 && (mIndexToTile.contains(arrBoardCoordToIndex[x][3][0])); ++x, ++tempLockingValue);
@@ -1112,7 +1188,7 @@ inline uint8_t EvalMoveMaxBlock(
 			uint8_t tempLockingValue = 0;
 
 			// Gauche haut
-			for (int x = 11; x >=0 && (mIndexToTile.contains(arrBoardCoordToIndex[x][3][0])); --x, ++tempLockingValue);
+			for (int x = 11; x >= 0 && (mIndexToTile.contains(arrBoardCoordToIndex[x][3][0])); --x, ++tempLockingValue);
 			if (tempLockingValue > 0)
 				lockingValue += tempLockingValue == 12 && mIndexToTile.contains(0x8C) ? tempLockingValue : tempLockingValue - 1;
 
@@ -1209,7 +1285,7 @@ inline uint8_t EvalMoveMaxBlock(
 // std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
 // std::vector<std::pair<std::vector<int>, int>>
 template <class T>
-inline void playAndPruneSortedMoves(Board & plateau, std::vector<std::pair<int, int>>& vSolution, std::vector<std::pair<std::vector<int>, T>>& vSortedMoves)
+inline void playAndPruneSortedMoves(Board& plateau, std::vector<std::pair<int, int>>& vSolution, std::vector<std::pair<std::vector<int>, T>>& vSortedMoves)
 {
 	auto itSortedMove = vSortedMoves.begin();
 	std::vector<int> vTile = itSortedMove->first;
@@ -1499,7 +1575,7 @@ inline bool tryBruteForceOrderingPlayablePadlocksFirst(Board plateau, std::vecto
 			{
 				return
 					left.first.size() > right.first.size() || // Les 4 en premier.
-					
+
 					(left.first.size() == right.first.size() && left.second.first > right.second.first) || // Les jouables ensuite.
 
 					((left.first.size() == right.first.size() && left.second.first == right.second.first && left.second.second > right.second.second)) || // Les déblocables
@@ -1557,8 +1633,8 @@ inline bool tryBruteForceOrderingFreed(Board plateau, std::vector<std::pair<int,
 		std::sort(vSortedMoves.begin(), vSortedMoves.end(),
 			[](const std::pair<std::vector<int>, std::pair<int, int>>& left, const std::pair<std::vector<int>, std::pair<int, int>>& right)
 			{
-					return left.first.size() > right.first.size() || (left.first.size() == right.first.size() && left.second.second > right.second.second) ||
-						((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first > right.second.first));
+				return left.first.size() > right.first.size() || (left.first.size() == right.first.size() && left.second.second > right.second.second) ||
+					((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first > right.second.first));
 			});
 
 		playAndPruneSortedMoves(plateau, vSolution, vSortedMoves);
@@ -1601,7 +1677,7 @@ inline bool tryBruteForceOrderingFreedPadlocksFirst(Board plateau, std::vector<s
 					((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first > right.second.first)) ||
 
 					((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first == right.second.first) &&
-					(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8F) && right.first.end() == std::find(right.first.begin(), right.first.end(), 0x8F))) ||
+						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8F) && right.first.end() == std::find(right.first.begin(), right.first.end(), 0x8F))) ||
 
 					((left.first.size() == right.first.size() && left.second.second == right.second.second && left.second.first == right.second.first) &&
 						(left.first.end() != std::find(left.first.begin(), left.first.end(), 0x8F) && right.first.end() != std::find(right.first.begin(), right.first.end(), 0x8F)) &&
@@ -1635,7 +1711,7 @@ bool SolveRecThr(
 	std::map<int, Tile> mIndexToTile,
 	std::vector<int> vWhatsLeft,
 	std::map<Coordinates, int> mOccupationBoard,
-	std::vector<std::pair<int, int>> &vSolution
+	std::vector<std::pair<int, int>>& vSolution
 #ifdef _DEBUG
 	, uint64_t positions
 #endif
@@ -1720,7 +1796,7 @@ inline bool SolveRecInit(const Board& plateau,
 #ifdef _DEBUG
 		std::cout << "*************" << std::endl;
 		std::cout << "*  Locked.  *" << std::endl;
-		std::cout << "*     " << lockStatus<< "     *" << std::endl;
+		std::cout << "*     " << lockStatus << "     *" << std::endl;
 		std::cout << "*************" << std::endl;
 #endif
 		return false;
