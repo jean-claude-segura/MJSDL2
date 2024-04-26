@@ -449,26 +449,29 @@ bool Board::TakeBack()
 	{
 		auto it = vHistory.end();
 		--it;
+		const auto firstIndex = it->first;
+		const auto secondIndex = it->second;
+
 		const auto firstTile = mIndexToRemovedTile.find(it->first)->second;
 		const auto secondTile = mIndexToRemovedTile.find(it->second)->second;
 
-		auto coord = arrIndexToBoardCoord[it->first];
-		vLogicalBoard.emplace_back(TileAndIndex(firstTile.Rank, it->first, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
-		mIndexToTile.emplace(it->first, firstTile);
-		mIndexToRemovedTile.erase(it->first);
+		auto coord = arrIndexToBoardCoord[firstIndex];
+		vLogicalBoard.emplace_back(TileAndIndex(firstTile.Rank, firstIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+		mIndexToTile.emplace(firstIndex, firstTile);
+		mIndexToRemovedTile.erase(firstIndex);
 
-		coord = arrIndexToBoardCoord[it->second];
-		vLogicalBoard.emplace_back(TileAndIndex(secondTile.Rank, it->second, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
-		mIndexToTile.emplace(it->second, secondTile);
-		mIndexToRemovedTile.erase(it->second);
+		coord = arrIndexToBoardCoord[secondIndex];
+		vLogicalBoard.emplace_back(TileAndIndex(secondTile.Rank, secondIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+		mIndexToTile.emplace(secondIndex, secondTile);
+		mIndexToRemovedTile.erase(secondIndex);
 
-		mOccupationBoard.emplace(arrIndexToCoord[it->first], it->first);
-		mOccupationBoard.emplace(arrIndexToCoord[it->first], it->second);
+		mOccupationBoard.emplace(arrIndexToCoord[firstIndex], firstIndex);
+		mOccupationBoard.emplace(arrIndexToCoord[secondIndex], secondIndex);
 
 		InitRemovable();
 
 		// Issue here if used by the heuristic.
-		vMoves.emplace_back(std::make_pair(it->first, it->second));
+		vMoves.emplace_back(std::make_pair(firstIndex, secondIndex));
 
 		vHistory.erase(it);
 

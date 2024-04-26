@@ -160,6 +160,7 @@ void GraphicBoard::Init()
 #else
 	plateau.InitBoard();
 #endif
+	direction = 1;
 	plateau.SortBoard(direction);
 	itNextMove = plateau.GetMovesLeft().begin();
 	itPrevMove = plateau.GetMovesLeft().end();
