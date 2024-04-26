@@ -742,14 +742,6 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 	if (vMove.size() == 4)
 		return false;
 
-	std::array<std::array<std::array<Tile, 4>, 8>, 12> arrBoard;
-
-	for (const auto& tileAndIndex : vLogicalBoard)
-	{
-		if (tileAndIndex.Index < 140)
-			arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex.TileObject;
-	}
-
 	const auto pairing = mIndexToRemovedTile.find(vMove[0])->second.Pairing;
 
 	std::vector<TileAndIndex> vPairedIndex;
@@ -778,6 +770,39 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 		auto c2 = vPairedIndex[1];
 		if (c1.X == c2.X && c1.Y == c2.Y && c1.DecX == c2.DecX && c1.DecY == c2.DecY)
 			return true;
+
+		if (c1.Y == c2.Y && c1.Z == c2.Z) // Same plane, same row
+		{
+			std::array<std::array<std::array<Tile, 4>, 8>, 12> arrBoard;
+			std::map<int, int> arrGlobalOccurences {};
+			std::map<int, int> arrRowOccurences {};
+
+			for (const auto& tileAndIndex : vLogicalBoard)
+			{
+				if (tileAndIndex.Index < 140)
+					arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex.TileObject;
+				++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
+				if(tileAndIndex.Y == c1.Y && tileAndIndex.Z == c1.Z) // Same plane, same row
+					++arrRowOccurences[tileAndIndex.TileObject.Pairing];
+			}
+
+			std::vector<int> vCandidates;
+			for (const auto& indexToPairing : arrRowOccurences)
+			{
+				// If all available matching tiles are in the same row and there's an issue, we can see it.
+				if (arrGlobalOccurences.find(indexToPairing.first)->second == indexToPairing.second)
+					vCandidates.emplace_back(indexToPairing.first);
+			}
+			// There's at least one because that was the condition to be here in the first place.
+			// But one's not enough to have an issue...
+			if (vCandidates.size() > 1)
+			{				
+				auto horizontalLimits = arrHorizontalLimits[c1.Y][c2.Z];
+				std::vector<int> vCut;
+				for (int x = horizontalLimits.first; x < horizontalLimits.second; ++x)
+					if (arrBoard[x][c1.Y][c1.Z].Pairing != -1) vCut.emplace_back(x);
+			}
+		}
 	}
 
 	/*
