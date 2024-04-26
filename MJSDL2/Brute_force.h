@@ -700,58 +700,6 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 			return true;
 	}
 
-	return false;
-}
-
-inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard)
-{
-	std::array<std::array<std::array<Tile, 4>, 8>, 12> arrBoard = {};
-
-	for (const auto& tileAndIndex : vLogicalBoard)
-	{
-		if (tileAndIndex.Index < 140)
-			arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex.TileObject;
-	}
-
-	std::array<int, 42> arrCountOnPairing;
-	for (int i = 0; i < 42; ++i) arrCountOnPairing[i] = 0;
-	for (const auto& tileAndIndex : vLogicalBoard)
-	{
-		++arrCountOnPairing[tileAndIndex.TileObject.Pairing];
-	}
-
-	for (int pairing = 0; pairing < 42; ++pairing)
-	{
-		if (arrCountOnPairing[pairing] != 2)
-			continue;
-
-		std::vector<TileAndIndex> vPairedIndex;
-		auto it = vLogicalBoard.begin();
-		for (; it != vLogicalBoard.end(); ++it)
-		{
-			if (it->TileObject.Pairing == pairing)
-			{
-				vPairedIndex.emplace_back(*it);
-				break;
-			}
-		}
-		if (it != vLogicalBoard.end())
-		{
-			for (++it; it != vLogicalBoard.end(); ++it)
-			{
-				if (it->TileObject.Pairing == pairing)
-				{
-					vPairedIndex.emplace_back(*it);
-					break;
-				}
-			}
-			// Pure vertical lock.
-			auto c1 = vPairedIndex[0];
-			auto c2 = vPairedIndex[1];
-			if (c1.X == c2.X && c1.Y == c2.Y && c1.DecX == c2.DecX && c1.DecY == c2.DecY)
-				return true;
-		}
-	}
 	/*
 	if (z == 3)
 	{
@@ -774,7 +722,7 @@ inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard)
 	}
 
 	{
-		// Whatever needs to be check horizontaly 
+		// Whatever needs to be check horizontaly
 		// AAAA****BBBB
 		// AA****BBBB and BBBB****AA when only 2 A are left
 		// AA****BB when there are only 2 A and 2 B left
@@ -782,6 +730,7 @@ inline bool CheckIfLocked(const std::vector<TileAndIndex>& vLogicalBoard)
 	*/
 	return false;
 }
+
 /*
 	A  AB
 	A  BA
@@ -1697,7 +1646,7 @@ inline bool SolveRecInit(const Board& plateau,
 		{
 			vSolution.clear();
 			vSolution = vSolutionTemp;
-			bSolutionFound = true,
+			bSolutionFound = true;
 #ifdef _DEBUG
 			std::cout << "vSolution : " << func.second << std::endl;
 #else

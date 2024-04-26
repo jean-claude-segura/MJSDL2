@@ -475,7 +475,7 @@ bool Board::TakeBack()
 
 		vHistory.pop_back();
 
-		bIsLockedFromMove = CheckIfLocked(vLogicalBoard);
+		IsLockedFromMove();
 
 		return true;
 	}
@@ -533,7 +533,7 @@ bool Board::MoveForward()
 
 		vHistory.emplace_back(std::make_pair(it.first, it.second));
 
-		bIsLockedFromMove = CheckIfLocked(vLogicalBoard);
+		IsLockedFromMove();
 
 		SetMoves();
 
@@ -541,7 +541,6 @@ bool Board::MoveForward()
 	}
 }
 
-// For the graphic board.
 bool Board::GoEnd()
 {
 	if (!vForwardHistory.empty())
