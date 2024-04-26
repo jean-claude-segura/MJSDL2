@@ -13,6 +13,9 @@ GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height(0), Width(0)
 	NordBtn = NULL;
 	ExitBtn = NULL;
 	TakeBackBtn = NULL;
+	MoveForwardBtn = NULL;
+	GoBeginningBtn = NULL;
+	GoEndBtn = NULL;
 	exitEvent.type = SDL_QUIT;
 	textureBackground = NULL;
 	MouseMask = NULL;
@@ -69,6 +72,12 @@ GraphicBoard::~GraphicBoard()
 		SDL_DestroyTexture(ExitBtn);
 	if (TakeBackBtn != NULL)
 		SDL_DestroyTexture(TakeBackBtn);
+	if (MoveForwardBtn != NULL)
+		SDL_DestroyTexture(MoveForwardBtn);
+	if (GoBeginningBtn != NULL)
+		SDL_DestroyTexture(GoBeginningBtn);
+	if (GoEndBtn != NULL)
+		SDL_DestroyTexture(GoEndBtn);
 	if (textureBackground != NULL)
 		SDL_DestroyTexture(textureBackground);
 	if (textureBackgroundVictory != NULL)
@@ -526,6 +535,9 @@ void GraphicBoard::LoadUI()
 	LoadButton(RestartBtn, "./interface/blank.svg", "RestartBtn");
 	LoadButton(ExitBtn, "./interface/blank.svg", "ExitBtn");
 	LoadButton(TakeBackBtn, "./interface/blank.svg", "TakeBackBtn");
+	LoadButton(MoveForwardBtn, "./interface/blank.svg", "MoveForwardBtn");
+	LoadButton(GoBeginningBtn, "./interface/blank.svg", "GoBeginningBtn");
+	LoadButton(GoEndBtn, "./interface/blank.svg", "GoEndBtn");
 }
 
 void GraphicBoard::InterfaceClicked(const int index, const bool right)
@@ -589,19 +601,30 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			Refresh(true);
 			itNextMove = plateau.GetMovesLeft().begin();
 			itPrevMove = plateau.GetMovesLeft().end();
-#ifdef _DEBUG
-			std::cout << std::dec << plateau.getNumberOfTilesLeft() << " tile" << (plateau.getNumberOfTilesLeft() > 1 ? "s" : "") << " left." << std::endl;
-			std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
-			std::cout << std::dec << plateau.HowManyMovesLeft() << " move" << (plateau.HowManyMovesLeft() > 1 ? "s" : "") << " left." << std::endl;
-			auto it = plateau.GetMovesLeft().begin();
-			if (it != plateau.GetMovesLeft().end())
-			{
-				std::cout << "(" << it->first << ";" << it->second << ")";
-				for (++it; it != plateau.GetMovesLeft().end(); ++it)
-					std::cout << ", (" << it->first << ";" << it->second << ")";
-				std::cout << "." << std::endl;
-			}
-#endif
+		}
+		break;
+	case MOVEFORWARD:
+		if (plateau.MoveForward())
+		{
+			Refresh(true);
+			itNextMove = plateau.GetMovesLeft().begin();
+			itPrevMove = plateau.GetMovesLeft().end();
+		}
+		break;
+	case GOBEGINNING:
+		if (plateau.GoBeginning(direction))
+		{
+			Refresh(true);
+			itNextMove = plateau.GetMovesLeft().begin();
+			itPrevMove = plateau.GetMovesLeft().end();
+		}
+		break;
+	case GOEND:
+		if (plateau.GoEnd())
+		{
+			Refresh(true);
+			itNextMove = plateau.GetMovesLeft().begin();
+			itPrevMove = plateau.GetMovesLeft().end();
 		}
 		break;
 	case HINT:
@@ -615,17 +638,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 					itNextMove = plateau.GetMovesLeft().begin();
 					itPrevMove = plateau.GetMovesLeft().end();
 #ifdef _DEBUG
-					std::cout << std::dec << plateau.getNumberOfTilesLeft() << " tile" << (plateau.getNumberOfTilesLeft() > 1 ? "s" : "") << " left." << std::endl;
 					std::cout << "Tile 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
-					std::cout << std::dec << plateau.HowManyMovesLeft() << " move" << (plateau.HowManyMovesLeft() > 1 ? "s" : "") << " left." << std::endl;
-					auto it = plateau.GetMovesLeft().begin();
-					if (it != plateau.GetMovesLeft().end())
-					{
-						std::cout << "(" << it->first << ";" << it->second << ")";
-						for (++it; it != plateau.GetMovesLeft().end(); ++it)
-							std::cout << ", (" << it->first << ";" << it->second << ")";
-						std::cout << "." << std::endl;
-					}
 #endif
 				}
 			}
@@ -1000,14 +1013,22 @@ void GraphicBoard::RefreshMouseMap()
 	RenderCopyMouseMap(ExitBtn, coordonnees, EXIT, 0, SDL_FLIP_NONE);
 	/**/
 
-		// TakeBack
+	// GoBeginning
+	coordonnees.x = Width / 2 + 20 - size.y - size.y;
+	coordonnees.y = Height - size.x;
+	RenderCopyMouseMap(GoBeginningBtn, coordonnees, GOBEGINNING, 90, SDL_FLIP_HORIZONTAL);
+	// TakeBack
 	coordonnees.x = Width / 2 - size.y;
 	coordonnees.y = Height - size.x;
-	RenderCopyMouseMap(TakeBackBtn, coordonnees, TAKEBACK, 90, SDL_FLIP_NONE);
-	/*coordonnees.x = Width / 2 - 20;
+	RenderCopyMouseMap(TakeBackBtn, coordonnees, TAKEBACK, 90, SDL_FLIP_HORIZONTAL);
+	// MoveForward
+	coordonnees.x = Width / 2 - 20;
 	coordonnees.y = Height - size.x;
-	SDL_RenderCopyEx(renderer, TurnBtn, NULL, &coordonnees, 90, NULL, SDL_FLIP_NONE);*/
-	/**/
+	RenderCopyMouseMap(MoveForwardBtn, coordonnees, MOVEFORWARD, 90, SDL_FLIP_HORIZONTAL);
+	// GoEnd
+	coordonnees.x = Width / 2 - 20 - 20 + size.y;
+	coordonnees.y = Height - size.x;
+	RenderCopyMouseMap(GoEndBtn, coordonnees, GOEND, 90, SDL_FLIP_HORIZONTAL);
 
 	// Restore the render target
 	SDL_SetRenderTarget(renderer, renderTarget);
@@ -1307,13 +1328,23 @@ void GraphicBoard::DisplayInterface()
 	SDL_RenderCopy(renderer, ExitBtn, NULL, &coordonnees);
 	/**/
 
+	// GoBeginning
+	coordonnees.x = Width / 2 + 20 - size.y - size.y;
+	coordonnees.y = Height - size.x;
+	SDL_RenderCopyEx(renderer, GoBeginningBtn, NULL, &coordonnees, 90, NULL, SDL_FLIP_HORIZONTAL);
 	// TakeBack
 	coordonnees.x = Width / 2 - size.y;
 	coordonnees.y = Height - size.x;
 	SDL_RenderCopyEx(renderer, TakeBackBtn, NULL, &coordonnees, 90, NULL, SDL_FLIP_HORIZONTAL);
-	/*coordonnees.x = Width / 2 - 20;
+	// MoveForward
+	coordonnees.x = Width / 2 - 20;
 	coordonnees.y = Height - size.x;
-	SDL_RenderCopyEx(renderer, TakeBackBtn, NULL, &coordonnees, 90, NULL, SDL_FLIP_HORIZONTAL);*/
+	SDL_RenderCopyEx(renderer, MoveForwardBtn, NULL, &coordonnees, 90, NULL, SDL_FLIP_HORIZONTAL);
+	// GoEnd
+	coordonnees.x = Width / 2 - 20 - 20 + size.y;
+	coordonnees.y = Height - size.x;
+	SDL_RenderCopyEx(renderer, GoEndBtn, NULL, &coordonnees, 90, NULL, SDL_FLIP_HORIZONTAL);
+
 	/**/
 }
 

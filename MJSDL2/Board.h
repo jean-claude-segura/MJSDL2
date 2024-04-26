@@ -296,13 +296,16 @@ public:
 	bool IsLockedFromMove();
 	bool TakeBack();
 	bool TakeBack(const uint8_t direction);
+	bool MoveForward();
+	bool GoEnd();
+	bool GoBeginning(const uint8_t direction);
 #ifdef _DEBUG
 	bool Test();
 	void InitBoardLockedHorizontal(int test);
 	bool TestLocked();
 #endif
 	const std::vector<std::pair<int, int>>& GetSolution() { return vSolution; }
-	const std::vector<std::pair<int, int>>& GetHistory() { return vHistory; }
+	//const std::vector<std::pair<int, int>>& GetHistory() { return vHistory; }
 
 	// For the brute force.
 	const std::map<int, Tile> & getTilesMap() { return mIndexToTile; }
@@ -313,6 +316,7 @@ public:
 private:
 	std::vector<std::pair<int, int>> vSolution;
 	std::vector<std::pair<int, int>> vHistory;
+	std::vector<std::pair<int, int>> vForwardHistory;
 	std::vector<int> vWhatsLeft; // Index
 	std::map<int, Tile> mIndexToTile; // Index -> TileObject
 	std::map<int, Tile> mIndexToRemovedTile;

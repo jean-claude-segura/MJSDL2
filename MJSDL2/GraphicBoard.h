@@ -25,6 +25,9 @@
 #define	EAST		0xF8
 #define	WEST		0xF7
 #define	TAKEBACK	0xF6
+#define	MOVEFORWARD	0xF5
+#define	GOBEGINNING	0xF4
+#define	GOEND		0xF3
 
 void LoadRandomBackgroundAsync(SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height);
 void LoadRandomBackground(const std::string& path, SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height);
@@ -90,6 +93,9 @@ private:
 		* NordBtn,
 		* ExitBtn,
 		* TakeBackBtn,
+		* MoveForwardBtn,
+		* GoBeginningBtn,
+		* GoEndBtn,
 		* Inverted,
 		* FaceMask,
 		* textureMouseMap,
