@@ -263,15 +263,12 @@ void Board::InitBoard()
 
 	InitRemovable();
 
-	vWhatsLeft.clear();
-	for (int i = 0; i < 144; ++i) vWhatsLeft.emplace_back(i);
-
 	SetMoves();
 
 	bIsLockedFromStart = CheckIfLockedFromStart(vLogicalBoard, mIndexToTile);
 
 #ifdef _DEBUG
-	std::cout << std::dec << vWhatsLeft.size() << " tile" << (vWhatsLeft.size() > 1 ? "s" : "") << " left." << std::endl;
+	std::cout << std::dec << vLogicalBoard.size() << " tile" << (vLogicalBoard.size() > 1 ? "s" : "") << " left." << std::endl;
 	std::cout << std::dec << vMoves.size() << " move" << (vMoves.size() > 1 ? "s" : "") << " left." << std::endl;
 	auto it = vMoves.begin();
 	if (it != vMoves.end())
@@ -297,10 +294,6 @@ void Board::RemoveTile(const int index)
 	double z = coord.z;
 	vLogicalBoard.erase(it);
 	mOccupationBoard.erase(coord);
-
-	auto itWL = std::find(vWhatsLeft.begin(), vWhatsLeft.end(), index);
-	if (itWL != vWhatsLeft.end())
-		vWhatsLeft.erase(itWL);
 
 	arrRemovable[index] = false;
 
@@ -405,7 +398,7 @@ void Board::SetMoves()
 
 bool Board::Solve()
 {
-	if (SolveRecInit/*Async*/(*this, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution))
+	if (SolveRecInit/*Async*/(*this, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution))
 	{
 #ifdef _DEBUG
 		for (auto& move : vSolution)
@@ -467,9 +460,6 @@ bool Board::TakeBack()
 
 		mIndexToTile.emplace(secondIndex, secondTile);
 		mIndexToRemovedTile.erase(secondIndex);
-
-		vWhatsLeft.emplace_back(firstIndex);
-		vWhatsLeft.emplace_back(secondIndex);
 
 		mOccupationBoard.emplace(arrIndexToCoord[firstIndex], firstIndex);
 		mOccupationBoard.emplace(arrIndexToCoord[secondIndex], secondIndex);
@@ -918,10 +908,6 @@ void Board::InitBoardLockedHorizontal(int test)
 	/**/
 
 	arrRemovable = InitRemovable();
-
-	vWhatsLeft.clear();
-	for(const auto & item : vLogicalBoard)
-		vWhatsLeft.emplace_back(item.Index);
 
 	SetMoves();
 }

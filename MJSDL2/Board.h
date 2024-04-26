@@ -329,9 +329,8 @@ public:
 	const bool IsLocked() { return vMoves.size() == 0; }
 	const int HowManyMovesLeft() { return vMoves.size(); }
 	const std::vector<std::pair<int, int>>& GetMovesLeft() { return vMoves; }
-	bool IsEmpty() { return vWhatsLeft.empty(); }
-	int getNumberOfTilesLeft() { return vWhatsLeft.size(); }
-	const std::vector<int>& getWhatsLeft() { return vWhatsLeft; }
+	bool IsEmpty() { return vLogicalBoard.empty(); }
+	int getNumberOfTilesLeft() { return vLogicalBoard.size(); }
 	const std::vector<TileAndIndex>& getLogicalBoard() { return vLogicalBoard; }
 	void SortBoard(const uint8_t direction);
 	bool Solve();
@@ -360,7 +359,6 @@ private:
 	std::vector<std::pair<int, int>> vSolution;
 	std::vector<std::pair<int, int>> vHistory;
 	std::vector<std::pair<int, int>> vForwardHistory;
-	std::vector<int> vWhatsLeft; // Index
 	std::map<int, Tile> mIndexToTile; // Index -> TileObject
 	std::map<int, Tile> mIndexToRemovedTile;
 	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> Index

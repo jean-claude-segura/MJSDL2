@@ -1548,9 +1548,9 @@ void GraphicBoard::WhatsLeft()
 		for (int y = 0; y < 8; ++y)
 			board[y][x] = 0;
 
-	for (auto& index : plateau.getWhatsLeft())
+	for (auto& tileAndIndex : plateau.getLogicalBoard())
 	{
-		int domino = plateau.getDominoFromIndex(index).Rank;
+		int domino = tileAndIndex.TileObject.Rank;
 		int x = (domino >> 3);
 		int y = (domino & 0b111);
 		++board[y][x];

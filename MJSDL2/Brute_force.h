@@ -15,14 +15,12 @@ inline void RemoveTile(
 	std::vector<TileAndIndex>& vLogicalBoard,
 	std::array<bool, 144>& arrRemovable,
 	std::map<int, Tile>& mIndexToTile,
-	std::vector<int>& vWhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard,
 	/* *********************************************************************** */
 	std::vector<TileAndIndex>& vLogicalBoardRemoved,
 	std::vector<int>& vRemovableWasTrue,
 	std::vector<int>& vRemovableWasFalse,
 	std::map<int, Tile>& mIndexToRemovedTile,
-	std::vector<int>& vWhatsLeftRemoved,
 	std::map<Coordinates, int>& mOccupationBoardRemoved
 )
 {
@@ -40,13 +38,6 @@ inline void RemoveTile(
 	vLogicalBoard.erase(it);
 	mOccupationBoardRemoved[coord] = index;
 	mOccupationBoard.erase(coord);
-
-	auto itWL = std::find(vWhatsLeft.begin(), vWhatsLeft.end(), index);
-	if (itWL != vWhatsLeft.end())
-	{
-		vWhatsLeftRemoved.emplace_back(*itWL);
-		vWhatsLeft.erase(itWL);
-	}
 
 	if (arrRemovable[index]) vRemovableWasTrue.emplace_back(index);
 	arrRemovable[index] = false;
@@ -414,14 +405,12 @@ inline std::pair<int, int> BruteForceOrderingEval(
 	std::vector<TileAndIndex>& vLogicalBoard,
 	std::array<bool, 144>& arrRemovable,
 	std::map<int, Tile>& mIndexToTile,
-	std::vector<int>& vWhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard)
 {
 	std::vector<TileAndIndex> vLogicalBoardRemoved;
 	std::vector<int> vRemovableWasTrue;
 	std::vector<int> vRemovableWasFalse;
 	std::map<int, Tile> mIndexToRemovedTile;
-	std::vector<int> WhatsLeftRemoved;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 	bool full = false;
 	for (const auto& index : vMove)
@@ -430,8 +419,7 @@ inline std::pair<int, int> BruteForceOrderingEval(
 			vLogicalBoard,
 			arrRemovable,
 			mIndexToTile,
-			vWhatsLeft,
-			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, WhatsLeftRemoved, mOccupationBoardRemoved);
+			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, mOccupationBoardRemoved);
 	}
 
 	auto moveEval = EvalMoves(vLogicalBoard, arrRemovable);
@@ -440,7 +428,6 @@ inline std::pair<int, int> BruteForceOrderingEval(
 	for (auto& item : vRemovableWasTrue) arrRemovable[item] = true;
 	for (auto& item : vRemovableWasFalse) arrRemovable[item] = false;
 	for (auto& item : mIndexToRemovedTile) mIndexToTile.emplace(item.first, item.second);
-	for (auto& item : WhatsLeftRemoved) vWhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 
 	return moveEval;
@@ -451,7 +438,6 @@ inline bool SolveRecParallel(
 	std::vector<TileAndIndex>& vLogicalBoard,
 	std::array<bool, 144>& arrRemovable,
 	std::map<int, Tile>& mIndexToTile,
-	std::vector<int>& vWhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard,
 	std::vector<std::pair<int, int>>& vSolution
 #ifdef _DEBUG
@@ -465,7 +451,6 @@ inline bool SolveRecParallel(
 	std::vector<int> vRemovableWasTrue;
 	std::vector<int> vRemovableWasFalse;
 	std::map<int, Tile> mIndexToRemovedTile;
-	std::vector<int> vWhatsLeftRemoved;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 	bool full = false;
 	for (const auto& move : vMove)
@@ -474,8 +459,7 @@ inline bool SolveRecParallel(
 			vLogicalBoard,
 			arrRemovable,
 			mIndexToTile,
-			vWhatsLeft,
-			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, vWhatsLeftRemoved, mOccupationBoardRemoved);
+			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, mOccupationBoardRemoved);
 	}
 	vSolution.emplace_back(std::make_pair(vMove[0], vMove[1]));
 	if (vMove.size() == 4)
@@ -500,7 +484,7 @@ inline bool SolveRecParallel(
 				std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
 				for (const auto& move : vNewMoves)
 				{
-					auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard);
+					auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard);
 					auto jouables = evalBruteForceOrderingEval.first;
 					auto debloques = evalBruteForceOrderingEval.second;
 					auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
@@ -521,7 +505,7 @@ inline bool SolveRecParallel(
 
 				for (const auto& move : vSortedMoves)
 				{
-					ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
+					ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution
 #ifdef _DEBUG
 						, ++positions
 #endif
@@ -546,7 +530,6 @@ inline bool SolveRecParallel(
 	for (auto& item : vRemovableWasTrue) arrRemovable[item] = true;
 	for (auto& item : vRemovableWasFalse) arrRemovable[item] = false;
 	for (auto& item : mIndexToRemovedTile) mIndexToTile.emplace(item.first, item.second);
-	for (auto& item : vWhatsLeftRemoved) vWhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 	/**/
 
@@ -558,7 +541,6 @@ inline bool SolveRec(
 	std::vector<TileAndIndex>& vLogicalBoard,
 	std::array<bool, 144>& arrRemovable,
 	std::map<int, Tile>& mIndexToTile,
-	std::vector<int>& vWhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard,
 	std::vector<std::pair<int, int>>& vSolution
 #ifdef _DEBUG
@@ -572,7 +554,6 @@ inline bool SolveRec(
 	std::vector<int> vRemovableWasTrue;
 	std::vector<int> vRemovableWasFalse;
 	std::map<int, Tile> mIndexToRemovedTile;
-	std::vector<int> vWhatsLeftRemoved;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 	bool full = false;
 	for (const auto& move : vMove)
@@ -581,8 +562,7 @@ inline bool SolveRec(
 			vLogicalBoard,
 			arrRemovable,
 			mIndexToTile,
-			vWhatsLeft,
-			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, vWhatsLeftRemoved, mOccupationBoardRemoved);
+			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, mOccupationBoardRemoved);
 	}
 	vSolution.emplace_back(std::make_pair(vMove[0], vMove[1]));
 	if (vMove.size() == 4)
@@ -607,7 +587,7 @@ inline bool SolveRec(
 				std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
 				for (const auto& move : vNewMoves)
 				{
-					auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard);
+					auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard);
 					auto jouables = evalBruteForceOrderingEval.first;
 					auto debloques = evalBruteForceOrderingEval.second;
 					auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
@@ -628,7 +608,7 @@ inline bool SolveRec(
 
 				for (const auto& move : vSortedMoves)
 				{
-					ret = SolveRec(move.first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
+					ret = SolveRec(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution
 #ifdef _DEBUG
 						, ++positions
 #endif
@@ -650,7 +630,6 @@ inline bool SolveRec(
 	for (auto& item : vRemovableWasTrue) arrRemovable[item] = true;
 	for (auto& item : vRemovableWasFalse) arrRemovable[item] = false;
 	for (auto& item : mIndexToRemovedTile) mIndexToTile.emplace(item.first, item.second);
-	for (auto& item : vWhatsLeftRemoved) vWhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 	/**/
 
@@ -1404,11 +1383,10 @@ inline bool tryRandomHeuristics(Board plateau, std::vector<std::pair<int, int>>&
 		auto vLogicalBoard = plateau.getLogicalBoard();
 		auto arrRemovable = plateau.getRemovable();
 		auto mIndexToTile = plateau.getTilesMap();
-		auto vWhatsLeft = plateau.getWhatsLeft();
 		auto mOccupationBoard = plateau.getOccupationBoard();
 		for (const auto& move : vMoves)
 		{
-			auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard);
+			auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard);
 			auto jouables = evalBruteForceOrderingEval.first;
 			auto debloques = evalBruteForceOrderingEval.second;
 			auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
@@ -1443,7 +1421,6 @@ inline uint8_t EvalMoveGreedy(
 	std::vector<TileAndIndex>& vLogicalBoard,
 	std::array<bool, 144>& arrRemovable,
 	std::map<int, Tile>& mIndexToTile,
-	std::vector<int>& vWhatsLeft,
 	std::map<Coordinates, int>& mOccupationBoard)
 {
 	std::vector<TileAndIndex> vLogicalBoardRemoved;
@@ -1459,8 +1436,7 @@ inline uint8_t EvalMoveGreedy(
 			vLogicalBoard,
 			arrRemovable,
 			mIndexToTile,
-			vWhatsLeft,
-			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, vWhatsLeftRemoved, mOccupationBoardRemoved);
+			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, mOccupationBoardRemoved);
 	}
 
 	int removables = 0;
@@ -1471,7 +1447,6 @@ inline uint8_t EvalMoveGreedy(
 	for (auto& item : vRemovableWasTrue) arrRemovable[item] = true;
 	for (auto& item : vRemovableWasFalse) arrRemovable[item] = false;
 	for (auto& item : mIndexToRemovedTile) mIndexToTile.emplace(item.first, item.second);
-	for (auto& item : vWhatsLeftRemoved) vWhatsLeft.emplace_back(item);
 	for (auto& item : mOccupationBoardRemoved) mOccupationBoard[item.first] = item.second;
 
 	return removables;
@@ -1490,11 +1465,10 @@ inline bool tryGreedy(Board plateau, std::vector<std::pair<int, int>>& vSolution
 		auto vLogicalBoard = plateau.getLogicalBoard();
 		auto arrRemovable = plateau.getRemovable();
 		auto mIndexToTile = plateau.getTilesMap();
-		auto vWhatsLeft = plateau.getWhatsLeft();
 		auto OccupationBoard = plateau.getOccupationBoard();
 		for (const auto& move : vMoves)
 		{
-			auto eval = EvalMoveGreedy(move, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, OccupationBoard);
+			auto eval = EvalMoveGreedy(move, vLogicalBoard, arrRemovable, mIndexToTile, OccupationBoard);
 			vSortedMoves.emplace_back(std::make_pair(move, eval));
 		}
 
@@ -1551,11 +1525,10 @@ inline bool tryBruteForceOrderingPlayable(Board plateau, std::vector<std::pair<i
 		auto vLogicalBoard = plateau.getLogicalBoard();
 		auto arrRemovable = plateau.getRemovable();
 		auto mIndexToTile = plateau.getTilesMap();
-		auto vWhatsLeft = plateau.getWhatsLeft();
 		auto OccupationBoard = plateau.getOccupationBoard();
 		for (const auto& move : vMoves)
 		{
-			auto eval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, OccupationBoard);
+			auto eval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, OccupationBoard);
 			vSortedMoves.emplace_back(std::make_pair(move, eval));
 		}
 
@@ -1587,11 +1560,10 @@ inline bool tryBruteForceOrderingPlayablePadlocksFirst(Board plateau, std::vecto
 		auto vLogicalBoard = plateau.getLogicalBoard();
 		auto arrRemovable = plateau.getRemovable();
 		auto mIndexToTile = plateau.getTilesMap();
-		auto vWhatsLeft = plateau.getWhatsLeft();
 		auto OccupationBoard = plateau.getOccupationBoard();
 		for (const auto& move : vMoves)
 		{
-			auto eval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, OccupationBoard);
+			auto eval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, OccupationBoard);
 			vSortedMoves.emplace_back(std::make_pair(move, eval));
 		}
 
@@ -1647,11 +1619,10 @@ inline bool tryBruteForceOrderingFreed(Board plateau, std::vector<std::pair<int,
 		auto vLogicalBoard = plateau.getLogicalBoard();
 		auto arrRemovable = plateau.getRemovable();
 		auto mIndexToTile = plateau.getTilesMap();
-		auto vWhatsLeft = plateau.getWhatsLeft();
 		auto OccupationBoard = plateau.getOccupationBoard();
 		for (const auto& move : vMoves)
 		{
-			auto eval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, OccupationBoard);
+			auto eval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, OccupationBoard);
 			vSortedMoves.emplace_back(std::make_pair(move, eval));
 		}
 
@@ -1683,11 +1654,10 @@ inline bool tryBruteForceOrderingFreedPadlocksFirst(Board plateau, std::vector<s
 		auto vLogicalBoard = plateau.getLogicalBoard();
 		auto arrRemovable = plateau.getRemovable();
 		auto mIndexToTile = plateau.getTilesMap();
-		auto vWhatsLeft = plateau.getWhatsLeft();
 		auto OccupationBoard = plateau.getOccupationBoard();
 		for (const auto& move : vMoves)
 		{
-			auto eval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, OccupationBoard);
+			auto eval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, OccupationBoard);
 			vSortedMoves.emplace_back(std::make_pair(move, eval));
 		}
 
@@ -1734,7 +1704,6 @@ bool SolveRecThr(
 	std::vector<TileAndIndex> vLogicalBoard,
 	std::array<bool, 144> arrRemovable,
 	std::map<int, Tile> mIndexToTile,
-	std::vector<int> vWhatsLeft,
 	std::map<Coordinates, int> mOccupationBoard,
 	std::vector<std::pair<int, int>>& vSolution
 #ifdef _DEBUG
@@ -1742,7 +1711,7 @@ bool SolveRecThr(
 #endif
 )
 {
-	auto ret = SolveRecParallel(vMove, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
+	auto ret = SolveRecParallel(vMove, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution
 #ifdef _DEBUG
 		, positions
 #endif
@@ -1756,7 +1725,6 @@ inline bool SolveRecInit(const Board& plateau,
 	std::vector<TileAndIndex> vLogicalBoard,
 	std::array<bool, 144> arrRemovable,
 	std::map<int, Tile> mIndexToTile,
-	std::vector<int> vWhatsLeft,
 	std::map<Coordinates, int> mOccupationBoard,
 	std::vector<std::pair<int, int>>& vSolution)
 {
@@ -1764,7 +1732,6 @@ inline bool SolveRecInit(const Board& plateau,
 	std::vector<TileAndIndex> LogicalBoardRefForDebug = vLogicalBoard;
 	std::array<bool, 144> RemovableRefForDebug = arrRemovable;
 	std::map<int, Tile> mIndexToTileRefForDebug = mIndexToTile;
-	std::vector<int> WhatsLeftRefForDebug = vWhatsLeft;
 	std::map<Coordinates, int> mOccupationBoardRefForDebug = mOccupationBoard;
 #endif
 
@@ -1838,7 +1805,7 @@ inline bool SolveRecInit(const Board& plateau,
 	std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
 	for (const auto& move : vMoves)
 	{
-		auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard);
+		auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard);
 		auto jouables = evalBruteForceOrderingEval.first;
 		auto debloques = evalBruteForceOrderingEval.second;
 		auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
@@ -1863,7 +1830,7 @@ inline bool SolveRecInit(const Board& plateau,
 
 	for (const auto& move : vSortedMoves)
 	{
-		ret = SolveRec(move.first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, vSolution
+		ret = SolveRec(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution
 #ifdef _DEBUG
 			, positions
 #endif
@@ -1875,18 +1842,15 @@ inline bool SolveRecInit(const Board& plateau,
 	bool LogicalBoardOk = LogicalBoardRefForDebug.size() == vLogicalBoard.size();
 	bool RemovableOk = RemovableRefForDebug.size() == arrRemovable.size();
 	bool TilesMapOk = mIndexToTileRefForDebug.size() == mIndexToTile.size();
-	bool WhatsLeftOk = WhatsLeftRefForDebug.size() == vWhatsLeft.size();
 	bool mOccupationBoardOk = mOccupationBoardRefForDebug.size() == mOccupationBoard.size();
 	for (auto& item : LogicalBoardRefForDebug) LogicalBoardOk &= vLogicalBoard.end() != std::find(vLogicalBoard.begin(), vLogicalBoard.end(), item);
 	for (int i = 0; i < RemovableRefForDebug.size(); ++i) RemovableOk &= arrRemovable[i] == RemovableRefForDebug[i];
 	for (auto& item : mIndexToTileRefForDebug) TilesMapOk &= mIndexToTile.contains(item.first) && mIndexToTile.find(item.first)->second == item.second;
-	for (auto& item : WhatsLeftRefForDebug) WhatsLeftOk &= WhatsLeftRefForDebug.end() != std::find(WhatsLeftRefForDebug.begin(), WhatsLeftRefForDebug.end(), item);
 	for (auto& item : mOccupationBoardRefForDebug)  mOccupationBoardOk &= mOccupationBoard.contains(item.first) && mOccupationBoard[item.first] == item.second;
 
 	std::cout << LogicalBoardOk << std::endl;
 	std::cout << RemovableOk << std::endl;
 	std::cout << TilesMapOk << std::endl;
-	std::cout << WhatsLeftOk << std::endl;
 	std::cout << mOccupationBoardOk << std::endl;
 #endif
 
@@ -1904,7 +1868,6 @@ inline bool SolveRecInitAsync(const Board& plateau,
 	std::vector<TileAndIndex> vLogicalBoard,
 	std::array<bool, 144> arrRemovable,
 	std::map<int, Tile> mIndexToTile,
-	std::vector<int> vWhatsLeft,
 	std::map<Coordinates, int> mOccupationBoard,
 	std::vector<std::pair<int, int>>& vSolution)
 {
@@ -1924,7 +1887,7 @@ inline bool SolveRecInitAsync(const Board& plateau,
 	std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
 	for (const auto& move : vMoves)
 	{
-		auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard);
+		auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard);
 		auto jouables = evalBruteForceOrderingEval.first;
 		auto debloques = evalBruteForceOrderingEval.second;
 		auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
@@ -1956,7 +1919,7 @@ inline bool SolveRecInitAsync(const Board& plateau,
 		{
 			if (itMove != vSortedMoves.end())
 			{
-				vSolvers.emplace_back(std::async(&SolveRecThr, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, vWhatsLeft, mOccupationBoard, std::ref(vvSolutions[i])
+				vSolvers.emplace_back(std::async(&SolveRecThr, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, std::ref(vvSolutions[i])
 #ifdef _DEBUG
 					, positions
 #endif
