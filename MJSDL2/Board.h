@@ -56,8 +56,10 @@ public:
 class TileAndIndex
 {
 private:
-	TileAndIndex() : TileObject(Tile(-1)), Index(-1) {}
+	//TileAndIndex() : TileObject(Tile(-1)), Index(-1) {}
 public:
+	TileAndIndex() : TileObject(Tile(-1)), Index(-1) {}
+
 	Tile TileObject;
 	int Index;
 	int X; 
@@ -79,10 +81,20 @@ public:
 	// Assignment operator
 	/*TileAndIndex& operator=(TileAndIndex&& other) noexcept
 	{
-		*const_cast<int*> (&Tile) = other.Tile;
+		*const_cast<int*> (&TileObject) = other.TileObject;
 		*const_cast<int*> (&Index) = other.Index;
 		return *this;
 	}*/
+	void operator=(const TileAndIndex& other) noexcept
+	{
+		TileObject = other.TileObject;
+		Index = other.Index;
+		X = other.X;
+		Y = other.Y;
+		Z = other.Z;
+		DecX = other.DecX;
+		DecY = other.DecY;
+	}
 };
 
 // https://www.ibm.com/docs/en/i/7.5?topic=only-constexpr-constructors-c11

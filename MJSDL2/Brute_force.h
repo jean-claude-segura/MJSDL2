@@ -747,7 +747,7 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 	0x77 -> 0x87 third floor
 	0x88 -> 0x8b fourth floor
 */
-inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int* cause = NULL)
+inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToTile, int* cause = NULL)
 {
 	// Index -> TileObject
 	// std::map<int, Tile>& mIndexToTile
@@ -755,7 +755,13 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 	if (mIndexToTile.size() < 144)
 		return false;
 
-	auto bestPadlock = mIndexToTile.find(0x8F)->second.Pairing;
+	std::array<std::array<std::array<TileAndIndex, 4>, 8>, 12> arrBoard;
+
+	for (const auto& tileAndIndex : vLogicalBoard)
+	{
+		if (tileAndIndex.Index < 140)
+			arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex;
+	}
 
 	std::vector<int> vStartPos;
 	vStartPos.emplace_back(0x88);
@@ -764,71 +770,110 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 	vStartPos.emplace_back(0x8B);
 
 	/**/
+	// Blocked by the centerPadlock.
+	auto centerPadlock = mIndexToTile.find(0x8F)->second.Pairing;
 	int pairs = 0;
 	for (auto itIndex = vStartPos.begin(); itIndex != vStartPos.end(); ++itIndex)
 	{
 		auto c = arrIndexToBoardCoord[*itIndex];
 		auto x = std::get<0>(c);
 		auto y = std::get<1>(c);
-		auto z = std::get<2>(c);
 
-		auto firstPadlock = mIndexToTile.find(arrBoardCoordToIndex[x][y][z])->second.Pairing;
-
-		// Blocked by the bestPadlock.
-		if (bestPadlock == firstPadlock) ++pairs;
-		if (pairs == 3)
-			{ if (cause != NULL) { *cause = 1; }; return true; }
-		if (bestPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 1])->second.Pairing) ++pairs;
-		if (pairs == 3)
-			{ if (cause != NULL) { *cause = 1; }; return true; }
-		if (bestPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 2])->second.Pairing) ++pairs;
-		if (pairs == 3)
-			{ if (cause != NULL) { *cause = 1; }; return true; }
-		if (bestPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 3])->second.Pairing) ++pairs;
-		if (pairs == 3)
-			{ if (cause != NULL) { *cause = 1; }; return true; }
-
-		// Pure vertical lock.
-		// All of this can be harcoded. I keep it like this for a probable future copy and paste.
-		if (
-			firstPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 1])->second.Pairing &&
-			firstPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 2])->second.Pairing &&
-			firstPadlock == mIndexToTile.find(arrBoardCoordToIndex[x][y][z - 3])->second.Pairing
-			)
-			{ if (cause != NULL) { *cause = 2; }; return true; }
-
-		// Crossed vertical lock.
-		if (itIndex < vStartPos.end() - 1)
+		int currPairs = 0;
+		
+		for (int z = 0; z <= std::get<2>(c); ++z)
 		{
-			auto itRef = itIndex;
-			auto refAppairage = mIndexToTile.find(*itRef)->second.Pairing;
-			auto refBoardCoord = arrIndexToBoardCoord[*itRef];
-			int refX = std::get<0>(refBoardCoord);
-			int refY = std::get<1>(refBoardCoord);
-			int refZ = std::get<2>(refBoardCoord);
-			for (auto itSecond = itRef + 1; itSecond != vStartPos.end(); ++itSecond)
+			if (centerPadlock == arrBoard[x][y][z].TileObject.Pairing) ++pairs, ++currPairs;
+			// If there are 3 others under the centerPadlock, game is alreay over.
+			if (pairs == 3)
 			{
-				auto secondAppairage = mIndexToTile.find(*itSecond)->second.Pairing;
-				auto secondBoardCoord = arrIndexToBoardCoord[*itSecond];
-				int secondX = std::get<0>(secondBoardCoord);
-				int secondY = std::get<1>(secondBoardCoord);
-				auto refCount = 0;
-				auto secondCount = 0;
-				for (int z = refZ; z >= 0; --z)
-				{
-					auto compAppairage = mIndexToTile.find(arrBoardCoordToIndex[refX][refY][z])->second.Pairing;
-					if (refAppairage == compAppairage) ++refCount;
-					if (secondAppairage == compAppairage) ++secondCount;
-					compAppairage = mIndexToTile.find(arrBoardCoordToIndex[secondX][secondY][z])->second.Pairing;
-					if (refAppairage == compAppairage) ++refCount;
-					if (secondAppairage == compAppairage) ++secondCount;
-					if (secondCount == 4 && refCount == secondCount)
-						{ if (cause != NULL) { *cause = 3; }; return true; }
-				}
+				if (cause != NULL) { *cause = 1; }; return true;
+			}
+			// Pure vertical lock.
+			// Removing the centerPadlock will never unlock the last twos.
+			if (currPairs == 2)
+			{
+				if (cause != NULL) { *cause = 2; }; return true;
 			}
 		}
 	}
-	
+
+	std::vector<TileAndIndex> vStartPosTileIndex;
+	for (int z = 3; z >= 2; --z)
+	{
+		for (int y = 0; y < 8; ++y)
+		{
+			auto horizontalLimits = arrHorizontalLimits[y][z];
+			for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+				vStartPosTileIndex.emplace_back(arrBoard[x][y][z]);
+		}
+	}
+
+	for (auto itIndex = vStartPosTileIndex.begin(); itIndex != vStartPosTileIndex.end(); ++itIndex)
+	{
+		auto x = itIndex->X;
+		auto y = itIndex->Y;
+
+		auto firstPadlock = itIndex->TileObject.Pairing;
+		int pairs = 0;
+		// Pure vertical lock.
+		for (int z = 0; z < itIndex->Z; ++z)
+		{
+			if (firstPadlock == arrBoard[x][y][z].TileObject.Pairing) ++pairs;
+			// Removing the first will never unlock the last twos.
+			if (pairs == 2)
+			{
+				if (cause != NULL) { *cause = 3; }; return true;
+			}
+		}
+	}
+
+	vStartPosTileIndex.clear();
+	for (int z = 3, y = 0; y < 8; ++y)
+	{
+		auto horizontalLimits = arrHorizontalLimits[y][z];
+		for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+			vStartPosTileIndex.emplace_back(arrBoard[x][y][z]);
+	}
+	for (auto itIndex = vStartPosTileIndex.begin(); itIndex != vStartPosTileIndex.end(); ++itIndex)
+	{
+		// Crossed vertical lock.
+		/*
+			AB
+			AA
+			BA
+			BB
+		*/
+		auto itRef = itIndex;
+		auto refAppairage = itRef->TileObject.Pairing;
+		int refX = itRef->X;
+		int refY = itRef->Y;
+		int refZ = itRef->Z;
+		for (auto itSecond = itRef + 1; itSecond != vStartPosTileIndex.end(); ++itSecond)
+		{
+			auto secondAppairage = itSecond->TileObject.Pairing;
+			int secondX = itSecond->X;
+			int secondY = itSecond->Y;
+			int secondZ = itSecond->Z;
+			auto refCount = 1;
+			auto secondCount = 1;
+			for (int z = 0; z < 3; ++z)
+			{
+				auto compAppairage = arrBoard[refX][refY][z].TileObject.Pairing;
+				if (refAppairage == compAppairage) ++refCount;
+				if (secondAppairage == compAppairage) ++secondCount;
+
+				compAppairage = arrBoard[secondX][secondY][z].TileObject.Pairing;
+				if (refAppairage == compAppairage) ++refCount;
+				if (secondAppairage == compAppairage) ++secondCount;
+			}
+			if (secondCount == 4 && refCount == secondCount)
+			{
+				if (cause != NULL) { *cause = 4; }; return true;
+			}
+		}
+	}
+
 	// For left and right padlocks : funny blocking...
 	// Doesn't work if not a starting pos. There could be padlocks missing.
 	// First pass : check potential issues
@@ -858,7 +903,7 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 	for (int x = 0; x < 12; ++x)
 	{
 		// First get the tile.
-		const auto& object = mIndexToTile.find(arrBoardCoordToIndex[x][3][0])->second;
+		const auto& object = arrBoard[x][3][0].TileObject;
 		// Get the first occurence
 		if (!mPairingFirst.contains(object.Pairing))
 			mPairingFirst[object.Pairing] = x;
@@ -870,7 +915,7 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 	for (int x = 0; x < 12; ++x)
 	{
 		// First get the tile.
-		const auto& object = mIndexToTile.find(arrBoardCoordToIndex[x][4][0])->second;
+		const auto& object = arrBoard[x][4][0].TileObject;
 		// Get the first occurence
 		if (!mPairingFirst.contains(object.Pairing))
 			mPairingFirst[object.Pairing] = x + 12;
@@ -902,7 +947,7 @@ inline bool CheckIfLockedFromStart(const std::map<int, Tile>& mIndexToTile, int*
 				{
 					// fAx < fBx && lAx < lBx
 					if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
-						if (cause != NULL) { *cause = 4; }; return true;
+						if (cause != NULL) { *cause = 5; }; return true;
 					// fBx < fAx && lBx < lAx
 					/*if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
 						if (cause != NULL) { *cause = 5; }; return true;*/
@@ -1669,11 +1714,13 @@ inline bool SolveRecInit(const Board& plateau,
 #endif
 	if (bSolutionFound)
 		return true;
-	if (CheckIfLockedFromStart(mIndexToTile))
+	int lockStatus = 0;
+	if (CheckIfLockedFromStart(vLogicalBoard, mIndexToTile, &lockStatus))
 	{
 #ifdef _DEBUG
 		std::cout << "*************" << std::endl;
 		std::cout << "*  Locked.  *" << std::endl;
+		std::cout << "*     " << lockStatus<< "     *" << std::endl;
 		std::cout << "*************" << std::endl;
 #endif
 		return false;
@@ -1760,7 +1807,7 @@ inline bool SolveRecInitAsync(const Board& plateau,
 	std::map<Coordinates, int> mOccupationBoard,
 	std::vector<std::pair<int, int>>& vSolution)
 {
-	if (CheckIfLockedFromStart(mIndexToTile))
+	if (CheckIfLockedFromStart(vLogicalBoard, mIndexToTile))
 	{
 		return false;
 	}

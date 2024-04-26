@@ -268,7 +268,7 @@ void Board::InitBoard()
 
 	SetMoves();
 
-	bIsLockedFromStart = CheckIfLockedFromStart(mIndexToTile);
+	bIsLockedFromStart = CheckIfLockedFromStart(vLogicalBoard, mIndexToTile);
 
 #ifdef _DEBUG
 	std::cout << std::dec << vWhatsLeft.size() << " tile" << (vWhatsLeft.size() > 1 ? "s" : "") << " left." << std::endl;
@@ -569,7 +569,7 @@ bool Board::Test()
 	do
 	{
 		InitBoard();
-		if (CheckIfLockedFromStart(mIndexToTile))
+		if (CheckIfLockedFromStart(vLogicalBoard, mIndexToTile))
 		{
 			Locked.emplace_back(i++);
 			continue;
@@ -926,12 +926,12 @@ bool Board::TestLocked()
 	std::vector<std::pair<int, int>> Locked;
 	std::map<int, int> causes;
 	int cause;
-	//for (int i = 0; i < 10000; ++i)
-	int i = 2;
+	for (int i = 0; i < 10000; ++i)
+	//int i = 2;
 	{
-		InitBoardLockedHorizontal(i);
-		//InitBoard();
-		if (CheckIfLockedFromStart(mIndexToTile, &cause))
+		//InitBoardLockedHorizontal(i);
+		InitBoard();
+		if (CheckIfLockedFromStart(vLogicalBoard, mIndexToTile, &cause))
 		{
 			Locked.emplace_back(std::make_pair(i, cause));
 			causes[cause] += 1;
