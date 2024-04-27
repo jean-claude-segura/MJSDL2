@@ -216,6 +216,7 @@ void Board::InitBoard()
 #ifdef _DEBUG
 	// 0, 1, 2, 5, 7, 12, 18, 19, 24, 25, 27, 31, 34, 36, 44, 49, 50, 55, 61, 62, 64, 66
 	// [0, 2, 21, 32]
+	// 9 is interesting.
 	static int seed = 0;
 	std::mt19937 e1(seed++);
 	//std::mt19937 e1(1);
@@ -443,34 +444,50 @@ bool Board::TakeBack()
 	{
 		const auto it = vHistory.back();
 		vForwardHistory.push_back(it);
-		const auto firstIndex = it.first;
-		const auto secondIndex = it.second;
 
-		const auto firstTile = mIndexToRemovedTile.find(firstIndex)->second;
-		const auto secondTile = mIndexToRemovedTile.find(secondIndex)->second;
+		for(auto it = vHistory.rbegin(); it != vHistory.rend(); ++it)
+		{
+			const auto firstIndex = it->first;
+			const auto secondIndex = it->second;
 
-		auto coord = arrIndexToBoardCoord[firstIndex];
-		vLogicalBoard.emplace_back(TileAndIndex(firstTile.Rank, firstIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			const auto firstTile = mIndexToRemovedTile.find(firstIndex)->second;
+			const auto secondTile = mIndexToRemovedTile.find(secondIndex)->second;
 
-		coord = arrIndexToBoardCoord[secondIndex];
-		vLogicalBoard.emplace_back(TileAndIndex(secondTile.Rank, secondIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			auto coord = arrIndexToBoardCoord[firstIndex];
+			vLogicalBoard.emplace_back(TileAndIndex(firstTile.Rank, firstIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 
-		mIndexToTile.emplace(firstIndex, firstTile);
-		mIndexToRemovedTile.erase(firstIndex);
+			coord = arrIndexToBoardCoord[secondIndex];
+			vLogicalBoard.emplace_back(TileAndIndex(secondTile.Rank, secondIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 
-		mIndexToTile.emplace(secondIndex, secondTile);
-		mIndexToRemovedTile.erase(secondIndex);
+			mIndexToTile.emplace(firstIndex, firstTile);
+			mIndexToRemovedTile.erase(firstIndex);
 
-		mOccupationBoard.emplace(arrIndexToCoord[firstIndex], firstIndex);
-		mOccupationBoard.emplace(arrIndexToCoord[secondIndex], secondIndex);
+			mIndexToTile.emplace(secondIndex, secondTile);
+			mIndexToRemovedTile.erase(secondIndex);
+
+			mOccupationBoard.emplace(arrIndexToCoord[firstIndex], firstIndex);
+			mOccupationBoard.emplace(arrIndexToCoord[secondIndex], secondIndex);
+		}
+
+		vHistory.pop_back();
+
+		bIsLockedFromMove = false;
+
+		for (const auto& it : vHistory)
+		{
+			RemoveTile(it.first);
+			RemoveTile(it.second);
+
+			std::vector<int> vMove;
+			vMove.emplace_back(it.first);
+			vMove.emplace_back(it.second);
+
+			bIsLockedFromMove = bIsLockedFromMove ? true : CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, vMove);
+		}
 
 		InitRemovable();
 
 		SetMoves();
-
-		vHistory.pop_back();
-
-		bIsLockedFromMove = CheckIfLockedAfterStart(vLogicalBoard);
 
 		return true;
 	}
