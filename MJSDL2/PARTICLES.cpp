@@ -197,47 +197,47 @@ const bool PARTICLE::setDeath()
 
 RANDOMORIGIN::RANDOMORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	const int xOrg = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH );
-	const int yOrg = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_HEIGHT );
+	const int xOrg = user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH );
+	const int yOrg = user_uniform_int_distribution<int32_t>( 0, SCREEN_HEIGHT );
 
-	XPos = xOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	YPos = yOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	XDir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
-	YDir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
+	XPos = xOrg - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
+	YPos = yOrg - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
+	XDir = -10 + user_uniform_int_distribution<int32_t>( 0, 20 );
+	YDir = -17 + user_uniform_int_distribution<int32_t>( 0, 19 );
 }
 
 // Original settings from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
 CENTEREDEDORIGIN::CENTEREDEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	/* randomly init particle, generate it in the center of the screen */
-	XPos = (SCREEN_WIDTH >> 1) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	YPos = (SCREEN_HEIGHT >> 1) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	XDir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
-	YDir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
+	XPos = (SCREEN_WIDTH >> 1) - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
+	YPos = (SCREEN_HEIGHT >> 1) - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
+	XDir = -10 + user_uniform_int_distribution<int32_t>( 0, 20 );
+	YDir = -17 + user_uniform_int_distribution<int32_t>( 0, 19 );
 }
 
 FORCEDORIGIN::FORCEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	XPos = xOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	YPos = yOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	XDir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
-	YDir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
+	XPos = xOrg - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
+	YPos = yOrg - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
+	XDir = -10 + user_uniform_int_distribution<int32_t>( 0, 20 );
+	YDir = -17 + user_uniform_int_distribution<int32_t>( 0, 19 );
 }
 
 CIRCULARPOS::CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius) : Radius(radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	const double angle = PARTICLES::user_uniform_real_distribution<double>( 0, std::numbers::pi * 2. );
+	const double angle = user_uniform_real_distribution<double>( 0, std::numbers::pi * 2. );
 	XPos = xOrg + std::cos(angle) * Radius; // X est le cosinus de l'angle.
 	YPos = yOrg + std::sin(angle) * Radius; // Y est le sinus de l'angle.
-	XDir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
-	YDir = -17 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 19 );
+	XDir = -10 + user_uniform_int_distribution<int32_t>( 0, 20 );
+	YDir = -17 + user_uniform_int_distribution<int32_t>( 0, 19 );
 }
 
 CIRCULARDIR::CIRCULARDIR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	const double angle = PARTICLES::user_uniform_real_distribution<double>( 0, std::numbers::pi * 2. );
-	XPos = xOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
-	YPos = yOrg - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	const double angle = user_uniform_real_distribution<double>( 0, std::numbers::pi * 2. );
+	XPos = xOrg - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
+	YPos = yOrg - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
 	XDir = std::cos(angle) * 10;
 	YDir = std::sin(angle) * 10;
 }
@@ -257,10 +257,10 @@ TRAIL::TRAIL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_
 		ydirdecbase = 25;
 	}
 
-	XPos = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH ) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	XPos = user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH ) - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
 	YPos = SCREEN_HEIGHT - 4;
-	XDir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
-	YDir = ydirbase + PARTICLES::user_uniform_int_distribution<int32_t>( 0, ydirdecbase ); // -32 -20
+	XDir = -10 + user_uniform_int_distribution<int32_t>( 0, 20 );
+	YDir = ydirbase + user_uniform_int_distribution<int32_t>( 0, ydirdecbase ); // -32 -20
 }
 
 void TRAIL::init()
@@ -282,10 +282,10 @@ void TRAIL::init()
 		ydirbase = -65;
 		ydirdecbase = 25;
 	}
-	XPos = PARTICLES::user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH ) - 20 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 40 );
+	XPos = user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH ) - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
 	YPos = SCREEN_HEIGHT - 4;
-	XDir = -10 + PARTICLES::user_uniform_int_distribution<int32_t>( 0, 20 );
-	YDir = ydirbase + PARTICLES::user_uniform_int_distribution<int32_t>( 0, ydirdecbase ); // -32 -20
+	XDir = -10 + user_uniform_int_distribution<int32_t>( 0, 20 );
+	YDir = ydirbase + user_uniform_int_distribution<int32_t>( 0, ydirdecbase ); // -32 -20
 	ColorIndex = 255;
 	Dead = false;
 }

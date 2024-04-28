@@ -744,10 +744,6 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 
 	SDL_Surface* firesurface = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
 
-	std::random_device r;
-	std::default_random_engine e1(r());
-	std::uniform_int_distribution<int> uniform_int_dist_angle(0, 360);
-
 	int size = 256;
 	size = (size >> 1) << 1;
 	Uint32* palette = new Uint32[size];
@@ -779,7 +775,7 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 		start = std::chrono::steady_clock::now();
 		if (!bAtLeastOneAlive)
 		{
-			GenerateAnyHSLColourFirePalette(palette, size, uniform_int_dist_angle(e1), uniform_int_dist_angle(e1), Alpha);
+			GenerateAnyHSLColourFirePalette(palette, size, user_uniform_int_distribution<int>(0, 360), user_uniform_int_distribution<int>(0, 360), Alpha);
 			for (int i = 0; i < size; ++i)
 				if (palette[i] == Alpha << 24) palette[i] = 0;
 			particles.init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_RANDOMORIGIN);
@@ -879,10 +875,6 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCLE);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_WATERFALL);
 
-	std::random_device r;
-	std::default_random_engine e1(r());
-	std::uniform_int_distribution<int> uniform_int_dist_angle(0, 360);
-
 	PARTICLES particles(SCREEN_WIDTH, SCREEN_HEIGHT);
 	TRAIL trail(SCREEN_WIDTH, SCREEN_HEIGHT);
 
@@ -924,7 +916,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 		if (!bAtLeastOneAlive)
 		{
 			trail.init();
-			GenerateAnyHSLColourFirePalette(palette, size, uniform_int_dist_angle(e1), uniform_int_dist_angle(e1), Alpha);
+			GenerateAnyHSLColourFirePalette(palette, size, user_uniform_int_distribution<int>(0, 360), user_uniform_int_distribution<int>(0, 360), Alpha);
 			for (int i = 0; i < size; ++i)
 				if (palette[i] == Alpha << 24) palette[i] = 0;
 			bTrailAlive = true; // To start the trail.
@@ -943,7 +935,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 				remaining = NUMBER_OF_PARTICLES;
 #endif
 				const int size = choices.size() - 1;
-				auto next = std::uniform_int_distribution<int>{ 0, size }(e1);
+				auto next = user_uniform_int_distribution<int>(0, size);
 				particles.init(NUMBER_OF_PARTICLES, choices[next], trail.getXPos(), trail.getYPos());
 				//vParticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_THISISMADNESS, vTrails[i].getXPos(), vTrails[i].getYPos());
 			}
@@ -1076,10 +1068,6 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 		fire[i] = NULL;
 	}
 
-	std::random_device r;
-	std::default_random_engine e1(r());
-	std::uniform_int_distribution<int> uniform_int_dist_angle(0, 360);
-
 	//for (Uint8 i = 0; i < max_number_of_fires; ++i)
 	int i = 0;
 	{
@@ -1136,13 +1124,13 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 					if (palette[i] != NULL)
 						delete[] palette[i];
 					palette[i] = new Uint32[size];
-					GenerateAnyHSLColourFirePalette(palette[i], size, uniform_int_dist_angle(e1), uniform_int_dist_angle(e1), Alpha);
+					GenerateAnyHSLColourFirePalette(palette[i], size, user_uniform_int_distribution<int>(0, 360), user_uniform_int_distribution<int>(0, 360), Alpha);
 					for (int c = 0; c < size; ++c)
 						if (palette[i][c] == Alpha << 24) palette[i][c] = 0;
 					bTrailAlive[i] = true; // To start the trail.
 					bAtLeastOneAlive[i] = true; // To prevent init of the trail on next loop.
 					const int size = choices.size() - 1;
-					auto next = std::uniform_int_distribution<int>{ 0, size }(e1);
+					auto next = user_uniform_int_distribution<int>(0, size);
 					vParticles[i].init(NUMBER_OF_PARTICLES, choices[next], vTrails[i].getXPos(), vTrails[i].getYPos());
 				}
 			}
@@ -1170,7 +1158,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 				if (palette[i] != NULL)
 					delete[] palette[i];
 				palette[i] = new Uint32[size];
-				GenerateAnyHSLColourFirePalette(palette[i], size, uniform_int_dist_angle(e1), uniform_int_dist_angle(e1), Alpha);
+				GenerateAnyHSLColourFirePalette(palette[i], size, user_uniform_int_distribution<int>(0, 360), user_uniform_int_distribution<int>(0, 360), Alpha);
 				for (int c = 0; c < size; ++c)
 					if (palette[i][c] == Alpha << 24) palette[i][c] = 0;
 				bTrailAlive[i] = true; // To start the trail.
@@ -1184,7 +1172,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 				if (!bTrailAlive[i])
 				{
 					const int size = choices.size() - 1;
-					auto next = std::uniform_int_distribution<int>{ 0, size }(e1);
+					auto next = user_uniform_int_distribution<int>(0, size);
 					vParticles[i].init(NUMBER_OF_PARTICLES, choices[next], vTrails[i].getXPos(), vTrails[i].getYPos());
 					//vParticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_THISISMADNESS, vTrails[i].getXPos(), vTrails[i].getYPos());
 					//vParticles[i].init(NUMBER_OF_PARTICLES, PARTICLES::PARTICULES_TYPES::TYPE_CIRCLE, vTrails[i].getXPos(), vTrails[i].getYPos());

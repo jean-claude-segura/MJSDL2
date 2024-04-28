@@ -277,10 +277,7 @@ void GraphicBoard::LoadRamdomTileSet(const int istart, const int iend, const std
 	else
 	{
 		std::sort(vPaths.begin(), vPaths.end());
-		std::random_device r;
-		std::default_random_engine e1(r());
-		std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
-		LoadTile(istart, iend, vPaths[uniform_dist(e1)]);
+		LoadTile(istart, iend, vPaths[user_uniform_int_distribution<int>(0, vPaths.size() - 1)]);
 	}
 }
 
@@ -293,10 +290,7 @@ void GraphicBoard::LoadRandomBackground(const std::string& path)
 			vPaths.emplace_back(entry.path().string());
 	}
 	std::sort(vPaths.begin(), vPaths.end());
-	std::random_device r;
-	std::default_random_engine e1(r());
-	std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
-	LoadBackground(vPaths[uniform_dist(e1)]);
+	LoadBackground(vPaths[user_uniform_int_distribution<int>(0, vPaths.size() - 1)]);
 }
 
 void GraphicBoard::LoadBackground(const std::string& path)
@@ -372,10 +366,7 @@ void LoadRandomBackground(const std::string& path, SDL_Renderer*& renderer, SDL_
 			vPaths.emplace_back(entry.path().string());
 	}
 	std::sort(vPaths.begin(), vPaths.end());
-	std::random_device r;
-	std::default_random_engine e1(r());
-	std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
-	LoadBackground(vPaths[uniform_dist(e1)], renderer, textureBackground, textureGreyedBackground, Width, Height);
+	LoadBackground(vPaths[user_uniform_int_distribution<int>(0, vPaths.size() - 1)], renderer, textureBackground, textureGreyedBackground, Width, Height);
 }
 
 void GraphicBoard::LoadRandomBackgroundVictory(const std::string& path)
@@ -387,10 +378,7 @@ void GraphicBoard::LoadRandomBackgroundVictory(const std::string& path)
 			vPaths.emplace_back(entry.path().string());
 	}
 	std::sort(vPaths.begin(), vPaths.end());
-	std::random_device r;
-	std::default_random_engine e1(r());
-	std::uniform_int_distribution<int> uniform_dist(0, vPaths.size() - 1);
-	LoadBackgroundVictory(vPaths[uniform_dist(e1)]);
+	LoadBackgroundVictory(vPaths[user_uniform_int_distribution<int>(0, vPaths.size() - 1)]);
 }
 
 void GraphicBoard::LoadBackgroundVictory(const std::string& path)

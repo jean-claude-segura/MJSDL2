@@ -7,7 +7,6 @@
 #include "Tools.h"
 #include "PARTICLES.h"
 #include <chrono>
-#include <random>
 
 void SDL_UpperBlitInverted(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);
 void SDL_UpperBlitXored(SDL_Surface* src, SDL_Surface* dest, SDL_Rect& coordonnees);
