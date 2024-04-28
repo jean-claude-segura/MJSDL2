@@ -46,7 +46,7 @@ public:
 		TYPE_THISISMADNESS
 	};
 	bool draw(uint8_t* fire);
-	void init(uint32_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, const int xOrg = 0, const int yOrg = 0, const double radius = 0);
+	void init(uint32_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, const double xOrg = 0, const double yOrg = 0, const double radius = 0);
 	const uint8_t getRemaining();
 };
 
@@ -55,8 +55,8 @@ public:
 class PARTICLE
 {
 protected:
-	int32_t XPos, YPos;
-	int32_t XDir, YDir;
+	double XPos, YPos;
+	double XDir, YDir;
 	uint8_t ColorIndex;
 	bool Dead;
 	int32_t SCREEN_WIDTH;
@@ -86,7 +86,7 @@ class FORCEDORIGIN : public PARTICLE
 {
 public:
 	// Starts from (xOrg; yOrg)
-	FORCEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
+	FORCEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg);
 };
 
 class CIRCULARPOS : public PARTICLE
@@ -96,7 +96,7 @@ private:
 public:
 	// Starts from (xOrg; yOrg)
 	// Every particle with the same (xOrg; yOrg) will be at the same distance from it (On a circle with the Radius specified centered from there)
-	CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius);
+	CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg, const double radius);
 };
 
 class CIRCULARDIR : public PARTICLE
@@ -104,7 +104,7 @@ class CIRCULARDIR : public PARTICLE
 public:
 	// Starts from (xOrg; yOrg)
 	// Every particle with the same (xOrg; yOrg) will run away from there at same speed
-	CIRCULARDIR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
+	CIRCULARDIR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg);
 };
 
 class TRAIL : public PARTICLE
@@ -116,8 +116,8 @@ public:
 
 	void init();
 
-	const int32_t getXPos() { return XPos; }
-	const int32_t getYPos() { return YPos; }
+	const double getXPos() { return XPos; }
+	const double getYPos() { return YPos; }
 
 protected:
 	const bool setDeath();
@@ -129,7 +129,7 @@ public:
 	// Starts from (xOrg; yOrg)
 	// Every particle with the same (xOrg; yOrg) will run away from there at same speed
 	// Will never fall.
-	RADIAL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
+	RADIAL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg);
 protected:
 	const bool setDeath();
 };
@@ -141,9 +141,9 @@ public:
 	// Every particle with the same (xOrg; yOrg) will run away from there at same speed
 	// Will never fall.
 	// Will die after 30 frames.
-	CIRCLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
+	CIRCLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg);
 private:
-	uint8_t Radius;
+	double Radius;
 protected:
 	const bool setDeath();
 };
@@ -155,9 +155,9 @@ public:
 	// Every particle with the same (xOrg; yOrg) will run away from there at same speed
 	// Will never fall.
 	// Will die after 30 frames.
-	SPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
+	SPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg);
 private:
-	uint8_t Radius;
+	double Radius;
 protected:
 	const bool setDeath();
 };
@@ -169,18 +169,18 @@ private:
 public:
 	// Starts from (xOrg; yOrg)
 	// Every particle with the same (xOrg; yOrg) will be at the same distance from it (On a circle with the Radius specified centered from there)
-	BUBBLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius);
+	BUBBLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg, const double radius);
 };
 
 class RADIALSPHERE : public PARTICLE
 {
 private:
 	const double Radius;
-	uint8_t DeathRadius;
+	double DeathRadius;
 public:
 	// Starts from (xOrg; yOrg)
 	// Every particle with the same (xOrg; yOrg) will be at the same distance from it (On a circle with the Radius specified centered from there)
-	RADIALSPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius);
+	RADIALSPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg, const double radius);
 protected:
 	const bool setDeath();
 };
@@ -191,9 +191,9 @@ public:
 	// Starts from (xOrg; yOrg)
 	// Every particle with the same (xOrg; yOrg) will run away from there at same speed
 	// Will fall after 30 frames.
-	WATERFALL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
+	WATERFALL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg);
 private:
-	uint8_t Radius;
+	double Radius;
 protected:
 	const bool setDeath();
 };

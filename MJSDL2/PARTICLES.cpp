@@ -19,7 +19,7 @@ bool PARTICLES::draw(uint8_t* fire)
 	return bAtLeastOneAlive;
 }
 
-void PARTICLES::init(uint32_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, const int xOrg, const int yOrg, const double radius)
+void PARTICLES::init(uint32_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, const double xOrg, const double yOrg, const double radius)
 {
 	NUMBER_OF_PARTICLES = _NUMBER_OF_PARTICLES;
 	particles.clear();
@@ -160,10 +160,10 @@ bool PARTICLE::draw(uint8_t* fire, bool& bAtLeastOneAlive)
 	{
 		int32_t temp;
 		/* draw particle */
-		if (YPos > 1 && XPos > 1 &&
-			(XPos < SCREEN_WIDTH - 3))
+		if (int(std::trunc(YPos)) > 1 && int(std::trunc(XPos)) > 1 &&
+			(int(std::trunc(XPos)) < SCREEN_WIDTH - 3))
 		{
-			temp = YPos * SCREEN_WIDTH + XPos;
+			temp = int(std::trunc(YPos)) * SCREEN_WIDTH + int(std::trunc(XPos));
 
 			fire[temp] = ColorIndex;
 			fire[temp - 1] = ColorIndex;
@@ -210,7 +210,7 @@ const bool PARTICLE::setDeath()
 	// If not -> Dead.
 	if (YPos <= 1)
 	{
-		int32_t deltaX = XDir;
+		double deltaX = XDir;
 		if ((deltaX > 0 && (XPos + deltaX >= SCREEN_WIDTH - 3)) ||
 			(deltaX < 0 && (XPos + deltaX <= 1)))
 		{
@@ -230,55 +230,55 @@ const bool PARTICLE::setDeath()
 
 RANDOMORIGIN::RANDOMORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	const int xOrg = user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH );
-	const int yOrg = user_uniform_int_distribution<int32_t>( 0, SCREEN_HEIGHT );
+	const double xOrg = user_uniform_real_distribution<double>( 0, SCREEN_WIDTH );
+	const double yOrg = user_uniform_real_distribution<double>( 0, SCREEN_HEIGHT );
 
-	XPos = xOrg - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
-	YPos = yOrg - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
-	XDir = -10 + user_uniform_int_distribution<int32_t>( 0, 20 );
-	YDir = -17 + user_uniform_int_distribution<int32_t>( 0, 19 );
+	XPos = xOrg - 20 + user_uniform_real_distribution<double>( 0, 40 );
+	YPos = yOrg - 20 + user_uniform_real_distribution<double>( 0, 40 );
+	XDir = -10 + user_uniform_real_distribution<double>( 0, 20 );
+	YDir = -17 + user_uniform_real_distribution<double>( 0, 19 );
 }
 
 // Original settings from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
 CENTEREDEDORIGIN::CENTEREDEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	/* randomly init particle, generate it in the center of the screen */
-	XPos = (SCREEN_WIDTH >> 1) - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
-	YPos = (SCREEN_HEIGHT >> 1) - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
-	XDir = -10 + user_uniform_int_distribution<int32_t>( 0, 20 );
-	YDir = -17 + user_uniform_int_distribution<int32_t>( 0, 19 );
+	XPos = (SCREEN_WIDTH >> 1) - 20 + user_uniform_real_distribution<double>( 0, 40 );
+	YPos = (SCREEN_HEIGHT >> 1) - 20 + user_uniform_real_distribution<double>( 0, 40 );
+	XDir = -10 + user_uniform_real_distribution<double>( 0, 20 );
+	YDir = -17 + user_uniform_real_distribution<double>( 0, 19 );
 }
 
-FORCEDORIGIN::FORCEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+FORCEDORIGIN::FORCEDORIGIN(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	XPos = xOrg - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
-	YPos = yOrg - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
-	XDir = -10 + user_uniform_int_distribution<int32_t>( 0, 20 );
-	YDir = -17 + user_uniform_int_distribution<int32_t>( 0, 19 );
+	XPos = xOrg - 20 + user_uniform_real_distribution<double>( 0, 40 );
+	YPos = yOrg - 20 + user_uniform_real_distribution<double>( 0, 40 );
+	XDir = -10 + user_uniform_real_distribution<double>( 0, 20 );
+	YDir = -17 + user_uniform_real_distribution<double>( 0, 19 );
 }
 
-CIRCULARPOS::CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius) : Radius(radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+CIRCULARPOS::CIRCULARPOS(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg, const double radius) : Radius(radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	const double angle = user_uniform_real_distribution<double>( 0, std::numbers::pi * 2. );
 	XPos = xOrg + std::cos(angle) * Radius; // X est le cosinus de l'angle.
 	YPos = yOrg + std::sin(angle) * Radius; // Y est le sinus de l'angle.
-	XDir = -10 + user_uniform_int_distribution<int32_t>( 0, 20 );
-	YDir = -17 + user_uniform_int_distribution<int32_t>( 0, 19 );
+	XDir = -10 + user_uniform_real_distribution<double>( 0, 20 );
+	YDir = -17 + user_uniform_real_distribution<double>( 0, 19 );
 }
 
-CIRCULARDIR::CIRCULARDIR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+CIRCULARDIR::CIRCULARDIR(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	const double angle = user_uniform_real_distribution<double>( 0, std::numbers::pi * 2. );
-	XPos = xOrg - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
-	YPos = yOrg - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
+	XPos = xOrg - 20 + user_uniform_real_distribution<double>( 0, 40 );
+	YPos = yOrg - 20 + user_uniform_real_distribution<double>( 0, 40 );
 	XDir = std::cos(angle) * 10;
 	YDir = std::sin(angle) * 10;
 }
 
 TRAIL::TRAIL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
-	int32_t ydirbase = -32;
-	int32_t ydirdecbase = 12;
+	double ydirbase = -32;
+	double ydirdecbase = 12;
 	if (SCREEN_HEIGHT >= 1080)
 	{
 		ydirbase = -46;
@@ -290,10 +290,10 @@ TRAIL::TRAIL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT) : PARTICLE(SCREEN_
 		ydirdecbase = 25;
 	}
 
-	XPos = user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH ) - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
+	XPos = user_uniform_real_distribution<double>( 0, SCREEN_WIDTH ) - 20 + user_uniform_real_distribution<double>( 0, 40 );
 	YPos = SCREEN_HEIGHT - 4;
-	XDir = -10 + user_uniform_int_distribution<int32_t>( 0, 20 );
-	YDir = ydirbase + user_uniform_int_distribution<int32_t>( 0, ydirdecbase ); // -32 -20
+	XDir = -10 + user_uniform_real_distribution<double>( 0, 20 );
+	YDir = ydirbase + user_uniform_real_distribution<double>( 0, ydirdecbase ); // -32 -20
 }
 
 void TRAIL::init()
@@ -303,8 +303,8 @@ void TRAIL::init()
 	// 1080 : (46 / 28 / 18)
 	//  *2    +19 / +12  +7
 	// 2160 :  65 / 40 / 25
-	int32_t ydirbase = -32;
-	int32_t ydirdecbase = 12;
+	double ydirbase = -32;
+	double ydirdecbase = 12;
 	if (SCREEN_HEIGHT >= 1080)
 	{
 		ydirbase = -46;
@@ -315,10 +315,10 @@ void TRAIL::init()
 		ydirbase = -65;
 		ydirdecbase = 25;
 	}
-	XPos = user_uniform_int_distribution<int32_t>( 0, SCREEN_WIDTH ) - 20 + user_uniform_int_distribution<int32_t>( 0, 40 );
+	XPos = user_uniform_real_distribution<double>( 0, SCREEN_WIDTH ) - 20 + user_uniform_real_distribution<double>( 0, 40 );
 	YPos = SCREEN_HEIGHT - 4;
-	XDir = -10 + user_uniform_int_distribution<int32_t>( 0, 20 );
-	YDir = ydirbase + user_uniform_int_distribution<int32_t>( 0, ydirdecbase ); // -32 -20
+	XDir = -10 + user_uniform_real_distribution<double>( 0, 20 );
+	YDir = ydirbase + user_uniform_real_distribution<double>( 0, ydirdecbase ); // -32 -20
 	ColorIndex = 255;
 	Dead = false;
 }
@@ -340,7 +340,7 @@ const bool TRAIL::setDeath()
 	// If not -> Dead.
 	if (YPos <= 1)
 	{
-		int32_t deltaX = XDir;
+		double deltaX = XDir;
 		if ((deltaX > 0 && (XPos + deltaX >= SCREEN_WIDTH - 3)) ||
 			(deltaX < 0 && (XPos + deltaX <= 1)))
 		{
@@ -363,7 +363,7 @@ const bool TRAIL::setDeath()
 	return false;
 }
 
-RADIAL::RADIAL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : CIRCULARDIR(SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
+RADIAL::RADIAL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg) : CIRCULARDIR(SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
 {
 }
 
@@ -410,7 +410,7 @@ const bool RADIAL::setDeath()
 	return false;
 }
 
-CIRCLE::CIRCLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : RADIAL(SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
+CIRCLE::CIRCLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg) : RADIAL(SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
 {
 	Radius = 30;
 }
@@ -419,13 +419,12 @@ const bool CIRCLE::setDeath()
 {
 	XPos += XDir;
 	YPos += YDir;
-	if (Radius > 0)
-		--Radius;
+	--Radius;
 
 	/* is particle Dead? */
 	if (ColorIndex == 0 ||
 		(YPos >= SCREEN_HEIGHT - 3) ||
-		Radius == 0)
+		Radius <= 0)
 	{
 		Dead = true;
 		return true;
@@ -461,12 +460,12 @@ const bool CIRCLE::setDeath()
 	return false;
 }
 
-SPHERE::SPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+SPHERE::SPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	const double alpha = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
 	const double beta = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
-	XPos = xOrg - 20 + user_uniform_int_distribution<int32_t>(0, 40);
-	YPos = yOrg - 20 + user_uniform_int_distribution<int32_t>(0, 40);
+	XPos = xOrg - 20 + user_uniform_real_distribution<double>(0, 40);
+	YPos = yOrg - 20 + user_uniform_real_distribution<double>(0, 40);
 	XDir = std::cos(alpha) * std::cos(beta) * 10.;
 	YDir = std::sin(alpha) * 10;
 
@@ -477,13 +476,12 @@ const bool SPHERE::setDeath()
 {
 	XPos += XDir;
 	YPos += YDir;
-	if (Radius > 0)
-		--Radius;
+	--Radius;
 
 	/* is particle Dead? */
 	if (ColorIndex == 0 ||
 		(YPos >= SCREEN_HEIGHT - 3) ||
-		Radius == 0)
+		Radius <= 0)
 	{
 		Dead = true;
 		return true;
@@ -519,18 +517,18 @@ const bool SPHERE::setDeath()
 	return false;
 }
 
-BUBBLE::BUBBLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius) : Radius(radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+BUBBLE::BUBBLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg, const double radius) : Radius(radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	const double alpha = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
 	const double beta = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
 
 	XPos = xOrg + std::cos(alpha) * std::cos(beta) * Radius; // X est le cosinus de l'angle.
 	YPos = yOrg + std::sin(alpha) * Radius; // Y est le sinus de l'angle.
-	XDir = 0;// -10 + user_uniform_int_distribution<int32_t>(0, 20);
-	YDir = -17;// +user_uniform_int_distribution<int32_t>(0, 19);
+	XDir = 0;// -10 + user_uniform_real_distribution<double>(0, 20);
+	YDir = -17;// +user_uniform_real_distribution<double>(0, 19);
 }
 
-RADIALSPHERE::RADIALSPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius) : Radius(radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+RADIALSPHERE::RADIALSPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg, const double radius) : Radius(radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 	const double alpha = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
 	const double beta = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
@@ -547,13 +545,12 @@ const bool RADIALSPHERE::setDeath()
 {
 	XPos += XDir;
 	YPos += YDir;
-	if (DeathRadius > 0)
-		--DeathRadius;
+	--DeathRadius;
 
 	/* is particle Dead? */
 	if (ColorIndex == 0 ||
 		(YPos >= SCREEN_HEIGHT - 3) ||
-		DeathRadius == 0)
+		DeathRadius <= 0)
 	{
 		Dead = true;
 		return true;
@@ -589,7 +586,7 @@ const bool RADIALSPHERE::setDeath()
 	return false;
 }
 
-WATERFALL::WATERFALL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : RADIAL(SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
+WATERFALL::WATERFALL(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg) : RADIAL(SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg)
 {
 	Radius = 30;
 }
@@ -598,8 +595,7 @@ const bool WATERFALL::setDeath()
 {
 	XPos += XDir;
 	YPos += YDir;
-	if (Radius > 0)
-		--Radius;
+	--Radius;
 
 	/* is particle Dead? */
 	if (ColorIndex == 0 ||
@@ -625,13 +621,13 @@ const bool WATERFALL::setDeath()
 		return true;
 	}
 
-	if (Radius == 0)
+	if (Radius <= 0)
 	{
 		// Is particle above (Actually *under*) visible screen coming back ?
 		// If not -> Dead.
 		if (YPos <= 1)
 		{
-			int32_t deltaX = XDir;
+			double deltaX = XDir;
 			if ((deltaX > 0 && (XPos + deltaX >= SCREEN_WIDTH - 3)) ||
 				(deltaX < 0 && (XPos + deltaX <= 1)))
 			{
@@ -642,7 +638,7 @@ const bool WATERFALL::setDeath()
 	}
 
 	/* gravity takes over */
-	if (Radius == 0)
+	if (Radius <= 0)
 		YDir++;
 
 	/* particle cools off */
