@@ -19,7 +19,7 @@ bool PARTICLES::draw(uint8_t* fire)
 	return bAtLeastOneAlive;
 }
 
-void PARTICLES::init(uint8_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, const int xOrg, const int yOrg, const double radius)
+void PARTICLES::init(uint32_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, const int xOrg, const int yOrg, const double radius)
 {
 	NUMBER_OF_PARTICLES = _NUMBER_OF_PARTICLES;
 	particles.clear();
@@ -61,6 +61,10 @@ void PARTICLES::init(uint8_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, co
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
 			particles.emplace_back(std::make_unique<CIRCLE>(CIRCLE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 		break;
+	case TYPE_SPHERE:
+		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
+			particles.emplace_back(std::make_unique<SPHERE>(SPHERE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+		break;
 	case TYPE_WATERFALL:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
 			particles.emplace_back(std::make_unique<WATERFALL>(WATERFALL{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
@@ -98,6 +102,9 @@ void PARTICLES::init(uint8_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, co
 				break;
 			case TYPE_CIRCLE:
 				particles.emplace_back(std::make_unique<CIRCLE>(CIRCLE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
+				break;
+			case TYPE_SPHERE:
+				particles.emplace_back(std::make_unique<SPHERE>(SPHERE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 				break;
 			case TYPE_WATERFALL:
 				particles.emplace_back(std::make_unique<WATERFALL>(WATERFALL{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
@@ -383,6 +390,64 @@ CIRCLE::CIRCLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, 
 }
 
 const bool CIRCLE::setDeath()
+{
+	XPos += XDir;
+	YPos += YDir;
+	if (Radius > 0)
+		--Radius;
+
+	/* is particle Dead? */
+	if (ColorIndex == 0 ||
+		(YPos >= SCREEN_HEIGHT - 3) ||
+		Radius == 0)
+	{
+		Dead = true;
+		return true;
+	}
+
+	// Is particle on the left side of visible screen coming back ?
+	// If not -> Dead.
+	if (XPos <= 1 && XDir <= 0) // Minimal check : those going left are not coming back for sure.
+	{
+		Dead = true;
+		return true;
+	}
+
+	// Is particle on the right side of visible screen coming back ?
+	// If not -> Dead.
+	if ((XPos >= SCREEN_WIDTH - 3) && XDir >= 0) // Minimal check : those going right are not coming back for sure.
+	{
+		Dead = true;
+		return true;
+	}
+
+	// Is particle above (Actually *under*) visible screen coming back ?
+	// If not -> Dead.
+	if (YPos <= 1 && YDir <= 0) // Circulars never fall.
+	{
+		Dead = true;
+		return true;
+	}
+
+	/* particle cools off */
+	ColorIndex--;
+
+	return false;
+}
+
+SPHERE::SPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg) : PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+{
+	const double alpha = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
+	const double beta = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
+	XPos = xOrg - 20 + user_uniform_int_distribution<int32_t>(0, 40);
+	YPos = yOrg - 20 + user_uniform_int_distribution<int32_t>(0, 40);
+	XDir = std::cos(alpha) * std::cos(beta) * 10.;
+	YDir = std::sin(alpha) * 10;
+
+	Radius = 30;
+}
+
+const bool SPHERE::setDeath()
 {
 	XPos += XDir;
 	YPos += YDir;

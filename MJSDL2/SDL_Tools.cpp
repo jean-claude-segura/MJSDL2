@@ -712,27 +712,27 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 	delete[] palette;
 }
 
-void SDL_ExplosionOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int NUMBER_OF_PARTICLES)
+void SDL_ExplosionOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const uint32_t NUMBER_OF_PARTICLES)
 {
 	auto renderTarget = SDL_GetRenderTarget(renderer);
 	SDL_ExplosionOnTexture(renderer, renderTarget, (SDL_Texture*)NULL, Width, Height, NUMBER_OF_PARTICLES);
 }
 
 // Current renderer must be set to the texture target and renderTarget to the main renderer texture
-void SDL_ExplosionOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+void SDL_ExplosionOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const uint32_t NUMBER_OF_PARTICLES, const Uint32 Alpha)
 {
 	auto screen = SDL_GetRenderTarget(renderer);
 	SDL_ExplosionOnTexture(renderer, renderTarget, screen, Width, Height, NUMBER_OF_PARTICLES, Alpha);
 }
 
 // Current renderer must be set to the texture target and renderTarget to the main renderer texture
-void SDL_ExplosionOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+void SDL_ExplosionOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const uint32_t NUMBER_OF_PARTICLES, const Uint32 Alpha)
 {
 	SDL_ExplosionOnTextureRect(renderer, renderTarget, screen, NULL, Width, Height, NUMBER_OF_PARTICLES, Alpha);
 }
 
 // Adapted from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
-void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const uint32_t NUMBER_OF_PARTICLES, const Uint32 Alpha)
 {
 	SDL_SetRenderTarget(renderer, renderTarget);
 	Uint32 buf, index, temp;
@@ -840,27 +840,27 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	delete[] palette;
 }
 
-void SDL_FireworkOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int NUMBER_OF_PARTICLES)
+void SDL_FireworkOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const uint32_t NUMBER_OF_PARTICLES)
 {
 	auto renderTarget = SDL_GetRenderTarget(renderer);
 	SDL_FireworkOnTexture(renderer, renderTarget, (SDL_Texture*)NULL, Width, Height, NUMBER_OF_PARTICLES);
 }
 
 // Current renderer must be set to the texture target and renderTarget to the main renderer texture
-void SDL_FireworkOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+void SDL_FireworkOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const uint32_t NUMBER_OF_PARTICLES, const Uint32 Alpha)
 {
 	auto screen = SDL_GetRenderTarget(renderer);
 	SDL_FireworkOnTexture(renderer, renderTarget, screen, Width, Height, NUMBER_OF_PARTICLES, Alpha);
 }
 
 // Current renderer must be set to the texture target and renderTarget to the main renderer texture
-void SDL_FireworkOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+void SDL_FireworkOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const uint32_t NUMBER_OF_PARTICLES, const Uint32 Alpha)
 {
 	SDL_FireworkOnTextureRect(renderer, renderTarget, screen, NULL, Width, Height, NUMBER_OF_PARTICLES, Alpha);
 }
 
 // Adapted from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
-void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const uint32_t NUMBER_OF_PARTICLES, const Uint32 Alpha)
 {
 	SDL_SetRenderTarget(renderer, renderTarget);
 	Uint32 buf, index, temp;
@@ -873,6 +873,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCULARDIR);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCULARPOS);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCLE);
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_SPHERE);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_WATERFALL);
 
 	PARTICLES particles(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -1010,27 +1011,27 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 	delete[] palette;
 }
 
-void SDL_FireworksOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const int NUMBER_OF_PARTICLES)
+void SDL_FireworksOnRenderer(SDL_Renderer* renderer, const int Width, const int Height, const uint32_t NUMBER_OF_PARTICLES)
 {
 	auto renderTarget = SDL_GetRenderTarget(renderer);
 	SDL_FireworksOnTexture(renderer, renderTarget, (SDL_Texture*)NULL, Width, Height, NUMBER_OF_PARTICLES);
 }
 
 // Current renderer must be set to the texture target and renderTarget to the main renderer texture
-void SDL_FireworksOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+void SDL_FireworksOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, const int Width, const int Height, const uint32_t NUMBER_OF_PARTICLES, const Uint32 Alpha)
 {
 	auto screen = SDL_GetRenderTarget(renderer);
 	SDL_FireworksOnTexture(renderer, renderTarget, screen, Width, Height, NUMBER_OF_PARTICLES, Alpha);
 }
 
 // Current renderer must be set to the texture target and renderTarget to the main renderer texture
-void SDL_FireworksOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+void SDL_FireworksOnTexture(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, const int Width, const int Height, const uint32_t NUMBER_OF_PARTICLES, const Uint32 Alpha)
 {
 	SDL_FireworksOnTextureRect(renderer, renderTarget, screen, NULL, Width, Height, NUMBER_OF_PARTICLES, Alpha);
 }
 
 // Adapted from "Retro Particle Explosion Effect - W.P. van Paassen - 2002"
-void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int NUMBER_OF_PARTICLES, const Uint32 Alpha)
+void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_Texture* screen, SDL_Rect* tgtRect, const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const uint32_t NUMBER_OF_PARTICLES, const Uint32 Alpha)
 {
 	SDL_SetRenderTarget(renderer, renderTarget);
 	Uint32 buf, index, temp;
@@ -1043,6 +1044,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCULARDIR);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCULARPOS);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_CIRCLE);
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_SPHERE);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_WATERFALL);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_TRAIL);
 
