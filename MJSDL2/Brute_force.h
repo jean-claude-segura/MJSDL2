@@ -672,34 +672,136 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 
 		if (c1.Y == c2.Y && c1.Z == c2.Z) // Same plane, same row
 		{
-			std::array<std::array<std::array<Tile, 4>, 8>, 12> arrBoard;
+			int z = c1.Z;
+			int y = c1.Y;
+			std::array<std::array<std::array<TileAndIndex, 4>, 8>, 12> arrBoard;
 			std::map<int, int> arrGlobalOccurences {};
 			std::map<int, int> arrRowOccurences {};
+
+			auto beginning = -1;
+			auto end = -1;
+			auto leftPadlockPairing = -1;
+			auto rightPadlockPairing = -1;
+			auto rightRightPadlockPairing = -1;
+			std::map<int, int> mPairingCount;
+			std::map<int, int> mPairingFirst;
+			std::map<int, int> mPairingLast;
 
 			for (const auto& tileAndIndex : vLogicalBoard)
 			{
 				if (tileAndIndex.Index < 140)
-					arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex.TileObject;
+					arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex;
 				++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
-				if(tileAndIndex.Y == c1.Y && tileAndIndex.Z == c1.Z) // Same plane, same row
+				if (tileAndIndex.Y == c1.Y && tileAndIndex.Z == c1.Z) // Same plane, same row
+				{
 					++arrRowOccurences[tileAndIndex.TileObject.Pairing];
+					if (beginning == -1)
+						beginning = tileAndIndex.X;
+					beginning = std::min(beginning, tileAndIndex.X);
+					end = std::max(end, tileAndIndex.X);
+				}
+				if (3 <= y && y <= 4 && z == 0)
+				{
+					if (tileAndIndex.Index == 0x8C)
+					{
+						leftPadlockPairing = tileAndIndex.TileObject.Pairing;
+
+						// Fake entries for the padlocks.
+						++mPairingCount[leftPadlockPairing];
+						mPairingFirst[leftPadlockPairing] = -1;
+						mPairingLast[leftPadlockPairing] = -1;
+					}
+					else if (tileAndIndex.Index == 0x8D)
+					{
+						rightPadlockPairing = tileAndIndex.TileObject.Pairing;
+
+						// Fake entries for the padlocks.
+						++mPairingCount[rightPadlockPairing];
+						if (!mPairingFirst.contains(rightPadlockPairing))
+							mPairingFirst[rightPadlockPairing] = 12;
+						mPairingLast[rightPadlockPairing] = 12;
+					}
+					else if (tileAndIndex.Index == 0x8E)
+					{
+						rightRightPadlockPairing = tileAndIndex.TileObject.Pairing;
+
+						// Fake entries for the padlocks.
+						++mPairingCount[rightRightPadlockPairing];
+						if (!mPairingFirst.contains(rightRightPadlockPairing))
+							mPairingFirst[rightRightPadlockPairing] = 13;
+						mPairingLast[rightRightPadlockPairing] = 13;
+					}
+				}
 			}
 
-			std::vector<int> vCandidates;
-			for (const auto& indexToPairing : arrRowOccurences)
+			// First pass : check potential issues
+			// 
+			// For 3 identical tiles :
+			// AAABB, AABAB but not ABAAB!
+			// BBAAA, BABAA but not BAABA!
+			auto horizontalLimits = std::make_pair(std::max(0, beginning), std::min(11, end)); // Just to re-use some code...
+
+			// Ponder
+			// Conditionnal pondering : may miss some lockings but it's better than fake ones.
+			if (3 <= y && y <= 4 && z == 0 && leftPadlockPairing != -1 && rightPadlockPairing != -1)
 			{
-				// If all available matching tiles are in the same row and there's an issue, we can see it.
-				if (arrGlobalOccurences.find(indexToPairing.first)->second == indexToPairing.second)
-					vCandidates.emplace_back(indexToPairing.first);
+				int yPonder = y == 3 ? 4 : 3;
+				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+				{
+					// First get the tile.
+					const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
+					if (
+						(leftPadlockPairing != -1 && pairing == leftPadlockPairing) ||
+						(rightPadlockPairing != -1 && pairing == rightPadlockPairing) ||
+						(rightRightPadlockPairing != -1 && pairing == rightRightPadlockPairing))
+						++mPairingCount[pairing];
+				}
 			}
+
+			for (int x = horizontalLimits.first; x <= horizontalLimits.second; ++x)
+			{
+				// First get the tile.
+				const auto& object = arrBoard[x][y][z].TileObject;
+				// Get the first occurence
+				if (!mPairingFirst.contains(object.Pairing))
+					mPairingFirst[object.Pairing] = x;
+				// Get the last occurence
+				if (!mPairingLast.contains(object.Pairing) || mPairingLast.find(object.Pairing)->second < x) // Because of the left and right blocker fake init before...
+					mPairingLast[object.Pairing] = x;
+				// Get the count of occurences
+				++mPairingCount[object.Pairing];
+			}
+
+			// Remove the useless ones :
+			for (const auto& item : mPairingCount)
+			{
+				// Actually, I realized that AAA/BBB is an issue. AABABB, AABBAB, ABAABB, AABABB but not AAABBB. I'll try to think about something.
+				if (item.second != arrGlobalOccurences.find(item.first)->second)
+				{
+					mPairingFirst.erase(item.first);
+					mPairingLast.erase(item.first);
+				}
+			}
+
 			// There's at least one because that was the condition to be here in the first place.
 			// But one's not enough to have an issue...
-			if (vCandidates.size() > 1)
-			{				
-				auto horizontalLimits = arrHorizontalLimits[c1.Y][c2.Z];
-				std::vector<int> vCut;
-				for (int x = horizontalLimits.first; x < horizontalLimits.second; ++x)
-					if (arrBoard[x][c1.Y][c1.Z].Pairing != -1) vCut.emplace_back(x);
+			if (mPairingFirst.size() > 1) // Ok, now we have an issue...
+			{
+				auto itEnd = mPairingFirst.end();
+				--itEnd;
+				for (auto it = mPairingFirst.begin(); it != itEnd; ++it)
+				{
+					auto itNext = it;
+					for (++itNext; itNext != mPairingFirst.end(); ++itNext)
+					{
+						// fAx < fBx && lAx < lBx
+						if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
+							return true;
+						// fBx < fAx && lBx < lAx
+						/*if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
+							return true;*/
+					}
+				}
 			}
 		}
 	}
@@ -791,13 +893,15 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 			// If there are 3 others under the centerPadlock, game is alreay over.
 			if (pairs == 3)
 			{
-				if (cause != NULL) { *cause = 1; }; return true;
+				if (cause != NULL) { *cause = 1; };
+				return true;
 			}
 			// Pure vertical lock.
 			// Removing the centerPadlock will never unlock the last twos.
 			if (currPairs == 2)
 			{
-				if (cause != NULL) { *cause = 2; }; return true;
+				if (cause != NULL) { *cause = 2; };
+				return true;
 			}
 		}
 	}
@@ -827,7 +931,8 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 			// Removing the first will never unlock the last twos.
 			if (pairs == 2)
 			{
-				if (cause != NULL) { *cause = 3; }; return true;
+				if (cause != NULL) { *cause = 3; };
+				return true;
 			}
 		}
 	}
@@ -873,7 +978,8 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 			}
 			if (secondCount == 4 && refCount == secondCount)
 			{
-				if (cause != NULL) { *cause = 4; }; return true;
+				if (cause != NULL) { *cause = 4; };
+				return true;
 			}
 		}
 	}
@@ -950,16 +1056,24 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 				{
 					// fAx < fBx && lAx < lBx
 					if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
-						if (cause != NULL) { *cause = 5; }; return true;
+					{
+						if (cause != NULL) { *cause = 5; };
+						return true;
+					}
 					// fBx < fAx && lBx < lAx
-					/*if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
-						if (cause != NULL) { *cause = 5; }; return true;*/
+					/*
+					if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
+					{
+						if (cause != NULL) { *cause = 5; };
+						return true;
+					}
+					*/
 				}
 			}
 		}
 	}
 
-	// Doesn't work if not a starting pos. There could be holes in the lines.
+	// There can't be holes in the lines.
 	for (int z = 3; z >= 0; --z)
 	{
 		for (int y = 0; y < 8; ++y)
@@ -1017,6 +1131,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 				// Remove the useless ones :
 				for (const auto& item : mPairingCount)
 				{
+					// Actually, I realized that AAA/BBB is an issue. AABABB, AABBAB, ABAABB, AABABB but not AAABBB. I'll try to think about something.
 					if (item.second != 4)
 					{
 						mPairingFirst.erase(item.first);
@@ -1034,10 +1149,18 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 						{
 							// fAx < fBx && lAx < lBx
 							if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
-								if (cause != NULL) { *cause = 6; }; return true;
+							{
+								if (cause != NULL) { *cause = 6; };
+								return true;
+							}
 							// fBx < fAx && lBx < lAx
-							/*if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
-								if (cause != NULL) { *cause = 7; }; return true;*/
+							/*
+							if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
+							{
+								if (cause != NULL) { *cause = 7; };
+								return true;
+							}
+							*/
 						}
 					}
 				}
@@ -1694,7 +1817,7 @@ inline bool SolveRecInit(const Board& plateau,
 		vSolutionTemp.clear();
 	}
 #ifndef _DEBUG
-	return true;
+	return bSolutionFound;
 #endif
 #ifdef _DEBUG
 	for (const auto& move : vSolution)
@@ -1717,6 +1840,8 @@ inline bool SolveRecInit(const Board& plateau,
 	return true;
 	vSolution.clear();
 	bool ret = false;
+
+	//return SolveRecInit(plateau, vOldMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution);
 
 	// New move container to remove the tiles 2 at once or 4 at once.
 	std::vector<std::vector<int>> vMoves;
