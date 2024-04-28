@@ -1047,6 +1047,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_SPHERE);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_WATERFALL);
 	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_TRAIL);
+	choices.emplace_back(PARTICLES::PARTICULES_TYPES::TYPE_RADIALSPHERE);
 
 	std::vector<PARTICLES> vParticles;
 	std::vector<TRAIL> vTrails;

@@ -65,6 +65,20 @@ void PARTICLES::init(uint32_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, c
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
 			particles.emplace_back(std::make_unique<SPHERE>(SPHERE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 		break;
+	case TYPE_BUBBLE:
+	{
+		const double radius = user_uniform_real_distribution<double>(0., 50.) + 30.;
+		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
+			particles.emplace_back(std::make_unique<BUBBLE>(BUBBLE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
+		break;
+	}
+	case TYPE_RADIALSPHERE:
+	{
+		const double radius = user_uniform_real_distribution<double>(0., 50.) + 30.;
+		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
+			particles.emplace_back(std::make_unique<RADIALSPHERE>(RADIALSPHERE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
+		break;
+	}
 	case TYPE_WATERFALL:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
 			particles.emplace_back(std::make_unique<WATERFALL>(WATERFALL{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
@@ -106,6 +120,18 @@ void PARTICLES::init(uint32_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, c
 			case TYPE_SPHERE:
 				particles.emplace_back(std::make_unique<SPHERE>(SPHERE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 				break;
+			case TYPE_BUBBLE:
+			{
+				const double radius = user_uniform_real_distribution<double>(0., 50.) + 30.;
+				particles.emplace_back(std::make_unique<BUBBLE>(BUBBLE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
+				break;
+			}
+			case TYPE_RADIALSPHERE:
+			{
+				const double radius = user_uniform_real_distribution<double>(0., 50.) + 30.;
+				particles.emplace_back(std::make_unique<RADIALSPHERE>(RADIALSPHERE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
+				break;
+			}
 			case TYPE_WATERFALL:
 				particles.emplace_back(std::make_unique<WATERFALL>(WATERFALL{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
 				break;
@@ -458,6 +484,76 @@ const bool SPHERE::setDeath()
 	if (ColorIndex == 0 ||
 		(YPos >= SCREEN_HEIGHT - 3) ||
 		Radius == 0)
+	{
+		Dead = true;
+		return true;
+	}
+
+	// Is particle on the left side of visible screen coming back ?
+	// If not -> Dead.
+	if (XPos <= 1 && XDir <= 0) // Minimal check : those going left are not coming back for sure.
+	{
+		Dead = true;
+		return true;
+	}
+
+	// Is particle on the right side of visible screen coming back ?
+	// If not -> Dead.
+	if ((XPos >= SCREEN_WIDTH - 3) && XDir >= 0) // Minimal check : those going right are not coming back for sure.
+	{
+		Dead = true;
+		return true;
+	}
+
+	// Is particle above (Actually *under*) visible screen coming back ?
+	// If not -> Dead.
+	if (YPos <= 1 && YDir <= 0) // Circulars never fall.
+	{
+		Dead = true;
+		return true;
+	}
+
+	/* particle cools off */
+	ColorIndex--;
+
+	return false;
+}
+
+BUBBLE::BUBBLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius) : Radius(radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+{
+	const double alpha = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
+	const double beta = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
+
+	XPos = xOrg + std::cos(alpha) * std::cos(beta) * Radius; // X est le cosinus de l'angle.
+	YPos = yOrg + std::sin(alpha) * Radius; // Y est le sinus de l'angle.
+	XDir = 0;// -10 + user_uniform_int_distribution<int32_t>(0, 20);
+	YDir = -17;// +user_uniform_int_distribution<int32_t>(0, 19);
+}
+
+RADIALSPHERE::RADIALSPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius) : Radius(radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+{
+	const double alpha = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
+	const double beta = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
+
+	XPos = xOrg + std::cos(alpha) * std::cos(beta) * Radius; // X est le cosinus de l'angle.
+	YPos = yOrg + std::sin(alpha) * Radius; // Y est le sinus de l'angle.
+	XDir = std::cos(alpha) * std::cos(beta) * 10.;
+	YDir = std::sin(alpha) * 10;
+
+	DeathRadius = 30;
+}
+
+const bool RADIALSPHERE::setDeath()
+{
+	XPos += XDir;
+	YPos += YDir;
+	if (DeathRadius > 0)
+		--DeathRadius;
+
+	/* is particle Dead? */
+	if (ColorIndex == 0 ||
+		(YPos >= SCREEN_HEIGHT - 3) ||
+		DeathRadius == 0)
 	{
 		Dead = true;
 		return true;

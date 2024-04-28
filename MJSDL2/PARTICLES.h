@@ -14,6 +14,8 @@ class TRAIL;
 class RADIAL;
 class CIRCLE;
 class SPHERE;
+class BUBBLE;
+class RADIALSPHERE;
 class WATERFALL;
 
 class PARTICLES
@@ -38,6 +40,8 @@ public:
 		TYPE_RADIAL,
 		TYPE_CIRCLE,
 		TYPE_SPHERE,
+		TYPE_BUBBLE,
+		TYPE_RADIALSPHERE,
 		TYPE_WATERFALL,
 		TYPE_THISISMADNESS
 	};
@@ -154,6 +158,29 @@ public:
 	SPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg);
 private:
 	uint8_t Radius;
+protected:
+	const bool setDeath();
+};
+
+class BUBBLE : public PARTICLE
+{
+private:
+	const double Radius;
+public:
+	// Starts from (xOrg; yOrg)
+	// Every particle with the same (xOrg; yOrg) will be at the same distance from it (On a circle with the Radius specified centered from there)
+	BUBBLE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius);
+};
+
+class RADIALSPHERE : public PARTICLE
+{
+private:
+	const double Radius;
+	uint8_t DeathRadius;
+public:
+	// Starts from (xOrg; yOrg)
+	// Every particle with the same (xOrg; yOrg) will be at the same distance from it (On a circle with the Radius specified centered from there)
+	RADIALSPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const int xOrg, const int yOrg, const double radius);
 protected:
 	const bool setDeath();
 };
