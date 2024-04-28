@@ -336,7 +336,7 @@ public:
 	bool Solve();
 	bool IsLockedFromStart();
 	bool IsLockedFromMove();
-	bool TakeBack();
+	bool TakeBack(bool Beginning = false);
 	bool TakeBack(const uint8_t direction);
 	bool MoveForward();
 	bool GoEnd();

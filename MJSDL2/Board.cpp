@@ -434,7 +434,7 @@ bool Board::IsLockedFromMove()
 	}
 }
 
-bool Board::TakeBack()
+bool Board::TakeBack(bool beginning)
 {
 	if (vHistory.empty())
 	{
@@ -442,11 +442,15 @@ bool Board::TakeBack()
 	}
 	else
 	{
-		const auto it = vHistory.back();
-		vForwardHistory.push_back(it);
+		const auto & it = vHistory.back();
+		if (!beginning)
+			vForwardHistory.push_back(it);
 
 		for(auto it = vHistory.rbegin(); it != vHistory.rend(); ++it)
 		{
+			if (beginning)
+				vForwardHistory.push_back(*it);
+
 			const auto firstIndex = it->first;
 			const auto secondIndex = it->second;
 
@@ -468,24 +472,29 @@ bool Board::TakeBack()
 			mOccupationBoard.emplace(arrIndexToCoord[firstIndex], firstIndex);
 			mOccupationBoard.emplace(arrIndexToCoord[secondIndex], secondIndex);
 		}
+		if (!beginning)
+			vHistory.pop_back();
+		else
+			vHistory.clear();
 
-		vHistory.pop_back();
+		InitRemovable();
 
 		bIsLockedFromMove = false;
 
-		for (const auto& it : vHistory)
+		if (!beginning)
 		{
-			RemoveTile(it.first);
-			RemoveTile(it.second);
+			for (const auto& it : vHistory)
+			{
+				RemoveTile(it.first);
+				RemoveTile(it.second);
 
-			std::vector<int> vMove;
-			vMove.emplace_back(it.first);
-			vMove.emplace_back(it.second);
+				std::vector<int> vMove;
+				vMove.emplace_back(it.first);
+				vMove.emplace_back(it.second);
 
-			bIsLockedFromMove = bIsLockedFromMove ? true : CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, vMove);
+				bIsLockedFromMove = bIsLockedFromMove ? true : CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, vMove);
+			}
 		}
-
-		InitRemovable();
 
 		SetMoves();
 
@@ -496,7 +505,7 @@ bool Board::TakeBack()
 // For the graphic board.
 bool Board::TakeBack(const uint8_t direction)
 {
-	if (TakeBack())
+	if (TakeBack(false))
 	{
 		SortBoard(direction);
 
@@ -511,13 +520,10 @@ bool Board::TakeBack(const uint8_t direction)
 // For the graphic board.
 bool Board::GoBeginning(const uint8_t direction)
 {
-	if (!vHistory.empty())
+	if (TakeBack(true))
 	{
-		while (!vHistory.empty())
-		{
-			TakeBack();
-		}
 		SortBoard(direction);
+
 		return true;
 	}
 	else
@@ -534,7 +540,7 @@ bool Board::MoveForward()
 	}
 	else
 	{
-		const auto it = vForwardHistory.back();
+		const auto & it = vForwardHistory.back();
 		const auto firstIndex = it.first;
 		const auto secondIndex = it.second;
 
