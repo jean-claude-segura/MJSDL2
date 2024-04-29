@@ -29,7 +29,7 @@ inline void RemoveTile(
 
 	std::vector<TileAndIndex>::iterator it = vLogicalBoard.begin();
 	for (; it != vLogicalBoard.end() && it->Index != index; ++it);
-	auto coord = arrIndexToCoord[it->Index];
+	const auto & coord = arrIndexToCoord[it->Index];
 	double x = coord.x;
 	double y = coord.y;
 	double z = coord.z;
@@ -665,8 +665,8 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 		}
 
 		// Pure vertical lock.
-		auto c1 = vPairedIndex[0];
-		auto c2 = vPairedIndex[1];
+		const auto & c1 = vPairedIndex[0];
+		const auto & c2 = vPairedIndex[1];
 		if (c1.X == c2.X && c1.Y == c2.Y && c1.DecX == c2.DecX && c1.DecY == c2.DecY)
 			return true;
 

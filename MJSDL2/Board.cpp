@@ -257,7 +257,7 @@ void Board::InitBoard()
 #endif
 		--tempDominos[domino];
 		mOccupationBoard[arrIndexToCoord[index]] = index;
-		const auto coord = arrIndexToBoardCoord[index];
+		const auto & coord = arrIndexToBoardCoord[index];
 		vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 		mIndexToTile.emplace(index, Tile(domino));
 	}
@@ -289,7 +289,7 @@ void Board::RemoveTile(const int index)
 
 	std::vector<TileAndIndex>::iterator it = vLogicalBoard.begin();
 	for (; it != vLogicalBoard.end() && it->Index != index; ++it);
-	auto coord = arrIndexToCoord[it->Index];
+	const auto & coord = arrIndexToCoord[it->Index];
 	double x = coord.x;
 	double y = coord.y;
 	double z = coord.z;

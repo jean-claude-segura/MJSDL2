@@ -909,7 +909,7 @@ void GraphicBoard::RefreshMouseMap()
 
 		for (auto& tile : plateau.getLogicalBoard())
 		{
-			auto temp = arrIndexToCoord[tile.Index];
+			const auto & temp = arrIndexToCoord[tile.Index];
 			auto x = temp.x;
 			auto y = temp.y;
 			auto z = temp.z;
@@ -1152,7 +1152,7 @@ void GraphicBoard::RefreshExample()
 	else
 	{
 		SDL_RenderCopy(renderer, textureBackgroundVictory, NULL, NULL);
-		SDL_FireworksOnTexture(renderer, renderTarget, Width >> 2, Height >> 2, 500, 0xC0);
+		SDL_FireworksOnTexture(renderer, renderTarget, Width >> 1, Height >> 1, 500, 0xC0);
 		SDL_SetRenderTarget(renderer, renderTarget);
 		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 	}
@@ -1380,7 +1380,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 
 		for (const auto& tile : plateau.getLogicalBoard())
 		{
-			auto temp = arrIndexToCoord[tile.Index];
+			const auto & temp = arrIndexToCoord[tile.Index];
 			auto x = temp.x;
 			auto y = temp.y;
 			auto z = temp.z;
@@ -1651,7 +1651,7 @@ void GraphicBoard::Loop()
 							std::vector<int> relevantTiles;
 							for (const auto& tile : plateau.getLogicalBoard())
 							{
-								auto temp = arrIndexToCoord[tile.Index];
+								const auto & temp = arrIndexToCoord[tile.Index];
 								auto x = temp.x;
 								auto y = temp.y;
 								auto z = temp.z;
