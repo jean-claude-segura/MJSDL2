@@ -77,6 +77,7 @@ private:
 	void LoadButton(SDL_Texture*& button, const std::string& strPath, const std::string& strName);
 
 private:
+	SDL_DisplayMode DisplayMode;
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 	SDL_Texture

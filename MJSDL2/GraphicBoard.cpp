@@ -121,7 +121,6 @@ void GraphicBoard::Init()
 		ThrowException(1);
 	}
 
-	SDL_DisplayMode DisplayMode;
 	SDL_GetCurrentDisplayMode(0, &DisplayMode);
 
 	window = SDL_CreateWindow(
@@ -317,7 +316,7 @@ void GraphicBoard::LoadBackground(const std::string& path)
 			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 			ThrowException(1);
 		}
-		SDL_ResizeTexture(renderer, textureBackground, Width, Height);
+		SDL_ResizeTexture(renderer, textureBackground, std::min(DisplayMode.w, Width), std::min(DisplayMode.h, Height));
 		SDL_GreyscaleTexture(renderer, textureBackground, textureGreyedBackground);
 		SDL_RenderCopy(renderer, textureGreyedBackground, NULL, NULL);
 	}
@@ -403,7 +402,7 @@ void GraphicBoard::LoadBackgroundVictory(const std::string& path)
 			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 			ThrowException(1);
 		}
-		SDL_ResizeTexture(renderer, textureBackgroundVictory, Width, Height);
+		SDL_ResizeTexture(renderer, textureBackgroundVictory, std::min(DisplayMode.w, Width), std::min(DisplayMode.h, Height));
 	}
 	SDL_FreeSurface(background);
 	SDL_FreeSurface(temp);
@@ -574,7 +573,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 
 			// I assume the async call attempt on the mass storage is the issue here. Or the tiles are loaded much faster than the background to see a difference.
 			// Thread or async don't increase speed that much.
-			std::thread thrLoadRandomBackground (LoadRandomBackgroundAsync, std::ref(renderer), std::ref(textureBackground), std::ref(textureGreyedBackground), Width, Height);
+			std::thread thrLoadRandomBackground (LoadRandomBackgroundAsync, std::ref(renderer), std::ref(textureBackground), std::ref(textureGreyedBackground), std::min(DisplayMode.w, Width), std::min(DisplayMode.h, Height));
 			//std::future<void > futureLoadRandomBackground = std::async(&LoadRandomBackgroundAsync, std::ref(renderer), std::ref(textureBackground), std::ref(textureGreyedBackground), Width, Height);
 			ReloadTiles();
 			thrLoadRandomBackground.join();
