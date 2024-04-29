@@ -224,6 +224,10 @@ void Board::InitBoard()
 #else
 	std::random_device r;
 	std::mt19937 e1(r());
+	// Création du seed.
+	const auto temp(e1());
+	// Affectation du seed.
+	e1.seed(temp);
 #endif
 	std::uniform_int_distribution<int> uniform_dist(0, 41);
 	vLogicalBoard.clear();
