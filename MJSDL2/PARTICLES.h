@@ -16,6 +16,7 @@ class CIRCLE;
 class SPHERE;
 class BUBBLE;
 class RADIALSPHERE;
+class FALLINGRADIALSPHERE;
 class WATERFALL;
 
 class PARTICLES
@@ -42,6 +43,7 @@ public:
 		TYPE_SPHERE,
 		TYPE_BUBBLE,
 		TYPE_RADIALSPHERE,
+		TYPE_FALLINGRADIALSPHERE,
 		TYPE_WATERFALL,
 		TYPE_THISISMADNESS
 	};
@@ -180,7 +182,22 @@ private:
 public:
 	// Starts from (xOrg; yOrg)
 	// Every particle with the same (xOrg; yOrg) will be at the same distance from it (On a circle with the Radius specified centered from there)
+	// Will die after 30 frames.
 	RADIALSPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg, const double radius);
+protected:
+	const bool setDeath();
+};
+
+class FALLINGRADIALSPHERE : public PARTICLE
+{
+private:
+	const double Radius;
+	double DeathRadius;
+public:
+	// Starts from (xOrg; yOrg)
+	// Every particle with the same (xOrg; yOrg) will be at the same distance from it (On a circle with the Radius specified centered from there)
+	// Will die after 2 frames.
+	FALLINGRADIALSPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg, const double radius);
 protected:
 	const bool setDeath();
 };

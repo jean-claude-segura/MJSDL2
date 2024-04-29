@@ -79,6 +79,13 @@ void PARTICLES::init(uint32_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, c
 			particles.emplace_back(std::make_unique<RADIALSPHERE>(RADIALSPHERE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
 		break;
 	}
+	case TYPE_FALLINGRADIALSPHERE:
+	{
+		const double radius = user_uniform_real_distribution<double>(0., 50.) + 30.;
+		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
+			particles.emplace_back(std::make_unique<FALLINGRADIALSPHERE>(FALLINGRADIALSPHERE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
+		break;
+	}
 	case TYPE_WATERFALL:
 		for (int i = 0; i < NUMBER_OF_PARTICLES; ++i)
 			particles.emplace_back(std::make_unique<WATERFALL>(WATERFALL{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg }));
@@ -130,6 +137,12 @@ void PARTICLES::init(uint32_t _NUMBER_OF_PARTICLES, uint8_t _PARTICULES_TYPES, c
 			{
 				const double radius = user_uniform_real_distribution<double>(0., 50.) + 30.;
 				particles.emplace_back(std::make_unique<RADIALSPHERE>(RADIALSPHERE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
+				break;
+			}
+			case TYPE_FALLINGRADIALSPHERE:
+			{
+				const double radius = user_uniform_real_distribution<double>(0., 50.) + 30.;
+				particles.emplace_back(std::make_unique<FALLINGRADIALSPHERE>(FALLINGRADIALSPHERE{ SCREEN_WIDTH, SCREEN_HEIGHT, xOrg, yOrg, radius }));
 				break;
 			}
 			case TYPE_WATERFALL:
@@ -579,6 +592,75 @@ const bool RADIALSPHERE::setDeath()
 		Dead = true;
 		return true;
 	}
+
+	/* particle cools off */
+	ColorIndex--;
+
+	return false;
+}
+
+FALLINGRADIALSPHERE::FALLINGRADIALSPHERE(const int SCREEN_WIDTH, const int SCREEN_HEIGHT, const double xOrg, const double yOrg, const double radius) : Radius(radius), PARTICLE(SCREEN_WIDTH, SCREEN_HEIGHT)
+{
+	const double alpha = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
+	const double beta = user_uniform_real_distribution<double>(0, std::numbers::pi * 2.);
+
+	XPos = xOrg + std::cos(alpha) * std::cos(beta) * Radius; // X est le cosinus de l'angle.
+	YPos = yOrg + std::sin(alpha) * Radius; // Y est le sinus de l'angle.
+	XDir = std::cos(alpha) * std::cos(beta) * 10.;
+	YDir = std::sin(alpha) * 10;
+
+	DeathRadius = 2;
+}
+
+const bool FALLINGRADIALSPHERE::setDeath()
+{
+	XPos += XDir;
+	YPos += YDir;
+	--DeathRadius;
+
+	/* is particle Dead? */
+	if (ColorIndex == 0 ||
+		(YPos >= SCREEN_HEIGHT - 3))
+	{
+		Dead = true;
+		return true;
+	}
+
+	// Is particle on the left side of visible screen coming back ?
+	// If not -> Dead.
+	if (XPos <= 1 && XDir <= 0) // Minimal check : those going left are not coming back for sure.
+	{
+		Dead = true;
+		return true;
+	}
+
+	// Is particle on the right side of visible screen coming back ?
+	// If not -> Dead.
+	if ((XPos >= SCREEN_WIDTH - 3) && XDir >= 0) // Minimal check : those going right are not coming back for sure.
+	{
+		Dead = true;
+		return true;
+	}
+
+	if (DeathRadius <= 0)
+	{
+		// Is particle above (Actually *under*) visible screen coming back ?
+		// If not -> Dead.
+		if (YPos <= 1)
+		{
+			double deltaX = XDir;
+			if ((deltaX > 0 && (XPos + deltaX >= SCREEN_WIDTH - 3)) ||
+				(deltaX < 0 && (XPos + deltaX <= 1)))
+			{
+				Dead = true;
+				return true;
+			}
+		}
+	}
+
+	/* gravity takes over */
+	if (DeathRadius <= 0)
+		YDir++;
 
 	/* particle cools off */
 	ColorIndex--;
