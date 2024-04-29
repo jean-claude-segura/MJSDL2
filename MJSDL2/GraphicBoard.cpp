@@ -913,7 +913,7 @@ void GraphicBoard::RefreshMouseMap()
 			auto x = temp.x;
 			auto y = temp.y;
 			auto z = temp.z;
-			auto domino = tile.TileObject;
+			const auto & domino = tile.TileObject;
 			auto index = tile.Index;
 			if (direction == 3)
 			{
@@ -1384,7 +1384,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 			auto x = temp.x;
 			auto y = temp.y;
 			auto z = temp.z;
-			auto domino = tile.TileObject;
+			const auto & domino = tile.TileObject;
 			auto index = tile.Index;
 			if (direction == 3)
 			{
@@ -1655,7 +1655,7 @@ void GraphicBoard::Loop()
 								auto x = temp.x;
 								auto y = temp.y;
 								auto z = temp.z;
-								auto domino = tile.TileObject;
+								const auto & domino = tile.TileObject;
 								auto index = tile.Index;
 
 								if (domino.Pairing == autoselected.Pairing &&

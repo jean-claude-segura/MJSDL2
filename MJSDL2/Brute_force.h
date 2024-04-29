@@ -6,7 +6,7 @@
 std::atomic<bool> stopSolverNow;
 inline uint8_t EvalMoveMaxBlock(
 	const std::vector<int>& vMove,
-	std::map<int, Tile>& mIndexToTile);
+	const std::map<int, Tile>& mIndexToTile);
 
 inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToRemovedTile, const std::vector<int>& vMove);
 
@@ -111,7 +111,7 @@ inline int BuildEvalMoves(const std::vector<TileAndIndex>& vRemovableBoard, std:
 	int moveEval = 0;
 	if (itFirst != vRemovableBoard.end())
 	{
-		auto domino = (*itFirst).TileObject;
+		const auto & domino = (*itFirst).TileObject;
 		auto itNext = itFirst;
 		bool bEmpty = true;
 		do
@@ -165,7 +165,7 @@ inline void BuildMoves(const std::vector<TileAndIndex>& RemovableBoard, std::vec
 {
 	if (itFirst != RemovableBoard.end())
 	{
-		auto domino = (*itFirst).TileObject;
+		const auto & domino = (*itFirst).TileObject;
 		auto itNext = itFirst;
 		std::vector<int> temp;
 		do
@@ -312,7 +312,7 @@ inline bool stopNowParallel(const std::map<int, Tile>& mIndexToTile
 	mtxStopNow.lock();
 	if (mTranspositionsTable.contains(hash))
 	{
-		auto boardDescriptionInHashtable = mTranspositionsTable[hash];
+		const auto & boardDescriptionInHashtable = mTranspositionsTable[hash];
 		for (int i = 0; i < 144 / 8; ++i)
 		{
 			if (boardDescriptionInHashtable[i] != boardDescription[i])
@@ -377,7 +377,7 @@ inline bool stopNow(const std::map<int, Tile>& mIndexToTile
 
 	if (mTranspositionsTable.contains(hash))
 	{
-		auto boardDescriptionInHashtable = mTranspositionsTable[hash];
+		const auto & boardDescriptionInHashtable = mTranspositionsTable[hash];
 		for (int i = 0; i < 144 / 8; ++i)
 		{
 			if (boardDescriptionInHashtable[i] != boardDescription[i])
@@ -1194,7 +1194,7 @@ inline void ConvertMovesToVector(const std::vector<std::pair<int, int>>& vOldMov
 
 inline uint8_t EvalMoveMaxBlock(
 	const std::vector<int>& vMove,
-	std::map<int, Tile>& mIndexToTile)
+	const std::map<int, Tile>& mIndexToTile)
 {
 	uint8_t lockingValue = 0;
 	for (const auto& index : vMove)
@@ -1378,7 +1378,7 @@ inline bool tryMaxBlock(Board plateau, std::vector<std::pair<int, int>>& vSoluti
 	{
 		// Scooting step :
 		std::vector<std::pair<std::vector<int>, int>> vSortedMoves;
-		auto mIndexToTile = plateau.getTilesMap();
+		const auto & mIndexToTile = plateau.getTilesMap();
 		for (const auto& move : vMoves)
 		{
 			auto eval = EvalMoveMaxBlock(move, mIndexToTile);

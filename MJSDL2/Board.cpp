@@ -338,8 +338,8 @@ void Board::RemoveTile(const int index)
 bool Board::RemovePairOfTiles(const int first, const int second)
 {
 	bool bRetour = false;
-	auto left = mIndexToTile.find(first)->second;
-	auto right = mIndexToTile.find(second)->second;
+	const auto & left = mIndexToTile.find(first)->second;
+	const auto & right = mIndexToTile.find(second)->second;
 	if (left.Pairing == right.Pairing)
 	{
 		RemoveTile(first);
@@ -356,7 +356,7 @@ void Board::BuildMoves(std::vector<TileAndIndex>& vRemovableBoard, std::vector<T
 {
 	if (itFirst != vRemovableBoard.end())
 	{
-		auto domino = (*itFirst).TileObject;
+		const auto & domino = (*itFirst).TileObject;
 		auto itNext = itFirst;
 		do
 		{
@@ -425,7 +425,7 @@ bool Board::IsLockedFromMove()
 	else
 	{
 		std::vector<int> vMove;
-		const auto it = vHistory.back();
+		const auto & it = vHistory.back();
 		vMove.emplace_back(it.first);
 		vMove.emplace_back(it.second);
 		
@@ -454,8 +454,8 @@ bool Board::TakeBack(bool beginning)
 			const auto firstIndex = it->first;
 			const auto secondIndex = it->second;
 
-			const auto firstTile = mIndexToRemovedTile.find(firstIndex)->second;
-			const auto secondTile = mIndexToRemovedTile.find(secondIndex)->second;
+			const auto & firstTile = mIndexToRemovedTile.find(firstIndex)->second;
+			const auto & secondTile = mIndexToRemovedTile.find(secondIndex)->second;
 
 			auto coord = arrIndexToBoardCoord[firstIndex];
 			vLogicalBoard.emplace_back(TileAndIndex(firstTile.Rank, firstIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
