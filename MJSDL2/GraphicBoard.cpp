@@ -7,10 +7,10 @@ GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height(0), Width(0)
 	RestartBtn = NULL;
 	HintBtn = NULL;
 	TurnBtn = NULL;
-	EstBtn = NULL;
-	SudBtn = NULL;
-	OuestBtn = NULL;
-	NordBtn = NULL;
+	SudEstBtn = NULL;
+	SudOuestBtn = NULL;
+	NordEstBtn = NULL;
+	NordOuestBtn = NULL;
 	ExitBtn = NULL;
 	TakeBackBtn = NULL;
 	MoveForwardBtn = NULL;
@@ -60,14 +60,14 @@ GraphicBoard::~GraphicBoard()
 		SDL_DestroyTexture(HintBtn);
 	if (TurnBtn != NULL)
 		SDL_DestroyTexture(TurnBtn);
-	if (NordBtn != NULL)
-		SDL_DestroyTexture(NordBtn);
-	if (OuestBtn != NULL)
-		SDL_DestroyTexture(OuestBtn);
-	if (SudBtn != NULL)
-		SDL_DestroyTexture(SudBtn);
-	if (EstBtn != NULL)
-		SDL_DestroyTexture(EstBtn);
+	if (NordOuestBtn != NULL)
+		SDL_DestroyTexture(NordOuestBtn);
+	if (NordEstBtn != NULL)
+		SDL_DestroyTexture(NordEstBtn);
+	if (SudOuestBtn != NULL)
+		SDL_DestroyTexture(SudOuestBtn);
+	if (SudEstBtn != NULL)
+		SDL_DestroyTexture(SudEstBtn);
 	if (ExitBtn != NULL)
 		SDL_DestroyTexture(ExitBtn);
 	if (TakeBackBtn != NULL)
@@ -121,13 +121,13 @@ void GraphicBoard::Init()
 		ThrowException(1);
 	}
 
-	SDL_DisplayMode DM;
-	SDL_GetCurrentDisplayMode(0, &DM);
+	SDL_DisplayMode DisplayMode;
+	SDL_GetCurrentDisplayMode(0, &DisplayMode);
 
 	window = SDL_CreateWindow(
 		"Mah Jongg SDL2",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		DM.w, DM.h,
+		DisplayMode.w, DisplayMode.h,
 		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_VULKAN
 		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_OPENGL
 		//SDL_WINDOW_FULLSCREEN | SDL_WINDOW_VULKAN
@@ -514,10 +514,10 @@ void GraphicBoard::LoadButton(SDL_Texture*& button, const std::string& strPath, 
 
 void GraphicBoard::LoadUI()
 {
-	LoadButton(EstBtn, "./interface/MJf1-.svg", "EstBtn");
-	LoadButton(SudBtn, "./interface/MJf2-.svg", "SudBtn");
-	LoadButton(OuestBtn, "./interface/MJf3-.svg", "OuestBtn");
-	LoadButton(NordBtn, "./interface/MJf4-.svg", "NordBtn");
+	LoadButton(SudEstBtn, "./interface/blank.svg", "SudEstBtn");
+	LoadButton(SudOuestBtn, "./interface/blank.svg", "SudOuestBtn");
+	LoadButton(NordEstBtn, "./interface/blank.svg", "NordEstBtn");
+	LoadButton(NordOuestBtn, "./interface/blank.svg", "NordOuestBtn");
 	LoadButton(TurnBtn, "./interface/MJd3rv1-.svg", "TurnBtn");
 	LoadButton(HintBtn, "./interface/blank.svg", "HintBtn");
 	LoadButton(RestartBtn, "./interface/blank.svg", "RestartBtn");
@@ -584,6 +584,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case TAKEBACK:
+		if (right)
+			break;
 		if (plateau.TakeBack(direction))
 		{
 			Refresh(true);
@@ -592,6 +594,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		}
 		break;
 	case MOVEFORWARD:
+		if (right)
+			break;
 		if (plateau.MoveForward())
 		{
 			Refresh(true);
@@ -600,6 +604,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		}
 		break;
 	case GOBEGINNING:
+		if (right)
+			break;
 		if (plateau.GoBeginning(direction))
 		{
 			Refresh(true);
@@ -608,6 +614,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		}
 		break;
 	case GOEND:
+		if (right)
+			break;
 		if (plateau.GoEnd())
 		{
 			Refresh(true);
@@ -664,54 +672,42 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		if (!plateau.IsEmpty()) Refresh(true);
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
-	case NORTH:
+	case NORTHWEST:
 		itNextMove = plateau.GetMovesLeft().begin();
 		itPrevMove = plateau.GetMovesLeft().end();
 		if (right)
 			break;
-		if (direction == 3)
-			direction = 0;
-		else if (direction == 2)
-			direction = 1;
+		direction = 0;
 		plateau.SortBoard(direction);
 		if (!plateau.IsEmpty()) Refresh(true);
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
-	case EAST:
+	case NORTHEAST:
 		itNextMove = plateau.GetMovesLeft().begin();
 		itPrevMove = plateau.GetMovesLeft().end();
 		if (right)
 			break;
-		if (direction == 0)
-			direction = 1;
-		else if (direction == 3)
-			direction = 2;
+		direction = 1;
 		plateau.SortBoard(direction);
 		if (!plateau.IsEmpty()) Refresh(true);
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
-	case SOUTH:
+	case SOUTHEAST:
 		itNextMove = plateau.GetMovesLeft().begin();
 		itPrevMove = plateau.GetMovesLeft().end();
 		if (right)
 			break;
-		if (direction == 0)
-			direction = 3;
-		else if (direction == 1)
-			direction = 2;
+		direction = 2;
 		plateau.SortBoard(direction);
 		if (!plateau.IsEmpty()) Refresh(true);
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
-	case WEST:
+	case SOUTHWEST:
 		itNextMove = plateau.GetMovesLeft().begin();
 		itPrevMove = plateau.GetMovesLeft().end();
 		if (right)
 			break;
-		if (direction == 1)
-			direction = 0;
-		else if (direction == 2)
-			direction = 3;
+		direction = 3;
 		plateau.SortBoard(direction);
 		if (!plateau.IsEmpty()) Refresh(true);
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
@@ -963,30 +959,35 @@ void GraphicBoard::RefreshMouseMap()
 	SDL_Rect coordonnees;
 	SDL_Point size;
 
-	// Ouest :
 	SDL_QueryTexture(RestartBtn, NULL, NULL, &size.x, &size.y);
-
 	coordonnees.w = size.x;
 	coordonnees.h = size.y;
+
+	// Sud-Ouest :
 	coordonnees.x = 0;
-	coordonnees.y = (size.y - 20) * 4;
-	RenderCopyMouseMap(OuestBtn, coordonnees, WEST, 0, SDL_FLIP_NONE);
-	// Sud :
-	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 5;
-	RenderCopyMouseMap(SudBtn, coordonnees, SOUTH, 0, SDL_FLIP_NONE);
+	RenderCopyMouseMap(SudOuestBtn, coordonnees, SOUTHWEST, 0, SDL_FLIP_NONE);
+
+	// Sud-Est :
+	coordonnees.x = (size.x << 1) - 40;
+	coordonnees.y = (size.y - 20) * 5;
+	RenderCopyMouseMap(SudEstBtn, coordonnees, SOUTHEAST, 0, SDL_FLIP_NONE);
+
 	// Turn :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 4;
 	RenderCopyMouseMap(TurnBtn, coordonnees, TURN, 0, SDL_FLIP_NONE);
-	// Nord :
-	coordonnees.x = size.x - 20;
+
+	// Nord-Ouest :
+	coordonnees.x = 0;
 	coordonnees.y = (size.y - 20) * 3;
-	RenderCopyMouseMap(NordBtn, coordonnees, NORTH, 0, SDL_FLIP_NONE);
-	// Est :
+	RenderCopyMouseMap(NordOuestBtn, coordonnees, NORTHWEST, 0, SDL_FLIP_NONE);
+
+	// Nord-Est :
 	coordonnees.x = (size.x << 1) - 40;
-	coordonnees.y = (size.y - 20) * 4;
-	RenderCopyMouseMap(EstBtn, coordonnees, EAST, 0, SDL_FLIP_NONE);
+	coordonnees.y = (size.y - 20) * 3;
+	RenderCopyMouseMap(NordEstBtn, coordonnees, NORTHEAST, 0, SDL_FLIP_NONE);
+
 	// Hint :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = size.y - 20;
@@ -1167,11 +1168,11 @@ void GraphicBoard::RefreshExample()
 	coordonnees.h = size.y;
 	coordonnees.x = 0;
 	coordonnees.y = (size.y - 20) * 4;
-	SDL_RenderCopy(renderer, OuestBtn, NULL, &coordonnees);
+	SDL_RenderCopy(renderer, NordEstBtn, NULL, &coordonnees);
 	// Sud :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 5;
-	SDL_RenderCopy(renderer, SudBtn, NULL, &coordonnees);
+	SDL_RenderCopy(renderer, SudOuestBtn, NULL, &coordonnees);
 	// Turn :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 4;
@@ -1179,11 +1180,11 @@ void GraphicBoard::RefreshExample()
 	// Nord :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 3;
-	SDL_RenderCopy(renderer, NordBtn, NULL, &coordonnees);
+	SDL_RenderCopy(renderer, NordOuestBtn, NULL, &coordonnees);
 	// Est :
 	coordonnees.x = (size.x << 1) - 40;
 	coordonnees.y = (size.y - 20) * 4;
-	SDL_RenderCopy(renderer, EstBtn, NULL, &coordonnees);
+	SDL_RenderCopy(renderer, SudEstBtn, NULL, &coordonnees);
 	// Hint :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = size.y - 20;
@@ -1276,32 +1277,39 @@ inline void GraphicBoard::RenderCopy(const double x, const double y, const doubl
 void GraphicBoard::DisplayInterface()
 {
 	// Interface :
-	// Ouest :
+
 	SDL_Point size;
 	SDL_QueryTexture(RestartBtn, NULL, NULL, &size.x, &size.y);
 
 	SDL_Rect coordonnees;
 	coordonnees.w = size.x;
 	coordonnees.h = size.y;
+
+	// Sud-Ouest :
 	coordonnees.x = 0;
-	coordonnees.y = (size.y - 20) * 4;
-	SDL_RenderCopy(renderer, OuestBtn, NULL, &coordonnees);
-	// Sud :
-	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 5;
-	SDL_RenderCopy(renderer, SudBtn, NULL, &coordonnees);
+	SDL_RenderCopy(renderer, SudOuestBtn, NULL, &coordonnees);
+
+	// Sud-Est :
+	coordonnees.x = (size.x << 1) - 40;
+	coordonnees.y = (size.y - 20) * 5;
+	SDL_RenderCopy(renderer, SudEstBtn, NULL, &coordonnees);
+
 	// Turn :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 4;
 	SDL_RenderCopy(renderer, TurnBtn, NULL, &coordonnees);
-	// Nord :
-	coordonnees.x = size.x - 20;
+
+	// Nord-Ouest :
+	coordonnees.x = 0;
 	coordonnees.y = (size.y - 20) * 3;
-	SDL_RenderCopy(renderer, NordBtn, NULL, &coordonnees);
-	// Est :
+	SDL_RenderCopy(renderer, NordOuestBtn, NULL, &coordonnees);
+
+	// Nord-Est :
 	coordonnees.x = (size.x << 1) - 40;
-	coordonnees.y = (size.y - 20) * 4;
-	SDL_RenderCopy(renderer, EstBtn, NULL, &coordonnees);
+	coordonnees.y = (size.y - 20) * 3;
+	SDL_RenderCopy(renderer, NordEstBtn, NULL, &coordonnees);
+
 	// Hint :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = size.y - 20;
@@ -1592,19 +1600,80 @@ void GraphicBoard::Loop()
 				InterfaceClicked(RESTART);
 				break;
 			case SDLK_UP:
-				InterfaceClicked(NORTH);
+			case SDLK_KP_8:
+				InterfaceClicked(GOBEGINNING);
 				break;
 			case SDLK_RIGHT:
-				InterfaceClicked(EAST);
+			case SDLK_KP_6:
+				InterfaceClicked(MOVEFORWARD);
 				break;
 			case SDLK_DOWN:
-				InterfaceClicked(SOUTH);
+			case SDLK_KP_2:
+				InterfaceClicked(GOEND);
 				break;
 			case SDLK_LEFT:
-				InterfaceClicked(WEST);
+			case SDLK_KP_4:
+				InterfaceClicked(TAKEBACK);
+				break;
+			case SDLK_HOME:
+			case SDLK_KP_7:
+				InterfaceClicked(NORTHWEST);
+				break;
+			case SDLK_PAGEDOWN:
+			case SDLK_KP_3:
+				InterfaceClicked(SOUTHEAST);
+				break;
+			case SDLK_END:
+			case SDLK_KP_1:
+				InterfaceClicked(SOUTHWEST);
+				break;
+			case SDLK_PAGEUP:
+			case SDLK_KP_9:
+				InterfaceClicked(NORTHEAST);
+				break;
+			case SDLK_KP_5:
+				InterfaceClicked(TURN);
 				break;
 			default:
 				break;
+			}
+			break;
+		case SDL_MOUSEWHEEL:
+			if (event.wheel.y > 0)
+			{
+				switch (direction)
+				{
+				case 0:
+					InterfaceClicked(NORTHEAST);
+					break;
+				case 1:
+					InterfaceClicked(SOUTHEAST);
+					break;
+				case 2:
+					InterfaceClicked(SOUTHWEST);
+					break;
+				case 3:
+					InterfaceClicked(NORTHWEST);
+					break;
+				}
+			}
+			else
+			{
+				switch (direction)
+				{
+				case 3:
+					InterfaceClicked(SOUTHEAST);
+					break;
+				case 2:
+					InterfaceClicked(NORTHEAST);
+					break;
+				case 1:
+					InterfaceClicked(NORTHWEST);
+					break;
+				case 0:
+					InterfaceClicked(SOUTHWEST);
+					break;
+				}
 			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:

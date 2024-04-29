@@ -19,10 +19,10 @@
 #define	RESTART		0xFD
 #define	HINT		0xFC
 #define	TURN		0xFB
-#define	NORTH		0xFA
-#define	SOUTH		0xF9
-#define	EAST		0xF8
-#define	WEST		0xF7
+#define	NORTHWEST	0xFA
+#define	NORTHEAST	0xF9
+#define	SOUTHEAST	0xF8
+#define	SOUTHWEST	0xF7
 #define	TAKEBACK	0xF6
 #define	MOVEFORWARD	0xF5
 #define	GOBEGINNING	0xF4
@@ -86,10 +86,10 @@ private:
 		* RestartBtn,
 		* HintBtn,
 		* TurnBtn,
-		* EstBtn,
-		* SudBtn,
-		* OuestBtn,
-		* NordBtn,
+		* SudEstBtn,
+		* SudOuestBtn,
+		* NordEstBtn,
+		* NordOuestBtn,
 		* ExitBtn,
 		* TakeBackBtn,
 		* MoveForwardBtn,

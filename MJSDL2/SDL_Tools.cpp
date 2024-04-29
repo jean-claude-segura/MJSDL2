@@ -484,11 +484,12 @@ void SDL_FireOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SD
 
 	SDL_Event event;
 	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+	SDL_FlushEvents(SDL_KEYDOWN, SDL_KEYUP);
 
 	//start the loop (one frame per loop)
 	while (true)
 	{
-		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
+		if (SDL_PollEvent(&event) == 1 && ((event.type == SDL_MOUSEBUTTONUP) || event.type == SDL_KEYUP))
 			break;
 
 		/*
@@ -597,11 +598,12 @@ void SDL_FireOnTextureRectLinear(SDL_Renderer* renderer, SDL_Texture* renderTarg
 
 	SDL_Event event;
 	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+	SDL_FlushEvents(SDL_KEYDOWN, SDL_KEYUP);
 
 	//start the loop (one frame per loop)
 	while (true)
 	{
-		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
+		if (SDL_PollEvent(&event) == 1 && ((event.type == SDL_MOUSEBUTTONUP) || event.type == SDL_KEYUP))
 			break;
 
 		if(FireType == 3)
@@ -657,11 +659,12 @@ void SDL_FireOnTilesRect(SDL_Renderer* renderer, SDL_Texture* renderTarget, SDL_
 
 	SDL_Event event;
 	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+	SDL_FlushEvents(SDL_KEYDOWN, SDL_KEYUP);
 
 	//start the loop (one frame per loop)
 	while (true)
 	{
-		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
+		if (SDL_PollEvent(&event) == 1 && ((event.type == SDL_MOUSEBUTTONUP) || event.type == SDL_KEYUP))
 			break;
 
 		/*
@@ -755,6 +758,7 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 
 	SDL_Event event;
 	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+	SDL_FlushEvents(SDL_KEYDOWN, SDL_KEYUP);
 
 	bool bAtLeastOneAlive = false;
 
@@ -765,7 +769,7 @@ void SDL_ExplosionOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	//start the loop (one frame per loop)
 	while (true)
 	{
-		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
+		if (SDL_PollEvent(&event) == 1 && ((event.type == SDL_MOUSEBUTTONUP) || event.type == SDL_KEYUP))
 			break;
 
 		end = std::chrono::steady_clock::now();
@@ -892,6 +896,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 
 	SDL_Event event;
 	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+	SDL_FlushEvents(SDL_KEYDOWN, SDL_KEYUP);
 
 	bool bAtLeastOneAlive = false;
 	bool bTrailAlive = false;
@@ -905,7 +910,7 @@ void SDL_FireworkOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarget
 	//start the loop (one frame per loop)
 	while (true)
 	{
-		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
+		if (SDL_PollEvent(&event) == 1 && ((event.type == SDL_MOUSEBUTTONUP) || event.type == SDL_KEYUP))
 			break;
 
 		end = std::chrono::steady_clock::now();
@@ -1088,6 +1093,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 
 	SDL_Event event;
 	SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+	SDL_FlushEvents(SDL_KEYDOWN, SDL_KEYUP);
 
 	auto start{ std::chrono::steady_clock::now() };
 	auto end{ std::chrono::steady_clock::now() };
@@ -1101,7 +1107,7 @@ void SDL_FireworksOnTextureRect(SDL_Renderer* renderer, SDL_Texture* renderTarge
 	{
 		end = std::chrono::steady_clock::now();
 
-		if (SDL_PollEvent(&event) == 1 && (event.type == SDL_MOUSEBUTTONUP))
+		if (SDL_PollEvent(&event) == 1 && ((event.type == SDL_MOUSEBUTTONUP) || event.type == SDL_KEYUP))
 			break;
 
 		// Read comment on limit = 2.

@@ -223,7 +223,7 @@ void Board::InitBoard()
 	std::cout << "******************************************* " << seed - 1 << " *******************************************" << std::endl;
 #else
 	std::random_device r;
-	std::default_random_engine e1(r());
+	std::mt19937 e1(r());
 #endif
 	std::uniform_int_distribution<int> uniform_dist(0, 41);
 	vLogicalBoard.clear();
