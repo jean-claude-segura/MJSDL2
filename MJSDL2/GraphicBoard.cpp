@@ -316,7 +316,8 @@ void GraphicBoard::LoadBackground(const std::string& path)
 			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 			ThrowException(1);
 		}
-		SDL_ResizeTexture(renderer, textureBackground, std::min(DisplayMode.w, Width), std::min(DisplayMode.h, Height));
+		if (std::min(DisplayMode.w, Width) < background->w && std::min(DisplayMode.h, Height) < background->h)
+			SDL_ResizeTexture(renderer, textureBackground, std::min(DisplayMode.w, Width), std::min(DisplayMode.h, Height));
 		SDL_GreyscaleTexture(renderer, textureBackground, textureGreyedBackground);
 		SDL_RenderCopy(renderer, textureGreyedBackground, NULL, NULL);
 	}
@@ -324,7 +325,7 @@ void GraphicBoard::LoadBackground(const std::string& path)
 	SDL_FreeSurface(temp);
 }
 
-void LoadBackground(const std::string& path, SDL_Renderer*& renderer, SDL_Texture *& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height)
+void LoadBackground(const std::string& path, SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height)
 {
 	if (textureBackground != NULL)
 		SDL_DestroyTexture(textureBackground);
@@ -348,7 +349,8 @@ void LoadBackground(const std::string& path, SDL_Renderer*& renderer, SDL_Textur
 			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 			throw(1);
 		}
-		SDL_ResizeTexture(renderer, textureBackground, Width, Height);
+		if (Width < background->w && Height < background->h)
+			SDL_ResizeTexture(renderer, textureBackground, Width, Height);
 		SDL_GreyscaleTexture(renderer, textureBackground, textureGreyedBackground);
 		SDL_RenderCopy(renderer, textureGreyedBackground, NULL, NULL);
 	}
@@ -402,7 +404,8 @@ void GraphicBoard::LoadBackgroundVictory(const std::string& path)
 			std::cout << stderr << "could not create texture: " << SDL_GetError() << std::endl;
 			ThrowException(1);
 		}
-		SDL_ResizeTexture(renderer, textureBackgroundVictory, std::min(DisplayMode.w, Width), std::min(DisplayMode.h, Height));
+		if (std::min(DisplayMode.w, Width) < background->w && std::min(DisplayMode.h, Height) < background->h)
+			SDL_ResizeTexture(renderer, textureBackgroundVictory, std::min(DisplayMode.w, Width), std::min(DisplayMode.h, Height));
 	}
 	SDL_FreeSurface(background);
 	SDL_FreeSurface(temp);
@@ -538,7 +541,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		{
 			if (plateau.Solve())
 			{
-				for (const auto & move : plateau.GetSolution())
+				for (const auto& move : plateau.GetSolution())
 				{
 					if (0 <= selected && selected < 143)
 						clicked[selected] = false;
@@ -573,7 +576,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 
 			// I assume the async call attempt on the mass storage is the issue here. Or the tiles are loaded much faster than the background to see a difference.
 			// Thread or async don't increase speed that much.
-			std::thread thrLoadRandomBackground (LoadRandomBackgroundAsync, std::ref(renderer), std::ref(textureBackground), std::ref(textureGreyedBackground), std::min(DisplayMode.w, Width), std::min(DisplayMode.h, Height));
+			std::thread thrLoadRandomBackground(LoadRandomBackgroundAsync, std::ref(renderer), std::ref(textureBackground), std::ref(textureGreyedBackground), std::min(DisplayMode.w, Width), std::min(DisplayMode.h, Height));
 			//std::future<void > futureLoadRandomBackground = std::async(&LoadRandomBackgroundAsync, std::ref(renderer), std::ref(textureBackground), std::ref(textureGreyedBackground), Width, Height);
 			ReloadTiles();
 			thrLoadRandomBackground.join();
@@ -904,11 +907,11 @@ void GraphicBoard::RefreshMouseMap()
 
 		for (auto& tile : plateau.getLogicalBoard())
 		{
-			const auto & temp = arrIndexToCoord[tile.Index];
+			const auto& temp = arrIndexToCoord[tile.Index];
 			auto x = temp.x;
 			auto y = temp.y;
 			auto z = temp.z;
-			const auto & domino = tile.TileObject;
+			const auto& domino = tile.TileObject;
 			auto index = tile.Index;
 			if (direction == 3)
 			{
@@ -1127,7 +1130,7 @@ void GraphicBoard::RefreshExample()
 		SDL_SetRenderTarget(renderer, renderTarget);
 		SDL_RenderCopy(renderer, textureBackground, NULL, NULL);
 	}
-	else if(false)
+	else if (false)
 	{
 		// x, y algo, full screen
 		SDL_SetRenderTarget(renderer, renderTarget);
@@ -1373,7 +1376,7 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 		std::cout << stderr << "could not copy background: " << SDL_GetError() << std::endl;
 		ThrowException(1);
 	}
-	if(oneByOne)
+	if (oneByOne)
 		DisplayInterface();
 	if (!plateau.IsEmpty())
 	{
@@ -1387,11 +1390,11 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 
 		for (const auto& tile : plateau.getLogicalBoard())
 		{
-			const auto & temp = arrIndexToCoord[tile.Index];
+			const auto& temp = arrIndexToCoord[tile.Index];
 			auto x = temp.x;
 			auto y = temp.y;
 			auto z = temp.z;
-			const auto & domino = tile.TileObject;
+			const auto& domino = tile.TileObject;
 			auto index = tile.Index;
 			if (direction == 3)
 			{
@@ -1450,44 +1453,44 @@ void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 				SDL_FireOnTexture(renderer, renderTargetOrg, Width >> 2, Height >> 2, 1, 0xA0);
 				break;
 			case 1:
+			{
+				SDL_Rect coordonnees;
+				//for (int z = 0; z < 5; ++z)
 				{
-					SDL_Rect coordonnees;
-					//for (int z = 0; z < 5; ++z)
+					int z = 0;
+					int domino = 0;
+					for (int y = 5; y >= 0; --y)
 					{
-						int z = 0;
-						int domino = 0;
-						for (int y = 5; y >= 0; --y)
+						for (int x = 0; x < 7; ++x)
 						{
-							for (int x = 0; x < 7; ++x)
-							{
-								SDL_Point size;
-								SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
+							SDL_Point size;
+							SDL_QueryTexture(dominos[domino], NULL, NULL, &size.x, &size.y);
 
-								auto tHeight = (Height - (size.y - 40) * 6) / 2;
-								auto tWidth = (Width - (size.x - 40) * 7) / 2;
+							auto tHeight = (Height - (size.y - 40) * 6) / 2;
+							auto tWidth = (Width - (size.x - 40) * 7) / 2;
 
-								coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
-								coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
-								coordonnees.w = size.x;
-								coordonnees.h = size.y;
+							coordonnees.x = x * (size.x - 40) - z * 40 + tWidth;
+							coordonnees.y = y * (size.y - 40) + z * 40 + tHeight;
+							coordonnees.w = size.x;
+							coordonnees.h = size.y;
 
-								SDL_RenderCopy(renderer, dominos[domino++], NULL, &coordonnees);
-							}
+							SDL_RenderCopy(renderer, dominos[domino++], NULL, &coordonnees);
 						}
 					}
-					SDL_Point sizeShift;
-					SDL_QueryTexture(MouseMask, NULL, NULL, &sizeShift.x, &sizeShift.y);
-					auto tHeight = (Height - (sizeShift.y - 40) * 6) / 2;
-					auto tWidth = (Width - (sizeShift.x - 40) * 7) / 2;
-
-					SDL_Rect tgtRect;
-					tgtRect.x = tWidth;
-					tgtRect.y = tHeight;
-					tgtRect.w = 6 * sizeShift.x - 30;
-					tgtRect.h = 5 * sizeShift.y + 54;
-					SDL_FireOnTextureRect(renderer, renderTargetOrg, screen, &tgtRect, Width >> 2, Height >> 2, 1, 0xA0);
 				}
-				break;
+				SDL_Point sizeShift;
+				SDL_QueryTexture(MouseMask, NULL, NULL, &sizeShift.x, &sizeShift.y);
+				auto tHeight = (Height - (sizeShift.y - 40) * 6) / 2;
+				auto tWidth = (Width - (sizeShift.x - 40) * 7) / 2;
+
+				SDL_Rect tgtRect;
+				tgtRect.x = tWidth;
+				tgtRect.y = tHeight;
+				tgtRect.w = 6 * sizeShift.x - 30;
+				tgtRect.h = 5 * sizeShift.y + 54;
+				SDL_FireOnTextureRect(renderer, renderTargetOrg, screen, &tgtRect, Width >> 2, Height >> 2, 1, 0xA0);
+			}
+			break;
 			case 2:
 				SDL_RenderCopy(renderer, textureBackgroundVictory, NULL, NULL);
 				//DisplayInterface();
@@ -1719,11 +1722,11 @@ void GraphicBoard::Loop()
 							std::vector<int> relevantTiles;
 							for (const auto& tile : plateau.getLogicalBoard())
 							{
-								const auto & temp = arrIndexToCoord[tile.Index];
+								const auto& temp = arrIndexToCoord[tile.Index];
 								auto x = temp.x;
 								auto y = temp.y;
 								auto z = temp.z;
-								const auto & domino = tile.TileObject;
+								const auto& domino = tile.TileObject;
 								auto index = tile.Index;
 
 								if (domino.Pairing == autoselected.Pairing &&
