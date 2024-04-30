@@ -462,25 +462,25 @@ bool Board::Solve()
 
 void Board::ComputerStop()
 {
-	if (solver.valid())
+	if (solver.joinable())
 	{
 		stopSolverNow = true;
-		solver.get();
+		solver.join();
 #ifdef _DEBUG
 		std::cout << "Computer stopped." << std::endl;
 #endif
 	}
 }
 
-bool Board::ComputerSolve()
+void Board::ComputerSolve()
 {
-	if (!solver.valid())
+	if (!solver.joinable())
 	{
 #ifdef _DEBUG
 		uint64_t positions = 0ULL;
 #endif
 		stopSolverNow = false;
-		solver = std::async(&SolveRecInitAsync, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, std::ref(vSolution)
+		solver = std::thread(&SolveRecInitAsync, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, std::ref(vSolution)
 #ifdef _DEBUG
 			, positions
 #endif
@@ -488,30 +488,11 @@ bool Board::ComputerSolve()
 #ifdef _DEBUG
 		std::cout << "Computer started." << std::endl;
 #endif
-		return true;
 	}
 	else
 	{
-		return ComputerSolveGetResult();
+		ComputerStop();
 	}
-}
-
-bool Board::ComputerSolveGetResult()
-{
-	stopSolverNow = true;
-	if (solver.get())
-	{
-#ifdef _DEBUG
-		for (auto& move : vSolution)
-			std::cout << move.first << ";" << move.second << std::endl;
-#endif
-		return true;
-	}
-#ifdef _DEBUG
-		std::cout << "Computer stopped." << std::endl;
-#endif
-	return false;
-
 }
 
 bool Board::IsLockedFromStart()

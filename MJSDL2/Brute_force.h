@@ -286,7 +286,7 @@ inline bool stopNowParallel(const std::map<int, Tile>& mIndexToTile
 
 	for (auto& item : mIndexToTile)
 	{
-		tileTab[item.first] = uint64_t(item.second.Rank);
+		tileTab[item.first] = uint64_t(item.second.Rank) + 1;
 	}
 
 	std::array<uint64_t, 144 / 8> boardDescription;
@@ -351,7 +351,7 @@ inline bool stopNow(const std::map<int, Tile>& mIndexToTile
 
 	for (auto& item : mIndexToTile)
 	{
-		tileTab[item.first] = uint64_t(item.second.Rank);
+		tileTab[item.first] = uint64_t(item.second.Rank) + 1;
 	}
 
 	std::array<uint64_t, 144 / 8> boardDescription;
@@ -1658,7 +1658,9 @@ bool SolveRecInitAsync(
 )
 {
 	//may return 0 when not able to detect
-	processor_count = std::thread::hardware_concurrency() - 1;
+	processor_count = std::thread::hardware_concurrency() - 2;
+
+	bool ret = false;
 
 	int lockStatus = 0;
 	if (CheckIfLockedFromStart(vLogicalBoard, mIndexToTile, &lockStatus))
@@ -1669,48 +1671,47 @@ bool SolveRecInitAsync(
 		std::cout << "*     " << lockStatus << "     *" << std::endl;
 		std::cout << "*************" << std::endl;
 #endif
-		return false;
 	}
-
-	vSolution.clear();
-
-	bool ret = false;
-
-	// New move container to remove the tiles 2 at once or 4 at once.
-	std::vector<std::vector<int>> vMoves;
-	ConvertMovesToVector(vOldMoves, vMoves);
-
-	std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
-	for (const auto& move : vMoves)
+	else
 	{
-		auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard);
-		auto jouables = evalBruteForceOrderingEval.first;
-		auto debloques = evalBruteForceOrderingEval.second;
-		auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
-		vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock)));
-	}
+		vSolution.clear();
 
-	std::sort(vSortedMoves.begin(), vSortedMoves.end(),
-		[](const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& left, const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& right)
+		// New move container to remove the tiles 2 at once or 4 at once.
+		std::vector<std::vector<int>> vMoves;
+		ConvertMovesToVector(vOldMoves, vMoves);
+
+		std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
+		for (const auto& move : vMoves)
 		{
-			return
-				left.first.size() > right.first.size() ||
-				left.first.size() == right.first.size() && std::get<0>(left.second) > std::get<0>(right.second) ||
-				(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) > std::get<1>(right.second)) ||
-				(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
-		});
+			auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard);
+			auto jouables = evalBruteForceOrderingEval.first;
+			auto debloques = evalBruteForceOrderingEval.second;
+			auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
+			vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock)));
+		}
 
-	for (const auto& move : vSortedMoves)
-	{
-		ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution
+		std::sort(vSortedMoves.begin(), vSortedMoves.end(),
+			[](const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& left, const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& right)
+			{
+				return
+					left.first.size() > right.first.size() ||
+					left.first.size() == right.first.size() && std::get<0>(left.second) > std::get<0>(right.second) ||
+					(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) > std::get<1>(right.second)) ||
+					(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
+			});
+
+		for (const auto& move : vSortedMoves)
+		{
+			ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution
 #ifdef _DEBUG
-			, positions
+				, positions
 #endif
-		);
-		if (ret) break;
-	}
+			);
+			if (ret) break;
+		}
 
-	mTranspositionsTable.clear();
+		mTranspositionsTable.clear();
+	}
 
 	SDL_Event event;
 

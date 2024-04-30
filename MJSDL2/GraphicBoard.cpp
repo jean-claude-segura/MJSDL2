@@ -1796,6 +1796,9 @@ void GraphicBoard::Loop()
 				plateau.ComputerStop();
 				for (const auto& move : plateau.GetSolution())
 				{
+#ifdef _DEBUG
+					std::cout << move.first << ";" << move.second << std::endl;
+#endif
 					if (0 <= selected && selected < 144)
 						clicked[selected] = false;
 					selected = -1;
