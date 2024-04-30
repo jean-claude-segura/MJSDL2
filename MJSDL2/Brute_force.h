@@ -576,7 +576,9 @@ inline bool SolveRecParallel(
 							if (solver.get())
 							{
 								stopSolverNow = true;
-								vSolution.insert(vSolution.end(), arrSolutions[i].begin(), arrSolutions[i].end());
+								// Funny case when more than one found a solution...
+								if (!ret)
+									vSolution.insert(vSolution.end(), arrSolutions[i].begin(), arrSolutions[i].end());
 								ret = true;
 							}
 							i++;
