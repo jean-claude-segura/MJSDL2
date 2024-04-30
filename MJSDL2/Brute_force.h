@@ -1834,7 +1834,9 @@ inline bool SolveRecAsyncInit(
 					if (solver.get())
 					{
 						stopSolverNow = true;
-						vSolution = arrSolutions[i];
+						// Funny case when more than one found a solution...
+						if (!ret)
+							vSolution = arrSolutions[i];
 						ret = true;
 					}
 					i++;
