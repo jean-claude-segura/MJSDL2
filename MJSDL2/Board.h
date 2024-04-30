@@ -334,6 +334,7 @@ public:
 	const std::vector<TileAndIndex>& getLogicalBoard() { return vLogicalBoard; }
 	void SortBoard(const uint8_t direction);
 	bool Solve();
+	bool ComputerSolve();
 	bool IsLockedFromStart();
 	bool IsLockedFromMove();
 	bool TakeBack(bool beginning = false);

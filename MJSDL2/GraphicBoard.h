@@ -31,6 +31,7 @@
 #define	GOEND		0xF3
 #define	QUICKSAVE	0xF2
 #define	QUICKLOAD	0xF1
+#define	COMPUTER	0xF0
 
 void LoadRandomBackgroundAsync(SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height);
 void LoadRandomBackground(const std::string& path, SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height);
@@ -102,6 +103,7 @@ private:
 		* GoEndBtn,
 		* QuickSaveBtn,
 		* QuickLoadBtn,
+		* ComputerBtn,
 		* Inverted,
 		* FaceMask,
 		* textureMouseMap,

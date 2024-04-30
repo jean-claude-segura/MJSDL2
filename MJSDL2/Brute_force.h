@@ -1763,21 +1763,25 @@ bool SolveRecThr(
 }
 
 // Just to work on a copy.
-inline bool SolveRecInit(const Board& plateau,
-	std::vector<std::pair<int, int>> vOldMoves,
+inline bool TryHeuristics(const Board& plateau,
 	std::vector<TileAndIndex> vLogicalBoard,
-	std::array<bool, 144> arrRemovable,
 	std::map<int, Tile> mIndexToTile,
-	std::map<Coordinates, int> mOccupationBoard,
 	std::vector<std::pair<int, int>>& vSolution)
 {
-#ifdef _DEBUG
-	std::vector<TileAndIndex> LogicalBoardRefForDebug = vLogicalBoard;
-	std::array<bool, 144> RemovableRefForDebug = arrRemovable;
-	std::map<int, Tile> mIndexToTileRefForDebug = mIndexToTile;
-	std::map<Coordinates, int> mOccupationBoardRefForDebug = mOccupationBoard;
-#endif
+	int lockStatus = 0;
 
+	if (CheckIfLockedFromStart(vLogicalBoard, mIndexToTile, &lockStatus))
+	{
+#ifdef _DEBUG
+		std::cout << "*************" << std::endl;
+		std::cout << "*  Locked.  *" << std::endl;
+		std::cout << "*     " << lockStatus << "     *" << std::endl;
+		std::cout << "*************" << std::endl;
+#endif
+#ifndef _DEBUG
+		return false;
+#endif
+	}
 
 	std::vector<std::pair<bool (*)(Board plateau, std::vector<std::pair<int, int>>& vSolution), std::string>> vTries;
 
@@ -1816,15 +1820,34 @@ inline bool SolveRecInit(const Board& plateau,
 		}
 		vSolutionTemp.clear();
 	}
-#ifndef _DEBUG
-	return bSolutionFound;
-#endif
+
 #ifdef _DEBUG
 	for (const auto& move : vSolution)
 		std::cout << move.first << ";" << move.second << std::endl;
 #endif
 	if (bSolutionFound)
 		return true;
+
+	return false;
+}
+
+
+// Just to work on a copy.
+inline bool SolveRecInit(
+	std::vector<std::pair<int, int>> vOldMoves,
+	std::vector<TileAndIndex> vLogicalBoard,
+	std::array<bool, 144> arrRemovable,
+	std::map<int, Tile> mIndexToTile,
+	std::map<Coordinates, int> mOccupationBoard,
+	std::vector<std::pair<int, int>>& vSolution)
+{
+#ifdef _DEBUG
+	std::vector<TileAndIndex> LogicalBoardRefForDebug = vLogicalBoard;
+	std::array<bool, 144> RemovableRefForDebug = arrRemovable;
+	std::map<int, Tile> mIndexToTileRefForDebug = mIndexToTile;
+	std::map<Coordinates, int> mOccupationBoardRefForDebug = mOccupationBoard;
+#endif
+
 	int lockStatus = 0;
 	if (CheckIfLockedFromStart(vLogicalBoard, mIndexToTile, &lockStatus))
 	{
@@ -1837,8 +1860,8 @@ inline bool SolveRecInit(const Board& plateau,
 		return false;
 	}
 
-	return true;
 	vSolution.clear();
+
 	bool ret = false;
 
 	//return SolveRecInit(plateau, vOldMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution);
@@ -1908,7 +1931,7 @@ inline bool SolveRecInit(const Board& plateau,
 
 // Just to work on a copy.
 // Note for this one : concurrence issues with the transposition table to prevent.
-inline bool SolveRecInitAsync(const Board& plateau,
+inline bool SolveRecInitAsync(
 	std::vector<std::pair<int, int>> vOldMoves,
 	std::vector<TileAndIndex> vLogicalBoard,
 	std::array<bool, 144> arrRemovable,
@@ -2000,6 +2023,7 @@ inline bool SolveRecInitAsync(const Board& plateau,
 
 	return ret;
 }
+
 #ifdef _DEBUG
 int64_t testAll(const Board& plateau)
 {

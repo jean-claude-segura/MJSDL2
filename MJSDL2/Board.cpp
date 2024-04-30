@@ -449,7 +449,21 @@ void Board::SetMoves()
 
 bool Board::Solve()
 {
-	if (SolveRecInit/*Async*/(*this, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution))
+	//if (SolveRecInit/*Async*/(*this, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution))
+	if (TryHeuristics(*this, vLogicalBoard, mIndexToTile, vSolution))
+	{
+#ifdef _DEBUG
+		for (auto& move : vSolution)
+			std::cout << move.first << ";" << move.second << std::endl;
+#endif
+		return true;
+	}
+	return false;
+}
+
+bool Board::ComputerSolve()
+{
+	if (SolveRecInit/*Async*/(vMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution))
 	{
 #ifdef _DEBUG
 		for (auto& move : vSolution)

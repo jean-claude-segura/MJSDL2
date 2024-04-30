@@ -18,6 +18,7 @@ GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height(0), Width(0)
 	GoEndBtn = NULL;
 	QuickSaveBtn = NULL;
 	QuickLoadBtn = NULL;
+	ComputerBtn = NULL;
 	exitEvent.type = SDL_QUIT;
 	textureBackground = NULL;
 	MouseMask = NULL;
@@ -84,6 +85,8 @@ GraphicBoard::~GraphicBoard()
 		SDL_DestroyTexture(QuickSaveBtn);
 	if (QuickLoadBtn != NULL)
 		SDL_DestroyTexture(QuickLoadBtn);
+	if (ComputerBtn != NULL)
+		SDL_DestroyTexture(ComputerBtn);
 	if (textureBackground != NULL)
 		SDL_DestroyTexture(textureBackground);
 	if (textureBackgroundVictory != NULL)
@@ -536,6 +539,7 @@ void GraphicBoard::LoadUI()
 	LoadButton(GoEndBtn, "./interface/blank.svg", "GoEndBtn");
 	LoadButton(QuickSaveBtn, "./interface/blank.svg", "QuickSaveBtn");
 	LoadButton(QuickLoadBtn, "./interface/blank.svg", "QuickLoadBtn");
+	LoadButton(ComputerBtn, "./interface/blank.svg", "ComputerBtn");
 }
 
 void GraphicBoard::InterfaceClicked(const int index, const bool right)
@@ -595,6 +599,39 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			Refresh(true, true);
 		}
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+		break;
+	case COMPUTER:
+		if (right ? plateau.ComputerSolve() : plateau.Solve())
+		{
+			for (const auto& move : plateau.GetSolution())
+			{
+				if (0 <= selected && selected < 144)
+					clicked[selected] = false;
+				selected = -1;
+				Refresh(false);
+
+				clicked[move.first] = true;
+				clicked[move.second] = true;
+
+				Refresh(false);
+
+				clicked[move.first] = false;
+				clicked[move.second] = false;
+
+				plateau.RemovePairOfTiles(move.first, move.second);
+
+				itNextMove = plateau.GetMovesLeft().begin();
+				itPrevMove = plateau.GetMovesLeft().end();
+
+				Refresh(false);
+			}
+
+			SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+
+			RefreshMouseMap();
+
+			break;
+		}
 		break;
 	case TAKEBACK:
 		if (right)
@@ -1088,6 +1125,11 @@ void GraphicBoard::RefreshMouseMap()
 	coordonnees.y = (size.y - 20) * 3;
 	RenderCopyMouseMap(NordEstBtn, coordonnees, NORTHEAST, 0, SDL_FLIP_NONE);
 
+	// Computer :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 2;
+	RenderCopyMouseMap(ComputerBtn, coordonnees, COMPUTER, 0, SDL_FLIP_NONE);
+
 	// Hint :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = size.y - 20;
@@ -1418,6 +1460,11 @@ void GraphicBoard::DisplayInterface()
 	coordonnees.x = (size.x << 1) - 40;
 	coordonnees.y = (size.y - 20) * 3;
 	SDL_RenderCopy(renderer, NordEstBtn, NULL, &coordonnees);
+
+	// Computer
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 2;
+	SDL_RenderCopy(renderer, ComputerBtn, NULL, &coordonnees);
 
 	// Hint :
 	coordonnees.x = size.x - 20;
