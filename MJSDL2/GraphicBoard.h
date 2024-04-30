@@ -10,6 +10,8 @@
 #include "SDL_Tools.h"
 #include "Tools.h"
 #include <future>
+#include <iostream>
+#include <fstream>
 
 // https://github.com/libsdl-org/SDL_ttf/tree/main/external
 // https://stackoverflow.com/questions/4998974/visual-studio-2008-moving-files-at-build-to-bin
@@ -27,6 +29,8 @@
 #define	MOVEFORWARD	0xF5
 #define	GOBEGINNING	0xF4
 #define	GOEND		0xF3
+#define	QUICKSAVE	0xF2
+#define	QUICKLOAD	0xF1
 
 void LoadRandomBackgroundAsync(SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height);
 void LoadRandomBackground(const std::string& path, SDL_Renderer*& renderer, SDL_Texture*& textureBackground, SDL_Texture*& textureGreyedBackground, int Width, int Height);
@@ -96,6 +100,8 @@ private:
 		* MoveForwardBtn,
 		* GoBeginningBtn,
 		* GoEndBtn,
+		* QuickSaveBtn,
+		* QuickLoadBtn,
 		* Inverted,
 		* FaceMask,
 		* textureMouseMap,

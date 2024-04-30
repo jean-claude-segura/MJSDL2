@@ -16,6 +16,8 @@ GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height(0), Width(0)
 	MoveForwardBtn = NULL;
 	GoBeginningBtn = NULL;
 	GoEndBtn = NULL;
+	QuickSaveBtn = NULL;
+	QuickLoadBtn = NULL;
 	exitEvent.type = SDL_QUIT;
 	textureBackground = NULL;
 	MouseMask = NULL;
@@ -78,6 +80,10 @@ GraphicBoard::~GraphicBoard()
 		SDL_DestroyTexture(GoBeginningBtn);
 	if (GoEndBtn != NULL)
 		SDL_DestroyTexture(GoEndBtn);
+	if (QuickSaveBtn != NULL)
+		SDL_DestroyTexture(QuickSaveBtn);
+	if (QuickLoadBtn != NULL)
+		SDL_DestroyTexture(QuickLoadBtn);
 	if (textureBackground != NULL)
 		SDL_DestroyTexture(textureBackground);
 	if (textureBackgroundVictory != NULL)
@@ -528,6 +534,8 @@ void GraphicBoard::LoadUI()
 	LoadButton(MoveForwardBtn, "./interface/blank.svg", "MoveForwardBtn");
 	LoadButton(GoBeginningBtn, "./interface/blank.svg", "GoBeginningBtn");
 	LoadButton(GoEndBtn, "./interface/blank.svg", "GoEndBtn");
+	LoadButton(QuickSaveBtn, "./interface/blank.svg", "QuickSaveBtn");
+	LoadButton(QuickLoadBtn, "./interface/blank.svg", "QuickLoadBtn");
 }
 
 void GraphicBoard::InterfaceClicked(const int index, const bool right)
@@ -543,7 +551,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			{
 				for (const auto& move : plateau.GetSolution())
 				{
-					if (0 <= selected && selected < 143)
+					if (0 <= selected && selected < 144)
 						clicked[selected] = false;
 					selected = -1;
 					Refresh(false);
@@ -569,6 +577,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		}
 		else
 		{
+			if (0 <= selected && selected < 144)
+				clicked[selected] = false;
+			selected = -1;
 			plateau.InitBoard();
 			plateau.SortBoard(direction);
 			itNextMove = plateau.GetMovesLeft().begin();
@@ -588,6 +599,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 	case TAKEBACK:
 		if (right)
 			break;
+		if (0 <= selected && selected < 144)
+			clicked[selected] = false;
+		selected = -1;
 		if (plateau.TakeBack(direction))
 		{
 			Refresh(true);
@@ -596,6 +610,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		}
 		break;
 	case MOVEFORWARD:
+		if (0 <= selected && selected < 144)
+			clicked[selected] = false;
+		selected = -1;
 		if (right)
 			break;
 		if (plateau.MoveForward())
@@ -606,6 +623,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		}
 		break;
 	case GOBEGINNING:
+		if (0 <= selected && selected < 144)
+			clicked[selected] = false;
+		selected = -1;
 		if (right)
 			break;
 		if (plateau.GoBeginning(direction))
@@ -616,6 +636,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		}
 		break;
 	case GOEND:
+		if (0 <= selected && selected < 144)
+			clicked[selected] = false;
+		selected = -1;
 		if (right)
 			break;
 		if (plateau.GoEnd())
@@ -625,6 +648,78 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			itPrevMove = plateau.GetMovesLeft().end();
 		}
 		break;
+	case QUICKSAVE:
+		if (0 <= selected && selected < 144)
+			clicked[selected] = false;
+		selected = -1;
+		if (right)
+		{
+			break;
+		}
+		else
+		{
+			std::pair<std::string, std::vector<std::string>> savedGame;
+			if (plateau.Save(savedGame))
+			{
+				const std::string saveDir = "./saves/";
+				const std::string saveFilename = "mjsdl2_000.sav";
+				const std::string path = saveDir + saveFilename;
+				if (!std::filesystem::exists(saveDir))
+					std::filesystem::create_directory(saveDir);
+				if(std::filesystem::exists(path))
+					std::filesystem::remove(path);
+				std::ofstream saveFile(path);
+				saveFile << savedGame.first << std::endl;
+				for(const auto & move : savedGame.second)
+					saveFile << move << std::endl;
+				saveFile.close();
+				Refresh(true);
+				itNextMove = plateau.GetMovesLeft().begin();
+				itPrevMove = plateau.GetMovesLeft().end();
+			}
+			break;
+		}
+	case QUICKLOAD:
+		if (0 <= selected && selected < 144)
+			clicked[selected] = false;
+		selected = -1;
+		if (right)
+		{
+			break;
+		}
+		else
+		{
+			std::pair<std::string, std::vector<std::string>> savedGame;
+			const std::string saveDir = "./saves/";
+			if (!std::filesystem::exists(saveDir))
+				std::filesystem::create_directory(saveDir);
+			for (const auto& entry : std::filesystem::directory_iterator(saveDir))
+			{
+				if (!entry.is_directory() && entry.path().string().contains("mjsdl2_000.sav"))
+				{
+					std::string path;
+					path = entry.path().string();
+					std::ifstream saveFile(path);
+					std::pair<std::string, std::vector<std::string>> savedGame;
+					getline(saveFile, savedGame.first);
+					std::string temp;
+					while (getline(saveFile, temp))
+					{
+						savedGame.second.emplace_back(temp);
+					}
+					saveFile.close();
+					if (plateau.Load(savedGame))
+					{
+						plateau.SortBoard(direction);
+						Refresh(true);
+						itNextMove = plateau.GetMovesLeft().begin();
+						itPrevMove = plateau.GetMovesLeft().end();
+					}
+					break;
+				}
+			}
+			break;
+		}
 	case HINT:
 		if (right)
 		{
@@ -647,7 +742,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 				itNextMove = plateau.GetMovesLeft().begin();
 			if (itNextMove != plateau.GetMovesLeft().end())
 			{
-				if (0 <= selected && selected < 143)
+				if (0 <= selected && selected < 144)
 					clicked[selected] = false;
 				selected = -1;
 				Refresh(false);
@@ -718,6 +813,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		if (right)
 		{
 #ifdef _DEBUG
+			if (0 <= selected && selected < 144)
+				clicked[selected] = false;
+			selected = -1;
 			RefreshExample();
 #endif
 			break;
@@ -998,6 +1096,15 @@ void GraphicBoard::RefreshMouseMap()
 	coordonnees.x = size.x - 20;
 	coordonnees.y = 0;
 	RenderCopyMouseMap(RestartBtn, coordonnees, RESTART, 0, SDL_FLIP_NONE);
+
+	// Load
+	coordonnees.x = Width - size.x;
+	coordonnees.y = (size.y - 20) * 3;
+	RenderCopyMouseMap(RestartBtn, coordonnees, QUICKLOAD, 0, SDL_FLIP_NONE);
+	// Save
+	coordonnees.x = Width - size.x;
+	coordonnees.y = (size.y - 20) * 2;
+	RenderCopyMouseMap(RestartBtn, coordonnees, QUICKSAVE, 0, SDL_FLIP_NONE);
 	// Exit
 	coordonnees.x = Width - size.x;
 	coordonnees.y = 0;
@@ -1320,11 +1427,20 @@ void GraphicBoard::DisplayInterface()
 	coordonnees.x = size.x - 20;
 	coordonnees.y = 0;
 	SDL_RenderCopy(renderer, RestartBtn, NULL, &coordonnees);
+
+	// Load
+	coordonnees.x = Width - size.x;
+	coordonnees.y = (size.y - 20) * 3;
+	SDL_RenderCopy(renderer, QuickLoadBtn, NULL, &coordonnees);
+	// Save
+	coordonnees.x = Width - size.x;
+	coordonnees.y = (size.y - 20) * 2;
+	SDL_RenderCopy(renderer, QuickSaveBtn, NULL, &coordonnees);
 	// Exit
 	coordonnees.x = Width - size.x;
 	coordonnees.y = 0;
 	SDL_RenderCopy(renderer, ExitBtn, NULL, &coordonnees);
-	/**/
+
 
 	// GoBeginning
 	coordonnees.x = Width / 2 + 20 - size.y - size.y;
@@ -1715,7 +1831,7 @@ void GraphicBoard::Loop()
 
 						if (!plateau.IsLocked() && plateau.getRemovableFromIndex(index))
 						{
-							if (0 <= selected && selected < 143)
+							if (0 <= selected && selected < 144)
 								clicked[selected] = false;
 							selected = -1;
 							auto autoselected = plateau.getDominoFromIndex(index);

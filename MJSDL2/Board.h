@@ -336,11 +336,13 @@ public:
 	bool Solve();
 	bool IsLockedFromStart();
 	bool IsLockedFromMove();
-	bool TakeBack(bool Beginning = false);
+	bool TakeBack(bool beginning = false);
 	bool TakeBack(const uint8_t direction);
-	bool MoveForward();
+	bool MoveForward(bool end = false);
 	bool GoEnd();
 	bool GoBeginning(const uint8_t direction);
+	bool Load(std::pair<std::string, std::vector<std::string>>& savedGame);
+	bool Save(std::pair<std::string, std::vector<std::string>>& savedGame);
 #ifdef _DEBUG
 	bool Test();
 	void InitBoardLockedHorizontal(int test);
@@ -364,11 +366,14 @@ private:
 	std::map<Coordinates, int> mOccupationBoard; // (x, y, z) -> Index
 	std::vector<TileAndIndex> vLogicalBoard; // (TileObject, Index)
 	std::array<bool, 144> arrRemovable = {};
-	std::array<bool, 144> InitRemovable();
-	void RemoveTile(int);
-	void BuildMoves(std::vector<TileAndIndex>& vRemovableBoard, std::vector<TileAndIndex>::iterator& itFirst, std::vector<std::pair<int, int>>& vMoves);
 	std::vector<std::pair<int, int>> vMoves;
-	void SetMoves();
 	bool bIsLockedFromMove;
 	bool bIsLockedFromStart;
+	unsigned int Seed;
+private:
+	std::array<bool, 144> InitRemovable();
+	void InitBoardSub(std::mt19937& e1);
+	void RemoveTile(int);
+	void BuildMoves(std::vector<TileAndIndex>& vRemovableBoard, std::vector<TileAndIndex>::iterator& itFirst, std::vector<std::pair<int, int>>& vMoves);
+	void SetMoves();
 };

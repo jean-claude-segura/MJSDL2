@@ -3,6 +3,7 @@
 
 Board::Board()
 {
+	Seed = 0;
 }
 
 bool Board::CompLogicalBoardDownLeft(const TileAndIndex& left, const TileAndIndex& right)
@@ -211,25 +212,46 @@ std::array<bool, 144> Board::InitRemovable()
 	return arrRemovable;
 }
 
-void Board::InitBoard()
+bool Board::Load(std::pair<std::string, std::vector<std::string>>& savedGame)
 {
-#ifdef _DEBUG
-	// 0, 1, 2, 5, 7, 12, 18, 19, 24, 25, 27, 31, 34, 36, 44, 49, 50, 55, 61, 62, 64, 66
-	// [0, 2, 21, 32]
-	// 9 is interesting.
-	static int seed = 0;
-	std::mt19937 e1(seed++);
-	//std::mt19937 e1(1);
-	std::cout << "******************************************* " << seed - 1 << " *******************************************" << std::endl;
-#else
-	std::random_device r;
-	std::mt19937 e1(r());
-	// Création du seed.
-	const auto temp(e1());
-	// Affectation du seed.
-	e1.seed(temp);
-#endif
+	Seed = std::stoul(savedGame.first);
+	std::mt19937 e1(Seed);
+
+	InitBoardSub(e1);
+
+	for (auto it = savedGame.second.begin(); it != savedGame.second.end();)
+	{
+		RemoveTile(std::stoul(*it));
+		RemoveTile(std::stoul(*(it + 1)));
+
+		vHistory.emplace_back(std::make_pair(std::stoul(*it), std::stoul(*(it + 1))));
+
+		IsLockedFromMove();
+
+		++it;
+		++it;
+	}
+
+	SetMoves();
+
+	return true;
+};
+
+bool Board::Save(std::pair<std::string, std::vector<std::string>>& savedGame)
+{
+	savedGame.first = std::to_string(Seed);
+	for (const auto& move : vHistory)
+	{
+		savedGame.second.emplace_back(std::to_string(move.first));
+		savedGame.second.emplace_back(std::to_string(move.second));
+	}
+	return true;
+};
+
+void Board::InitBoardSub(std::mt19937 &e1)
+{
 	std::uniform_int_distribution<int> uniform_dist(0, 41);
+
 	vLogicalBoard.clear();
 	mIndexToTile.clear();
 	mIndexToRemovedTile.clear();
@@ -261,7 +283,7 @@ void Board::InitBoard()
 #endif
 		--tempDominos[domino];
 		mOccupationBoard[arrIndexToCoord[index]] = index;
-		const auto & coord = arrIndexToBoardCoord[index];
+		const auto& coord = arrIndexToBoardCoord[index];
 		vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 		mIndexToTile.emplace(index, Tile(domino));
 	}
@@ -284,6 +306,30 @@ void Board::InitBoard()
 		std::cout << "." << std::endl;
 	}
 #endif
+}
+
+void Board::InitBoard()
+{
+#ifdef _DEBUG
+	// 0, 1, 2, 5, 7, 12, 18, 19, 24, 25, 27, 31, 34, 36, 44, 49, 50, 55, 61, 62, 64, 66
+	// [0, 2, 21, 32]
+	// 9 is interesting.
+	static unsigned int seed = 0;
+	Seed = seed;
+	std::mt19937 e1(Seed);
+	++seed;
+	//std::mt19937 e1(1);
+	std::cout << "******************************************* " << Seed << " *******************************************" << std::endl;
+#else
+	std::random_device r;
+	std::mt19937 e1(r());
+	// Création du seed.
+	Seed = e1();
+	// Affectation du seed.
+	e1.seed(Seed);
+#endif
+
+	InitBoardSub(e1);
 }
 
 void Board::RemoveTile(const int index)
@@ -498,9 +544,10 @@ bool Board::TakeBack(bool beginning)
 
 				bIsLockedFromMove = bIsLockedFromMove ? true : CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, vMove);
 			}
+
+			SetMoves();
 		}
 
-		SetMoves();
 
 		return true;
 	}
@@ -528,6 +575,8 @@ bool Board::GoBeginning(const uint8_t direction)
 	{
 		SortBoard(direction);
 
+		SetMoves();
+
 		return true;
 	}
 	else
@@ -536,7 +585,7 @@ bool Board::GoBeginning(const uint8_t direction)
 	}
 }
 
-bool Board::MoveForward()
+bool Board::MoveForward(bool end)
 {
 	if (vForwardHistory.empty())
 	{
@@ -557,7 +606,8 @@ bool Board::MoveForward()
 
 		IsLockedFromMove();
 
-		SetMoves();
+		if(!end)
+			SetMoves();
 
 		return true;
 	}
@@ -569,8 +619,11 @@ bool Board::GoEnd()
 	{
 		while (!vForwardHistory.empty())
 		{
-			MoveForward();
+			MoveForward(true);
 		}
+
+		SetMoves();
+
 		return true;
 	}
 	else
