@@ -474,7 +474,7 @@ void Board::ComputerStop()
 	}
 }
 
-void Board::ComputerSolve()
+bool Board::ComputerSolve()
 {
 	if (!solver.joinable())
 	{
@@ -490,10 +490,12 @@ void Board::ComputerSolve()
 #ifdef _DEBUG
 		std::cout << "Computer started." << std::endl;
 #endif
+		return true;
 	}
 	else
 	{
 		ComputerStop();
+		return false;
 	}
 }
 

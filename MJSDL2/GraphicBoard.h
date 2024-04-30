@@ -79,7 +79,8 @@ private:
 	void setRightClicked(const int x, const int y);
 	void ThrowException(const int);
 	void LoadUI();
-	void LoadButton(SDL_Texture*& button, const std::string& strPath, const std::string& strName);
+	void LoadButton(SDL_Texture*& button, const std::string& strPath);
+	void CreateButton(SDL_Texture*& button, const std::string& strPathBack, const std::string& strPathIcon);
 
 private:
 	SDL_DisplayMode DisplayMode;
@@ -103,7 +104,8 @@ private:
 		* GoEndBtn,
 		* QuickSaveBtn,
 		* QuickLoadBtn,
-		* ComputerBtn,
+		* ComputerOnBtn,
+		* ComputerOffBtn,
 		* Inverted,
 		* FaceMask,
 		* textureMouseMap,
@@ -162,4 +164,5 @@ private:
 	std::vector<std::pair<int, int>>::const_iterator itPrevMove;
 	uint8_t direction;
 	SDL_Event exitEvent;
+	bool Solving = false;
 };

@@ -18,7 +18,8 @@ GraphicBoard::GraphicBoard() : selected(-1), direction(3), Height(0), Width(0)
 	GoEndBtn = NULL;
 	QuickSaveBtn = NULL;
 	QuickLoadBtn = NULL;
-	ComputerBtn = NULL;
+	ComputerOnBtn = NULL;
+	ComputerOffBtn = NULL;
 	exitEvent.type = SDL_QUIT;
 	textureBackground = NULL;
 	MouseMask = NULL;
@@ -85,8 +86,10 @@ GraphicBoard::~GraphicBoard()
 		SDL_DestroyTexture(QuickSaveBtn);
 	if (QuickLoadBtn != NULL)
 		SDL_DestroyTexture(QuickLoadBtn);
-	if (ComputerBtn != NULL)
-		SDL_DestroyTexture(ComputerBtn);
+	if (ComputerOnBtn != NULL)
+		SDL_DestroyTexture(ComputerOnBtn);
+	if (ComputerOffBtn != NULL)
+		SDL_DestroyTexture(ComputerOffBtn);
 	if (textureBackground != NULL)
 		SDL_DestroyTexture(textureBackground);
 	if (textureBackgroundVictory != NULL)
@@ -493,7 +496,46 @@ void GraphicBoard::LoadResources()
 	LoadRandomBackgroundVictory();
 }
 
-void GraphicBoard::LoadButton(SDL_Texture*& button, const std::string& strPath, const std::string& strName)
+void GraphicBoard::CreateButton(SDL_Texture*& button, const std::string& strPathBack, const std::string& strPathIcon)
+{
+	if (button != NULL)
+		SDL_DestroyTexture(button);
+	SDL_Texture* texture_Back = NULL;
+	LoadButton(texture_Back, strPathBack);
+	SDL_Texture* texture_Icon = NULL;
+	LoadButton(texture_Icon, strPathIcon);
+
+	Uint32 format;
+	int w, h;
+	int wi, hi;
+	SDL_BlendMode blendmode;
+
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+
+	SDL_QueryTexture(texture_Back, &format, NULL, &w, &h);
+	SDL_QueryTexture(texture_Icon, NULL, NULL, &wi, &hi);
+	SDL_GetTextureBlendMode(texture_Back, &blendmode);
+
+	button = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, w, h);
+
+	SDL_SetTextureBlendMode(button, SDL_BLENDMODE_NONE);
+
+	SDL_SetRenderTarget(renderer, button);
+
+	SDL_RenderCopy(renderer, texture_Back, NULL, NULL);
+	//SDL_Rect tgtRect{ -5, 5, w, h };
+	//SDL_Rect tgtRect{ -25, 0, wi / 4 , hi / 4};
+	SDL_Rect tgtRect{ -10, 15, 110, 110 };
+	SDL_RenderCopy(renderer, texture_Icon, NULL, &tgtRect);
+
+	SDL_SetRenderTarget(renderer, renderTarget);
+	SDL_SetTextureBlendMode(button, SDL_BLENDMODE_BLEND);
+
+	SDL_DestroyTexture(texture_Icon);
+	SDL_DestroyTexture(texture_Back);
+}
+
+void GraphicBoard::LoadButton(SDL_Texture*& button, const std::string& strPath)
 {
 	if (button != NULL)
 		SDL_DestroyTexture(button);
@@ -527,21 +569,23 @@ void GraphicBoard::LoadButton(SDL_Texture*& button, const std::string& strPath, 
 
 void GraphicBoard::LoadUI()
 {
-	LoadButton(SudEstBtn, "./interface/blank.svg", "SudEstBtn");
-	LoadButton(SudOuestBtn, "./interface/blank.svg", "SudOuestBtn");
-	LoadButton(NordEstBtn, "./interface/blank.svg", "NordEstBtn");
-	LoadButton(NordOuestBtn, "./interface/blank.svg", "NordOuestBtn");
-	LoadButton(TurnBtn, "./interface/MJd3rv1-.svg", "TurnBtn");
-	LoadButton(HintBtn, "./interface/blank.svg", "HintBtn");
-	LoadButton(RestartBtn, "./interface/blank.svg", "RestartBtn");
-	LoadButton(ExitBtn, "./interface/blank.svg", "ExitBtn");
-	LoadButton(TakeBackBtn, "./interface/blank.svg", "TakeBackBtn");
-	LoadButton(MoveForwardBtn, "./interface/blank.svg", "MoveForwardBtn");
-	LoadButton(GoBeginningBtn, "./interface/blank.svg", "GoBeginningBtn");
-	LoadButton(GoEndBtn, "./interface/blank.svg", "GoEndBtn");
-	LoadButton(QuickSaveBtn, "./interface/blank.svg", "QuickSaveBtn");
-	LoadButton(QuickLoadBtn, "./interface/blank.svg", "QuickLoadBtn");
-	LoadButton(ComputerBtn, "./interface/blank.svg", "ComputerBtn");
+	LoadButton(SudEstBtn, "./interface/blank.svg");
+	LoadButton(SudOuestBtn, "./interface/blank.svg");
+	LoadButton(NordEstBtn, "./interface/blank.svg");
+	LoadButton(NordOuestBtn, "./interface/blank.svg");
+	LoadButton(TurnBtn, "./interface/MJd3rv1-.svg");
+	LoadButton(HintBtn, "./interface/blank.svg");
+	LoadButton(RestartBtn, "./interface/blank.svg");
+	LoadButton(ExitBtn, "./interface/blank.svg");
+	LoadButton(TakeBackBtn, "./interface/blank.svg");
+	LoadButton(MoveForwardBtn, "./interface/blank.svg");
+	LoadButton(GoBeginningBtn, "./interface/blank.svg");
+	LoadButton(GoEndBtn, "./interface/blank.svg");
+	LoadButton(QuickSaveBtn, "./interface/blank.svg");
+	LoadButton(QuickLoadBtn, "./interface/blank.svg");
+
+	CreateButton(ComputerOnBtn, "./interface/blank.svg", "./interface/cpu.svg");
+	CreateButton(ComputerOffBtn, "./interface/blank.svg", "./interface/lightbulb.svg");
 }
 
 void GraphicBoard::InterfaceClicked(const int index, const bool right)
@@ -606,7 +650,8 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 	case COMPUTER:
 		if (right)
 		{
-			plateau.ComputerSolve();
+			Solving = plateau.ComputerSolve();
+			Refresh(true);
 		}
 		else
 		{
@@ -1166,7 +1211,10 @@ void GraphicBoard::RefreshMouseMap()
 	// Computer :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 2;
-	RenderCopyMouseMap(ComputerBtn, coordonnees, COMPUTER, 0, SDL_FLIP_NONE);
+	if(Solving)
+		RenderCopyMouseMap(ComputerOnBtn, coordonnees, COMPUTER, 0, SDL_FLIP_NONE);
+	else
+		RenderCopyMouseMap(ComputerOffBtn, coordonnees, COMPUTER, 0, SDL_FLIP_NONE);
 
 	// Hint :
 	coordonnees.x = size.x - 20;
@@ -1502,7 +1550,10 @@ void GraphicBoard::DisplayInterface()
 	// Computer
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 2;
-	SDL_RenderCopy(renderer, ComputerBtn, NULL, &coordonnees);
+	if(Solving)
+		SDL_RenderCopy(renderer, ComputerOnBtn, NULL, &coordonnees);
+	else
+		SDL_RenderCopy(renderer, ComputerOffBtn, NULL, &coordonnees);
 
 	// Hint :
 	coordonnees.x = size.x - 20;
@@ -1793,9 +1844,12 @@ void GraphicBoard::Loop()
 			{
 			case 0 :
 				plateau.ComputerStop();
+				Solving = false;
+				Refresh(true);
 				break;
 			case 1:
 				plateau.ComputerStop();
+				Solving = false;
 				for (const auto& move : plateau.GetSolution())
 				{
 #ifdef _DEBUG

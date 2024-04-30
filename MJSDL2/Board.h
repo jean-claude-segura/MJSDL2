@@ -342,7 +342,7 @@ public:
 	void SortBoard(const uint8_t direction);
 	bool Solve();
 	void ComputerStop();
-	void ComputerSolve();
+	bool ComputerSolve();
 	bool IsLockedFromStart();
 	bool IsLockedFromMove();
 	bool TakeBack(bool beginning = false);
