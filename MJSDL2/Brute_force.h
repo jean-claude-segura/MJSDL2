@@ -1763,8 +1763,6 @@ inline bool SolveRecAsyncInit(
 #endif
 )
 {
-	// I keep 2 for the main thread and this one.
-	processor_count = std::thread::hardware_concurrency() - 2; // May return 0 when not able to detect.
 
 	bool ret = false;
 
@@ -1780,6 +1778,9 @@ inline bool SolveRecAsyncInit(
 	}
 	else
 	{
+		// I keep 2 for the main thread and this one.
+		processor_count = std::thread::hardware_concurrency() - 2; // May return 0 when not able to detect.
+
 		vSolution.clear();
 
 		// New move container to remove the tiles 2 at once or 4 at once.

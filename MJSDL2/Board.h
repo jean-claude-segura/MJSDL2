@@ -5,7 +5,6 @@
 #include <map>
 #include <random>
 #include <cmath>
-#include <map>
 #include <sstream>
 #include <thread>
 
@@ -112,7 +111,7 @@ public:
 		*const_cast<int*> (&Z) = other.Z;
 		*const_cast<int*> (&DecX) = other.DecX;
 		*const_cast<int*> (&DecY) = other.DecY;
-		*const_cast<int*> (&Index) = other.Index;
+
 		return *this;
 	}
 	/**/
@@ -125,7 +124,6 @@ public:
 		*const_cast<int*> (&Z) = other.Z;
 		*const_cast<int*> (&DecX) = other.DecX;
 		*const_cast<int*> (&DecY) = other.DecY;
-		*const_cast<int*> (&Index) = other.Index;
 	}
 };
 
@@ -154,7 +152,7 @@ public:
 
 constexpr std::array<Coordinates, 144> InitIndexToCoord(const std::array<std::array<std::array<bool, 4>, 8>, 12> & arrBasePattern)
 {
-	std::array<Coordinates, 144> arrInitIndexToCoord;
+	std::array<Coordinates, 144> arrInitIndexToCoord = {};
 	int index = 0;
 	for (int z = 0; z < 4; ++z)
 	{
@@ -169,17 +167,20 @@ constexpr std::array<Coordinates, 144> InitIndexToCoord(const std::array<std::ar
 		}
 	}
 
-	arrInitIndexToCoord[index++] = { -1., 3.5, 0. };
-	arrInitIndexToCoord[index++] = { 12., 3.5, 0. };
-	arrInitIndexToCoord[index++] = { 13., 3.5, 0. };
-	arrInitIndexToCoord[index++] = { 5.5, 3.5, 4. };
+	if (index <= 140)
+	{
+		arrInitIndexToCoord[index++] = { -1., 3.5, 0. };
+		arrInitIndexToCoord[index++] = { 12., 3.5, 0. };
+		arrInitIndexToCoord[index++] = { 13., 3.5, 0. };
+		arrInitIndexToCoord[index++] = { 5.5, 3.5, 4. };
+	}
 
 	return arrInitIndexToCoord;
 }
 
 constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> InitBasePattern()
 {
-	std::array<std::array<std::array<bool, 4>, 8>, 12> arrBasePattern;
+	std::array<std::array<std::array<bool, 4>, 8>, 12> arrBasePattern = {};
 	for (int z = 0; z < 4; ++z)
 		for (int y = 0; y < 8; ++y)
 			for (int x = 0; x < 12; ++x)
@@ -219,7 +220,7 @@ constexpr std::array<std::array<std::array<bool, 4>, 8>, 12> InitBasePattern()
 
 constexpr std::array<std::tuple<int, int, int, int, int>, 144> InitIndexToBoardCoord(const std::array<std::array<std::array<bool, 4>, 8>, 12>& arrBasePattern)
 {
-	std::array<std::tuple<int, int, int, int, int>, 144> arrBaseTurtlePatternToCoord;
+	std::array<std::tuple<int, int, int, int, int>, 144> arrBaseTurtlePatternToCoord = {};
 	int index = 0;
 	for (int z = 0; z < 4; ++z)
 	{
@@ -234,17 +235,20 @@ constexpr std::array<std::tuple<int, int, int, int, int>, 144> InitIndexToBoardC
 		}
 	}
 
-	arrBaseTurtlePatternToCoord[index++] = { -1, 3, 0, 0, 1 };
-	arrBaseTurtlePatternToCoord[index++] = { 12, 3, 0, 0, 1 };
-	arrBaseTurtlePatternToCoord[index++] = { 13, 3, 0, 0, 1 };
-	arrBaseTurtlePatternToCoord[index++] = { 5, 3, 4, 1, 1 };
+	if (index <= 140)
+	{
+		arrBaseTurtlePatternToCoord[index++] = { -1, 3, 0, 0, 1 };
+		arrBaseTurtlePatternToCoord[index++] = { 12, 3, 0, 0, 1 };
+		arrBaseTurtlePatternToCoord[index++] = { 13, 3, 0, 0, 1 };
+		arrBaseTurtlePatternToCoord[index++] = { 5, 3, 4, 1, 1 };
+	}
 
 	return arrBaseTurtlePatternToCoord;
 }
 
 constexpr std::array<std::array<std::array<int, 4>, 8>, 12> InitBoardCoordToIndex(const std::array<std::array<std::array<bool, 4>, 8>, 12>& arrBasePattern)
 {
-	std::array<std::array<std::array<int, 4>, 8>, 12> arrBaseTurtlePattern;
+	std::array<std::array<std::array<int, 4>, 8>, 12> arrBaseTurtlePattern = {};
 	int index = 0;
 	for (int z = 0; z < 4; ++z)
 	{
@@ -268,7 +272,7 @@ constexpr std::array<std::array<std::array<int, 4>, 8>, 12> InitBoardCoordToInde
 
 constexpr std::array < std::array < std::pair<int, int>, 4>, 8> InitHorizontalLimits(std::array<std::array<std::array<int, 4>, 8>, 12> arrBaseTurtlePattern)
 {
-	std::array < std::array < std::pair<int, int>, 4>, 8> arrHorizontalLimits;
+	std::array < std::array < std::pair<int, int>, 4>, 8> arrHorizontalLimits = {};
 
 	for (int z = 0; z < 4; ++z)
 	{
