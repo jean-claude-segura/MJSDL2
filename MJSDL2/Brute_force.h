@@ -9,7 +9,7 @@ unsigned int processor_count;
 
 std::mutex mtxProcessorCount;
 
-unsigned int AskForCores(unsigned int wanted)
+inline unsigned int AskForCores(unsigned int wanted)
 {
 	mtxProcessorCount.lock();
 
