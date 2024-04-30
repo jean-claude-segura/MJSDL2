@@ -480,7 +480,7 @@ void Board::ComputerSolve()
 		uint64_t positions = 0ULL;
 #endif
 		stopSolverNow = false;
-		solver = std::thread(&SolveRecInitAsync, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, std::ref(vSolution)
+		solver = std::thread(&SolveRecAsyncInit, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, std::ref(vSolution)
 #ifdef _DEBUG
 			, positions
 #endif

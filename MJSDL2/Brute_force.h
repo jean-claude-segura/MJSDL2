@@ -5,7 +5,51 @@
 #include <SDL.h>
 
 std::atomic<bool> stopSolverNow;
-std::atomic<unsigned int> processor_count;
+unsigned int processor_count;
+
+std::mutex mtxProcessorCount;
+
+unsigned int AskForCores(unsigned int wanted)
+{
+	mtxProcessorCount.lock();
+
+	int allowed = 0;
+
+	if(processor_count > 1)
+	{
+		allowed = std::min(processor_count, wanted);
+		processor_count -= allowed;
+	}
+	else
+	{
+		allowed = 0;
+	}
+
+	mtxProcessorCount.unlock();
+
+	return allowed;
+}
+
+inline void GiveCoresBack(unsigned int allowed)
+{
+	mtxProcessorCount.lock();
+
+	processor_count += allowed;
+
+	mtxProcessorCount.unlock();
+}
+
+inline bool SolveRecParallelInit(
+	const std::vector<int> vMove,
+	std::vector<TileAndIndex> vLogicalBoard,
+	std::array<bool, 144> arrRemovable,
+	std::map<int, Tile> mIndexToTile,
+	std::map<Coordinates, int> mOccupationBoard,
+	std::vector<std::pair<int, int>>& vSolution
+#ifdef _DEBUG
+	, uint64_t positions
+#endif
+);
 
 inline uint8_t EvalMoveMaxBlock(
 	const std::vector<int>& vMove,
@@ -504,19 +548,61 @@ inline bool SolveRecParallel(
 							(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) > std::get<1>(right.second)) ||
 							(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
 					});
-
-				for (const auto& move : vSortedMoves)
+				const auto allowed_processor_count = AskForCores(vSortedMoves.size());
+				if (allowed_processor_count > 1)
 				{
-					ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution
-#ifdef _DEBUG
-						, ++positions
-#endif
-					);
+					auto arrSolutions = std::make_unique<std::vector<std::pair<int, int>>[]>((unsigned int)allowed_processor_count);
+					const auto maxthread = std::min((unsigned int)vSortedMoves.size(), (unsigned int)allowed_processor_count);
 
-					if (ret)
-						stopSolverNow = true;
-					if (stopSolverNow)
-						break;
+					for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
+					{
+						std::vector< std::future<bool>> vSolvers;
+						for (int i = 0; i < maxthread; ++i)
+						{
+							if (itMove != vSortedMoves.end())
+							{
+								vSolvers.emplace_back(std::async(&SolveRecParallelInit, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, std::ref(arrSolutions[i])
+#ifdef _DEBUG
+									, positions
+#endif
+								));
+								++itMove;
+							}
+						}
+
+						int i = 0;
+						for (auto& solver : vSolvers)
+						{
+							if (solver.get())
+							{
+								stopSolverNow = true;
+								vSolution.insert(vSolution.end(), arrSolutions[i].begin(), arrSolutions[i].end());
+								ret = true;
+							}
+							i++;
+						}
+
+						if (stopSolverNow)
+							break;
+					}
+
+					GiveCoresBack(allowed_processor_count);
+				}
+				else
+				{
+					for (const auto& move : vSortedMoves)
+					{
+						ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution
+#ifdef _DEBUG
+							, ++positions
+#endif
+						);
+
+						if (ret)
+							stopSolverNow = true;
+						if (stopSolverNow)
+							break;
+					}
 				}
 			}
 		}
@@ -1663,7 +1749,7 @@ inline bool SolveRecParallelInit(
 	);
 }
 // Just to work on a copy.
-bool SolveRecInitAsync(
+inline bool SolveRecAsyncInit(
 	std::vector<std::pair<int, int>> vOldMoves,
 	std::vector<TileAndIndex> vLogicalBoard,
 	std::array<bool, 144> arrRemovable,
@@ -1717,12 +1803,12 @@ bool SolveRecInitAsync(
 					(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) > std::get<1>(right.second)) ||
 					(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
 			});
-
-		if (processor_count > 1)
+		const auto allowed_processor_count = AskForCores(vSortedMoves.size());
+		if (allowed_processor_count > 1)
 		{
-			auto arrSolutions = std::make_unique<std::vector<std::pair<int, int>>[]>((unsigned int)processor_count);
-			const auto maxthread = std::min((unsigned int)vSortedMoves.size(), (unsigned int)processor_count);
-			processor_count -= maxthread;
+			auto arrSolutions = std::make_unique<std::vector<std::pair<int, int>>[]>((unsigned int)allowed_processor_count);
+			const auto maxthread = std::min((unsigned int)vSortedMoves.size(), (unsigned int)allowed_processor_count);
+
 			for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
 			{
 				std::vector< std::future<bool>> vSolvers;
@@ -1742,10 +1828,12 @@ bool SolveRecInitAsync(
 				int i = 0;
 				for (auto& solver : vSolvers)
 				{
-					auto retSolver = solver.get();
-					ret |= retSolver;
-					if (retSolver)
+					if (solver.get())
+					{
+						stopSolverNow = true;
 						vSolution = arrSolutions[i];
+						ret = true;
+					}
 					i++;
 				}
 				if (ret)
@@ -1753,6 +1841,8 @@ bool SolveRecInitAsync(
 				if (stopSolverNow)
 					break;
 			}
+
+			GiveCoresBack(allowed_processor_count);
 		}
 		else
 		{
