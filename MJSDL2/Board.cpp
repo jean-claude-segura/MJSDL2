@@ -449,7 +449,6 @@ void Board::SetMoves()
 
 bool Board::Solve()
 {
-	//if (SolveRecInit/*Async*/(*this, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution))
 	if (TryHeuristics(*this, vLogicalBoard, mIndexToTile, vSolution))
 	{
 #ifdef _DEBUG
@@ -461,9 +460,46 @@ bool Board::Solve()
 	return false;
 }
 
+void Board::ComputerStop()
+{
+	if (solver.valid())
+	{
+		stopSolverNow = true;
+		solver.get();
+#ifdef _DEBUG
+		std::cout << "Computer stopped." << std::endl;
+#endif
+	}
+}
+
 bool Board::ComputerSolve()
 {
-	if (SolveRecInit/*Async*/(vMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution))
+	if (!solver.valid())
+	{
+#ifdef _DEBUG
+		uint64_t positions = 0ULL;
+#endif
+		stopSolverNow = false;
+		solver = std::async(&SolveRecInitAsync, vMoves, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, std::ref(vSolution)
+#ifdef _DEBUG
+			, positions
+#endif
+		);
+#ifdef _DEBUG
+		std::cout << "Computer started." << std::endl;
+#endif
+		return true;
+	}
+	else
+	{
+		return ComputerSolveGetResult();
+	}
+}
+
+bool Board::ComputerSolveGetResult()
+{
+	stopSolverNow = true;
+	if (solver.get())
 	{
 #ifdef _DEBUG
 		for (auto& move : vSolution)
@@ -471,7 +507,11 @@ bool Board::ComputerSolve()
 #endif
 		return true;
 	}
+#ifdef _DEBUG
+		std::cout << "Computer stopped." << std::endl;
+#endif
 	return false;
+
 }
 
 bool Board::IsLockedFromStart()
@@ -481,7 +521,6 @@ bool Board::IsLockedFromStart()
 
 bool Board::IsLockedFromMove()
 {
-	//return CheckIfLocked(vLogicalBoard);
 	if (vHistory.empty())
 	{
 		return false;

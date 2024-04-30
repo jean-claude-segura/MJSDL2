@@ -549,6 +549,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 	switch (index)
 	{
 	case RESTART:
+		plateau.ComputerStop();
 		if (right)
 		{
 			if (plateau.Solve())
@@ -601,100 +602,131 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case COMPUTER:
-		if (right ? plateau.ComputerSolve() : plateau.Solve())
+		if (right)
 		{
-			for (const auto& move : plateau.GetSolution())
+			plateau.ComputerSolve();
+		}
+		else
+		{
+			plateau.ComputerStop();
+			if (plateau.Solve())
 			{
-				if (0 <= selected && selected < 144)
-					clicked[selected] = false;
-				selected = -1;
-				Refresh(false);
+				for (const auto& move : plateau.GetSolution())
+				{
+					if (0 <= selected && selected < 144)
+						clicked[selected] = false;
+					selected = -1;
+					Refresh(false);
 
-				clicked[move.first] = true;
-				clicked[move.second] = true;
+					clicked[move.first] = true;
+					clicked[move.second] = true;
 
-				Refresh(false);
+					Refresh(false);
 
-				clicked[move.first] = false;
-				clicked[move.second] = false;
+					clicked[move.first] = false;
+					clicked[move.second] = false;
 
-				plateau.RemovePairOfTiles(move.first, move.second);
+					plateau.RemovePairOfTiles(move.first, move.second);
 
-				itNextMove = plateau.GetMovesLeft().begin();
-				itPrevMove = plateau.GetMovesLeft().end();
+					itNextMove = plateau.GetMovesLeft().begin();
+					itPrevMove = plateau.GetMovesLeft().end();
 
-				Refresh(false);
+					Refresh(false);
+				}
+
+				SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+
+				RefreshMouseMap();
 			}
-
-			SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
-
-			RefreshMouseMap();
-
-			break;
 		}
 		break;
 	case TAKEBACK:
-		if (right)
-			break;
-		if (0 <= selected && selected < 144)
-			clicked[selected] = false;
-		selected = -1;
-		if (plateau.TakeBack(direction))
-		{
-			Refresh(true);
-			itNextMove = plateau.GetMovesLeft().begin();
-			itPrevMove = plateau.GetMovesLeft().end();
-		}
-		break;
-	case MOVEFORWARD:
-		if (0 <= selected && selected < 144)
-			clicked[selected] = false;
-		selected = -1;
-		if (right)
-			break;
-		if (plateau.MoveForward())
-		{
-			Refresh(true);
-			itNextMove = plateau.GetMovesLeft().begin();
-			itPrevMove = plateau.GetMovesLeft().end();
-		}
-		break;
-	case GOBEGINNING:
-		if (0 <= selected && selected < 144)
-			clicked[selected] = false;
-		selected = -1;
-		if (right)
-			break;
-		if (plateau.GoBeginning(direction))
-		{
-			Refresh(true);
-			itNextMove = plateau.GetMovesLeft().begin();
-			itPrevMove = plateau.GetMovesLeft().end();
-		}
-		break;
-	case GOEND:
-		if (0 <= selected && selected < 144)
-			clicked[selected] = false;
-		selected = -1;
-		if (right)
-			break;
-		if (plateau.GoEnd())
-		{
-			Refresh(true);
-			itNextMove = plateau.GetMovesLeft().begin();
-			itPrevMove = plateau.GetMovesLeft().end();
-		}
-		break;
-	case QUICKSAVE:
-		if (0 <= selected && selected < 144)
-			clicked[selected] = false;
-		selected = -1;
 		if (right)
 		{
 			break;
 		}
 		else
 		{
+			plateau.ComputerStop();
+			if (0 <= selected && selected < 144)
+				clicked[selected] = false;
+			selected = -1;
+			if (plateau.TakeBack(direction))
+			{
+				Refresh(true);
+				itNextMove = plateau.GetMovesLeft().begin();
+				itPrevMove = plateau.GetMovesLeft().end();
+			}
+			break;
+		}
+	case MOVEFORWARD:
+		if (right)
+		{
+			break;
+		}
+		else
+		{
+			plateau.ComputerStop();
+			if (0 <= selected && selected < 144)
+				clicked[selected] = false;
+			selected = -1;
+			if (plateau.MoveForward())
+			{
+				Refresh(true);
+				itNextMove = plateau.GetMovesLeft().begin();
+				itPrevMove = plateau.GetMovesLeft().end();
+			}
+			break;
+		}
+	case GOBEGINNING:
+		if (right)
+		{
+			break;
+		}
+		else
+		{
+			plateau.ComputerStop();
+			if (0 <= selected && selected < 144)
+				clicked[selected] = false;
+			selected = -1;
+			if (plateau.GoBeginning(direction))
+			{
+				Refresh(true);
+				itNextMove = plateau.GetMovesLeft().begin();
+				itPrevMove = plateau.GetMovesLeft().end();
+			}
+			break;
+		}
+	case GOEND:
+		if (right)
+		{
+			break;
+		}
+		else
+		{
+			plateau.ComputerStop();
+			if (0 <= selected && selected < 144)
+				clicked[selected] = false;
+			selected = -1;
+			if (plateau.GoEnd())
+			{
+				Refresh(true);
+				itNextMove = plateau.GetMovesLeft().begin();
+				itPrevMove = plateau.GetMovesLeft().end();
+			}
+			break;
+		}
+	case QUICKSAVE:
+		if (right)
+		{
+			break;
+		}
+		else
+		{
+			plateau.ComputerStop();
+			if (0 <= selected && selected < 144)
+				clicked[selected] = false;
+			selected = -1;
 			std::pair<std::string, std::vector<std::string>> savedGame;
 			if (plateau.Save(savedGame))
 			{
@@ -717,15 +749,16 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			break;
 		}
 	case QUICKLOAD:
-		if (0 <= selected && selected < 144)
-			clicked[selected] = false;
-		selected = -1;
 		if (right)
 		{
 			break;
 		}
 		else
 		{
+			plateau.ComputerStop();
+			if (0 <= selected && selected < 144)
+				clicked[selected] = false;
+			selected = -1;
 			std::pair<std::string, std::vector<std::string>> savedGame;
 			const std::string saveDir = "./saves/";
 			if (!std::filesystem::exists(saveDir))
@@ -760,6 +793,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 	case HINT:
 		if (right)
 		{
+			plateau.ComputerStop();
 			if (!plateau.GetMovesLeft().empty() && itPrevMove != plateau.GetMovesLeft().end())
 			{
 				if (plateau.RemovePairOfTiles(itPrevMove->first, itPrevMove->second))
@@ -847,6 +881,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
 		break;
 	case EXIT:
+		plateau.ComputerStop();
 		if (right)
 		{
 #ifdef _DEBUG
@@ -902,6 +937,7 @@ void GraphicBoard::setLeftClicked(const int x, const int y)
 					}
 					else
 					{
+						plateau.ComputerStop();
 						clicked[index] = true;
 						std::cout << "Tile " << std::dec << plateau.getDominoFromIndex(index).Rank << ", index 0x" << std::hex << index << " (" << std::dec << index << ")" << " clicked." << std::endl;
 						if (plateau.RemovePairOfTiles(selected, index))
@@ -1750,12 +1786,48 @@ void GraphicBoard::Loop()
 	{
 		switch (event.type)
 		{
+		case SDL_USEREVENT:
+			switch (event.user.code)
+			{
+			case 0 :
+				plateau.ComputerStop();
+				break;
+			case 1:
+				plateau.ComputerStop();
+				for (const auto& move : plateau.GetSolution())
+				{
+					if (0 <= selected && selected < 144)
+						clicked[selected] = false;
+					selected = -1;
+					Refresh(false);
+
+					clicked[move.first] = true;
+					clicked[move.second] = true;
+
+					Refresh(false);
+
+					clicked[move.first] = false;
+					clicked[move.second] = false;
+
+					plateau.RemovePairOfTiles(move.first, move.second);
+
+					itNextMove = plateau.GetMovesLeft().begin();
+					itPrevMove = plateau.GetMovesLeft().end();
+
+					Refresh(false);
+				}
+
+				RefreshMouseMap();
+				break;
+			}
+			break;
 		case SDL_KEYDOWN:
 			switch (event.key.keysym.sym)
 			{
 			case SDLK_RETURN:
 				break;
 			case SDLK_ESCAPE:
+				plateau.ComputerStop();
 				SDL_PushEvent(&exitEvent);
 				break;
 			case SDLK_F1:
@@ -1763,6 +1835,12 @@ void GraphicBoard::Loop()
 				break;
 			case SDLK_F2:
 				InterfaceClicked(RESTART);
+				break;
+			case SDLK_F5:
+				InterfaceClicked(QUICKSAVE);
+				break;
+			case SDLK_F7:
+				InterfaceClicked(QUICKLOAD);
 				break;
 			case SDLK_UP:
 			case SDLK_KP_8:
@@ -1903,6 +1981,7 @@ void GraphicBoard::Loop()
 							while (SDL_WaitEvent(&event) && (event.type != SDL_MOUSEBUTTONUP));
 							if (event.button.button == SDL_BUTTON_LEFT && (relevantTiles.size() == 2 || relevantTiles.size() == 4))
 							{
+								plateau.ComputerStop();
 								for (const auto& index : relevantTiles)
 									clicked[index] = false;
 								bool result = plateau.RemovePairOfTiles(relevantTiles[0], relevantTiles[1]);

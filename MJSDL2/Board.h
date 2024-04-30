@@ -7,6 +7,7 @@
 #include <cmath>
 #include <map>
 #include <sstream>
+#include <future>
 
 class Tile
 {
@@ -311,6 +312,8 @@ constexpr std::array<std::array<std::array<int, 4>, 8>, 12> arrBoardCoordToIndex
 // Limits on horizontal lines (Padlocks not in).
 constexpr std::array < std::array < std::pair<int, int>, 4>, 8> arrHorizontalLimits = InitHorizontalLimits(arrBoardCoordToIndex);
 
+static std::future<bool> solver;
+
 class Board
 {
 private:
@@ -334,7 +337,9 @@ public:
 	const std::vector<TileAndIndex>& getLogicalBoard() { return vLogicalBoard; }
 	void SortBoard(const uint8_t direction);
 	bool Solve();
+	void ComputerStop();
 	bool ComputerSolve();
+	bool ComputerSolveGetResult();
 	bool IsLockedFromStart();
 	bool IsLockedFromMove();
 	bool TakeBack(bool beginning = false);
