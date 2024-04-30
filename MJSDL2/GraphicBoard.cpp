@@ -651,7 +651,7 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 		if (right)
 		{
 			Solving = plateau.ComputerSolve();
-			Refresh(true);
+			RefreshInterface();
 		}
 		else
 		{
@@ -1103,6 +1103,42 @@ inline void GraphicBoard::RenderCopyMouseMap(SDL_Texture* Mask, SDL_Rect coordon
 	SDL_DestroyTexture(tgt);
 }
 
+void GraphicBoard::RefreshInterfaceMouseMap()
+{
+	// Save the current rendering target (will be NULL if it is the current window)
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+	SDL_SetRenderTarget(renderer, textureMouseMap);
+
+	// Interface :
+	SDL_Rect coordonnees;
+	SDL_Point size;
+
+	SDL_QueryTexture(RestartBtn, NULL, NULL, &size.x, &size.y);
+	coordonnees.w = size.x;
+	coordonnees.h = size.y;
+
+	// Computer :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 2;
+	if (Solving)
+		RenderCopyMouseMap(ComputerOnBtn, coordonnees, COMPUTER, 0, SDL_FLIP_NONE);
+	else
+		RenderCopyMouseMap(ComputerOffBtn, coordonnees, COMPUTER, 0, SDL_FLIP_NONE);
+
+	// Hint :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = size.y - 20;
+	RenderCopyMouseMap(HintBtn, coordonnees, HINT, 0, SDL_FLIP_NONE);
+
+	// Restart :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = 0;
+	RenderCopyMouseMap(RestartBtn, coordonnees, RESTART, 0, SDL_FLIP_NONE);
+
+	// Restore the render target
+	SDL_SetRenderTarget(renderer, renderTarget);
+}
+
 void GraphicBoard::RefreshMouseMap()
 {
 	// Save the current rendering target (will be NULL if it is the current window)
@@ -1220,6 +1256,7 @@ void GraphicBoard::RefreshMouseMap()
 	coordonnees.x = size.x - 20;
 	coordonnees.y = size.y - 20;
 	RenderCopyMouseMap(HintBtn, coordonnees, HINT, 0, SDL_FLIP_NONE);
+
 	// Restart :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = 0;
@@ -1559,6 +1596,7 @@ void GraphicBoard::DisplayInterface()
 	coordonnees.x = size.x - 20;
 	coordonnees.y = size.y - 20;
 	SDL_RenderCopy(renderer, HintBtn, NULL, &coordonnees);
+
 	// Restart :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = 0;
@@ -1568,10 +1606,12 @@ void GraphicBoard::DisplayInterface()
 	coordonnees.x = Width - size.x;
 	coordonnees.y = (size.y - 20) * 3;
 	SDL_RenderCopy(renderer, QuickLoadBtn, NULL, &coordonnees);
+
 	// Save
 	coordonnees.x = Width - size.x;
 	coordonnees.y = (size.y - 20) * 2;
 	SDL_RenderCopy(renderer, QuickSaveBtn, NULL, &coordonnees);
+
 	// Exit
 	coordonnees.x = Width - size.x;
 	coordonnees.y = 0;
@@ -1598,6 +1638,38 @@ void GraphicBoard::DisplayInterface()
 	/**/
 }
 
+void GraphicBoard::RefreshInterface()
+{
+	RefreshInterfaceMouseMap();
+	// Interface :
+
+	SDL_Point size;
+	SDL_QueryTexture(RestartBtn, NULL, NULL, &size.x, &size.y);
+
+	SDL_Rect coordonnees;
+	coordonnees.w = size.x;
+	coordonnees.h = size.y;
+
+	// Computer
+	coordonnees.x = size.x - 20;
+	coordonnees.y = (size.y - 20) * 2;
+	if (Solving)
+		SDL_RenderCopy(renderer, ComputerOnBtn, NULL, &coordonnees);
+	else
+		SDL_RenderCopy(renderer, ComputerOffBtn, NULL, &coordonnees);
+
+	// Hint :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = size.y - 20;
+	SDL_RenderCopy(renderer, HintBtn, NULL, &coordonnees);
+
+	// Restart :
+	coordonnees.x = size.x - 20;
+	coordonnees.y = 0;
+	SDL_RenderCopy(renderer, RestartBtn, NULL, &coordonnees);
+
+	SDL_RenderPresent(renderer);
+}
 
 void GraphicBoard::Refresh(const bool refreshMouseMap, const bool oneByOne)
 {
@@ -1845,11 +1917,12 @@ void GraphicBoard::Loop()
 			case 0 :
 				plateau.ComputerStop();
 				Solving = false;
-				Refresh(true);
+				RefreshInterface();
 				break;
 			case 1:
 				plateau.ComputerStop();
 				Solving = false;
+				RefreshInterface();
 				for (const auto& move : plateau.GetSolution())
 				{
 #ifdef _DEBUG

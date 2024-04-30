@@ -66,12 +66,14 @@ private:
 	void LoadRandomBackgroundVictory();
 	void LoadBackgroundVictory(const std::string& path);
 	void LoadResources();
+	void RefreshInterface();
 	void Refresh(const bool refreshMouseMap, const bool oneByOne = false);
 	void DisplayInterface();
 #ifdef _DEBUG
 	void RefreshExample();
 #endif
 	void RefreshMouseMap();
+	void RefreshInterfaceMouseMap();
 	void WhatsLeft();
 	void InterfaceClicked(const int index, const bool right = false);
 	void setLeftClicked(const int x, const int y);
