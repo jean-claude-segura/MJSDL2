@@ -295,6 +295,7 @@ void Board::InitBoardSub(std::mt19937 &e1)
 	bIsLockedFromStart = CheckIfLockedFromStart(vLogicalBoard, mIndexToTile);
 
 #ifdef _DEBUG
+#ifndef BENCHMARK
 	std::cout << std::dec << vLogicalBoard.size() << " tile" << (vLogicalBoard.size() > 1 ? "s" : "") << " left." << std::endl;
 	std::cout << std::dec << vMoves.size() << " move" << (vMoves.size() > 1 ? "s" : "") << " left." << std::endl;
 	auto it = vMoves.begin();
@@ -305,6 +306,7 @@ void Board::InitBoardSub(std::mt19937 &e1)
 			std::cout << ", (" << it->first << ";" << it->second << ")";
 		std::cout << "." << std::endl;
 	}
+#endif
 #endif
 }
 
@@ -667,6 +669,7 @@ bool Board::GoEnd()
 }
 
 #ifdef _DEBUG
+#ifndef BENCHMARK
 bool Board::Test()
 {
 	uint64_t ret = 0ULL;
@@ -1062,4 +1065,5 @@ bool Board::TestLocked()
 
 	return false;
 }
+#endif
 #endif

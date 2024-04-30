@@ -114,8 +114,10 @@ void GraphicBoard::ThrowException(const int i)
 void GraphicBoard::Init()
 {
 #ifdef _DEBUG	
+#ifndef BENCHMARK
 	//plateau.Test();
 	//plateau.TestLocked();
+#endif
 #endif
 
 	SDL_SetMainReady();

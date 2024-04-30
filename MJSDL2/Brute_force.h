@@ -2,12 +2,17 @@
 #include "Board.h"
 #include <thread>
 #include <future>
+#ifndef BENCHMARK
 #include <SDL.h>
+#endif // !BENCHMARK
 
-std::atomic<bool> stopSolverNow;
-unsigned int processor_count;
+static std::atomic<bool> stopSolverNow;
 
-std::mutex mtxProcessorCount;
+static unsigned int processor_count;
+
+static std::mutex mtxProcessorCount;
+
+static std::mutex mtxStopNow;
 
 inline unsigned int AskForCores(unsigned int wanted)
 {
@@ -15,7 +20,7 @@ inline unsigned int AskForCores(unsigned int wanted)
 
 	int allowed = 0;
 
-	if(processor_count > 1)
+	if (processor_count > 1)
 	{
 		allowed = std::min(processor_count, wanted);
 		processor_count -= allowed;
@@ -317,8 +322,6 @@ inline uint64_t getFNV1a(const std::map<int, Tile>& mIndexToTile)
 	return hash;
 }
 
-std::mutex mtxStopNow;
-
 inline bool stopNowParallel(const std::map<int, Tile>& mIndexToTile
 #ifdef _DEBUG
 	, uint64_t& positions
@@ -377,6 +380,16 @@ inline bool stopNowParallel(const std::map<int, Tile>& mIndexToTile
 	}
 	else
 	{
+#ifdef BENCHMARK
+		const auto maxSize = mTranspositionsTable.max_size();
+		const auto currSize = mTranspositionsTable.size();
+		if (mTranspositionsTable.max_size() <= mTranspositionsTable.size())
+		{
+			mtxStopNow.unlock();
+			return true;
+		}
+#endif
+		// I hope people will give up before the hash is really full...
 		auto temp = std::make_pair(hash, boardDescription);
 		mTranspositionsTable.emplace(temp);
 		mtxStopNow.unlock();
@@ -1750,6 +1763,7 @@ inline bool SolveRecParallelInit(
 #endif
 	);
 }
+
 // Just to work on a copy.
 inline bool SolveRecAsyncInit(
 	std::vector<std::pair<int, int>> vOldMoves,
@@ -1868,6 +1882,7 @@ inline bool SolveRecAsyncInit(
 		mTranspositionsTable.clear();
 	}
 
+#ifndef BENCHMARK
 	SDL_Event event;
 
 	event.type = SDL_USEREVENT;
@@ -1875,7 +1890,7 @@ inline bool SolveRecAsyncInit(
 	event.user.data1 = NULL;
 	event.user.data2 = NULL;
 	SDL_PushEvent(&event);
-
+#endif
 	return ret;
 }
 
@@ -1936,7 +1951,7 @@ inline bool TryHeuristics(const Board& plateau,
 			vSolution = vSolutionTemp;
 		}
 		vSolutionTemp.clear();
-		}
+	}
 
 #ifdef _DEBUG
 	for (const auto& move : vSolution)
@@ -1946,9 +1961,10 @@ inline bool TryHeuristics(const Board& plateau,
 		return true;
 
 	return false;
-	}
+}
 
 #ifdef _DEBUG
+#ifndef BENCHMARK
 int64_t testAll(const Board& plateau)
 {
 	std::vector<std::pair<bool (*)(Board plateau, std::vector<std::pair<int, int>>& vSolution), std::string>> vTries;
@@ -1976,4 +1992,5 @@ int64_t testAll(const Board& plateau)
 
 	return ret;
 }
+#endif
 #endif

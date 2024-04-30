@@ -352,10 +352,13 @@ public:
 	bool GoBeginning(const uint8_t direction);
 	bool Load(std::pair<std::string, std::vector<std::string>>& savedGame);
 	bool Save(std::pair<std::string, std::vector<std::string>>& savedGame);
+	unsigned int getSeed() { return Seed; }
 #ifdef _DEBUG
+#ifndef BENCHMARK
 	bool Test();
 	void InitBoardLockedHorizontal(int test);
 	bool TestLocked();
+#endif
 #endif
 	const std::vector<std::pair<int, int>>& GetSolution() { return vSolution; }
 	//const std::vector<std::pair<int, int>>& GetHistory() { return vHistory; }
