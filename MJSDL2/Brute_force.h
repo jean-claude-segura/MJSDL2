@@ -1675,8 +1675,8 @@ bool SolveRecInitAsync(
 #endif
 )
 {
-	//may return 0 when not able to detect
-	processor_count = std::thread::hardware_concurrency() - 2;
+	// I keep 2 for the main thread and this one.
+	processor_count = std::thread::hardware_concurrency() - 2; // May return 0 when not able to detect.
 
 	bool ret = false;
 
@@ -1718,36 +1718,56 @@ bool SolveRecInitAsync(
 					(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
 			});
 
-		auto arrSolutions = std::make_unique<std::vector<std::pair<int, int>>[]>((unsigned int)processor_count);
-		for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
+		if (processor_count > 1)
 		{
-			std::vector< std::future<bool>> vSolvers;
-			for (int i = 0; i < std::min((unsigned int)vSortedMoves.size(), (unsigned int)processor_count); ++i)
+			auto arrSolutions = std::make_unique<std::vector<std::pair<int, int>>[]>((unsigned int)processor_count);
+			const auto maxthread = std::min((unsigned int)vSortedMoves.size(), (unsigned int)processor_count);
+			processor_count -= maxthread;
+			for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
 			{
-				if (itMove != vSortedMoves.end())
+				std::vector< std::future<bool>> vSolvers;
+				for (int i = 0; i < maxthread; ++i)
 				{
-					vSolvers.emplace_back(std::async(&SolveRecParallelInit, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, std::ref(arrSolutions[i])
+					if (itMove != vSortedMoves.end())
+					{
+						vSolvers.emplace_back(std::async(&SolveRecParallelInit, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, std::ref(arrSolutions[i])
 #ifdef _DEBUG
-						, positions
+							, positions
 #endif
-					));
-					++itMove;
+						));
+						++itMove;
+					}
 				}
-			}
 
-			int i = 0;
-			for (auto& solver : vSolvers)
-			{
-				auto retSolver = solver.get();
-				ret |= retSolver;
-				if (retSolver)
-					vSolution = arrSolutions[i];
-				i++;
+				int i = 0;
+				for (auto& solver : vSolvers)
+				{
+					auto retSolver = solver.get();
+					ret |= retSolver;
+					if (retSolver)
+						vSolution = arrSolutions[i];
+					i++;
+				}
+				if (ret)
+					break;
+				if (stopSolverNow)
+					break;
 			}
-			if (ret)
-				break;
-			if (stopSolverNow)
-				break;
+		}
+		else
+		{
+			for (const auto& move : vSortedMoves)
+			{
+				ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution
+#ifdef _DEBUG
+					, positions
+#endif
+				);
+				if (ret)
+					break;
+				if (stopSolverNow)
+					break;
+			}
 		}
 
 		mTranspositionsTable.clear();
