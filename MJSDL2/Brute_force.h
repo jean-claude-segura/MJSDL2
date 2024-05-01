@@ -505,6 +505,7 @@ inline bool SolveRecParallel(
 #endif
 )
 {
+	int IndexesToRemoveFromSolutionCount = 0;
 	std::vector<std::vector<int>> vNewMoves;
 
 	std::vector<TileAndIndex> vLogicalBoardRemoved;
@@ -512,7 +513,7 @@ inline bool SolveRecParallel(
 	std::vector<int> vRemovableWasFalse;
 	std::map<int, Tile> mIndexToRemovedTile;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
-	bool full = false;
+	
 	for (const auto& move : vMove)
 	{
 		RemoveTile(move,
@@ -522,13 +523,53 @@ inline bool SolveRecParallel(
 			mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, mOccupationBoardRemoved);
 	}
 	vSolution.emplace_back(std::make_pair(vMove[0], vMove[1]));
+	++IndexesToRemoveFromSolutionCount;
 	if (vMove.size() == 4)
 	{
-		full = true;
+		++IndexesToRemoveFromSolutionCount;
 		vSolution.emplace_back(std::make_pair(vMove[2], vMove[3]));
 	}
 
-	SetMoves(vLogicalBoard, arrRemovable, vNewMoves);
+	bool loop = false;
+	
+	do
+	{
+		loop = false;
+		vNewMoves.clear();
+		SetMoves(vLogicalBoard, arrRemovable, vNewMoves);
+
+		std::array<std::array<std::array<TileAndIndex, 4>, 8>, 12> arrBoard;
+		std::map<int, int> arrGlobalOccurences {};
+		for (const auto& tileAndIndex : vLogicalBoard)
+			++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
+
+		for (auto itMove = vNewMoves.begin(); itMove != vNewMoves.end(); ++itMove)
+		{
+			const auto& vMove = *itMove;
+			const auto index = *vMove.begin();
+			const auto pairing = mIndexToTile.find(index)->second.Pairing;
+			if (vMove.size() == arrGlobalOccurences.find(pairing)->second)
+			{
+				loop = true;
+				for (const auto& move : vMove)
+				{
+					RemoveTile(move,
+						vLogicalBoard,
+						arrRemovable,
+						mIndexToTile,
+						mOccupationBoard, vLogicalBoardRemoved, vRemovableWasTrue, vRemovableWasFalse, mIndexToRemovedTile, mOccupationBoardRemoved);
+				}
+				++IndexesToRemoveFromSolutionCount;
+				vSolution.emplace_back(std::make_pair(vMove[0], vMove[1]));
+				if (vMove.size() == 4)
+				{
+					++IndexesToRemoveFromSolutionCount;
+					vSolution.emplace_back(std::make_pair(vMove[2], vMove[3]));
+				}
+			}
+		}
+	}
+	while (loop);
 
 	auto ret = vLogicalBoard.empty();
 	if (!ret)
@@ -623,9 +664,8 @@ inline bool SolveRecParallel(
 		}
 		if (!ret)
 		{
-			if (full)
+			for (int i = 0; i < IndexesToRemoveFromSolutionCount; ++i)
 				vSolution.pop_back();
-			vSolution.pop_back();
 		}
 	}
 	/**/
@@ -1745,6 +1785,7 @@ inline bool tryBruteForceOrderingFreedPadlocksFirst(Board plateau, std::vector<s
 	return plateau.IsEmpty();
 }
 
+// Just to work on a copy.
 inline bool SolveRecParallelInit(
 	const std::vector<int> vMove,
 	std::vector<TileAndIndex> vLogicalBoard,
