@@ -50,6 +50,7 @@ inline bool SolveRecParallelInit(
 	std::array<bool, 144> arrRemovable,
 	std::map<int, Tile> mIndexToTile,
 	std::map<Coordinates, int> mOccupationBoard,
+	std::map<int, int> arrGlobalOccurences,
 	std::vector<std::pair<int, int>>& vSolution
 #ifdef _DEBUG
 	, uint64_t positions
@@ -572,6 +573,7 @@ inline bool SolveRecParallel(
 	std::array<bool, 144>& arrRemovable,
 	std::map<int, Tile>& mIndexToTile,
 	std::map<Coordinates, int>& mOccupationBoard,
+	std::map<int, int> arrGlobalOccurences,
 	std::vector<std::pair<int, int>>& vSolution
 #ifdef _DEBUG
 	, uint64_t& positions
@@ -604,10 +606,6 @@ inline bool SolveRecParallel(
 	}
 
 	bool loop = false;
-
-	std::map<int, int> arrGlobalOccurences {};
-	for (const auto& tileAndIndex : vLogicalBoard)
-		++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
 
 	do
 	{
@@ -687,7 +685,7 @@ inline bool SolveRecParallel(
 						{
 							if (itMove != vSortedMoves.end())
 							{
-								vSolvers.emplace_back(std::async(&SolveRecParallelInit, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, std::ref(arrSolutions[i])
+								vSolvers.emplace_back(std::async(&SolveRecParallelInit, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, arrGlobalOccurences, std::ref(arrSolutions[i])
 #ifdef _DEBUG
 									, positions
 #endif
@@ -720,7 +718,7 @@ inline bool SolveRecParallel(
 				{
 					for (const auto& move : vSortedMoves)
 					{
-						ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution
+						ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, arrGlobalOccurences, vSolution
 #ifdef _DEBUG
 							, ++positions
 #endif
@@ -1864,13 +1862,14 @@ inline bool SolveRecParallelInit(
 	std::array<bool, 144> arrRemovable,
 	std::map<int, Tile> mIndexToTile,
 	std::map<Coordinates, int> mOccupationBoard,
+	std::map<int, int> arrGlobalOccurences,
 	std::vector<std::pair<int, int>>& vSolution
 #ifdef _DEBUG
 	, uint64_t positions
 #endif
 )
 {
-	return SolveRecParallel(vMove, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution
+	return SolveRecParallel(vMove, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, arrGlobalOccurences, vSolution
 #ifdef _DEBUG
 		, positions
 #endif
@@ -1982,7 +1981,7 @@ inline bool SolveRecAsyncInit(
 					{
 						if (itMove != vSortedMoves.end())
 						{
-							vSolvers.emplace_back(std::async(&SolveRecParallelInit, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, std::ref(arrSolutions[i])
+							vSolvers.emplace_back(std::async(&SolveRecParallelInit, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, arrGlobalOccurences, std::ref(arrSolutions[i])
 #ifdef _DEBUG
 								, positions
 #endif
@@ -2016,7 +2015,7 @@ inline bool SolveRecAsyncInit(
 			{
 				for (const auto& move : vSortedMoves)
 				{
-					ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, vSolution
+					ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, arrGlobalOccurences, vSolution
 #ifdef _DEBUG
 						, positions
 #endif
