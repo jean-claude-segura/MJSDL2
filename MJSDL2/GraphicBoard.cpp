@@ -574,18 +574,20 @@ void GraphicBoard::LoadUI()
 	LoadButton(NordEstBtn, "./interface/blank.svg");
 	LoadButton(NordOuestBtn, "./interface/blank.svg");
 	LoadButton(TurnBtn, "./interface/MJd3rv1-.svg");
-	LoadButton(HintBtn, "./interface/blank.svg");
-	LoadButton(RestartBtn, "./interface/blank.svg");
-	LoadButton(ExitBtn, "./interface/blank.svg");
 	LoadButton(TakeBackBtn, "./interface/blank.svg");
 	LoadButton(MoveForwardBtn, "./interface/blank.svg");
 	LoadButton(GoBeginningBtn, "./interface/blank.svg");
 	LoadButton(GoEndBtn, "./interface/blank.svg");
-	LoadButton(QuickSaveBtn, "./interface/blank.svg");
-	LoadButton(QuickLoadBtn, "./interface/blank.svg");
 
+	CreateButton(RestartBtn, "./interface/blank.svg", "./interface/restart.svg");
+	CreateButton(HintBtn, "./interface/blank.svg", "./interface/magnifying-glass.svg");
 	CreateButton(ComputerOnBtn, "./interface/blank.svg", "./interface/cpu.svg");
 	CreateButton(ComputerOffBtn, "./interface/blank.svg", "./interface/lightbulb.svg");
+
+	CreateButton(ExitBtn, "./interface/blank.svg", "./interface/exit-door.svg");
+	CreateButton(QuickSaveBtn, "./interface/blank.svg", "./interface/floppy-disk.svg");
+	CreateButton(QuickLoadBtn, "./interface/blank.svg", "./interface/floppy-disk.svg");
+
 }
 
 void GraphicBoard::InterfaceClicked(const int index, const bool right)
