@@ -623,6 +623,7 @@ inline bool SolveRecParallel(
 			const auto pairing = mIndexToTile.find(index)->second.Pairing;
 			if (vMove.size() == arrGlobalOccurences.find(pairing)->second)
 			{
+				arrGlobalOccurences.erase(pairing);
 				loop = true;
 				for (const auto& move : vMove)
 				{
@@ -1934,6 +1935,7 @@ inline bool SolveRecAsyncInit(
 				const auto pairing = mIndexToTile.find(index)->second.Pairing;
 				if (vMove.size() == arrGlobalOccurences.find(pairing)->second)
 				{
+					arrGlobalOccurences.erase(pairing);
 					loop = true;
 					for (const auto& move : vMove)
 					{
