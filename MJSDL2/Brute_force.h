@@ -605,16 +605,15 @@ inline bool SolveRecParallel(
 
 	bool loop = false;
 
+	std::map<int, int> arrGlobalOccurences {};
+	for (const auto& tileAndIndex : vLogicalBoard)
+		++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
+
 	do
 	{
 		loop = false;
 		vNewMoves.clear();
 		SetMoves(vLogicalBoard, arrRemovable, vNewMoves);
-
-		std::array<std::array<std::array<TileAndIndex, 4>, 8>, 12> arrBoard;
-		std::map<int, int> arrGlobalOccurences {};
-		for (const auto& tileAndIndex : vLogicalBoard)
-			++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
 
 		for (auto itMove = vNewMoves.begin(); itMove != vNewMoves.end(); ++itMove)
 		{
@@ -1917,16 +1916,15 @@ inline bool SolveRecAsyncInit(
 
 		bool loop = false;
 
+		std::map<int, int> arrGlobalOccurences {};
+		for (const auto& tileAndIndex : vLogicalBoard)
+			++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
+
 		do
 		{
 			loop = false;
 			vMoves.clear();
 			SetMoves(vLogicalBoard, arrRemovable, vMoves);
-
-			std::array<std::array<std::array<TileAndIndex, 4>, 8>, 12> arrBoard;
-			std::map<int, int> arrGlobalOccurences {};
-			for (const auto& tileAndIndex : vLogicalBoard)
-				++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
 
 			for (auto itMove = vMoves.begin(); itMove != vMoves.end(); ++itMove)
 			{
