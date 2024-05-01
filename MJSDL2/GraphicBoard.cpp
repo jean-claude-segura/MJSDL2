@@ -597,39 +597,13 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 	switch (index)
 	{
 	case RESTART:
-		plateau.ComputerStop();
 		if (right)
 		{
-			if (plateau.Solve())
-			{
-				for (const auto& move : plateau.GetSolution())
-				{
-					if (0 <= selected && selected < 144)
-						clicked[selected] = false;
-					selected = -1;
-					Refresh(false);
-
-					clicked[move.first] = true;
-					clicked[move.second] = true;
-
-					Refresh(false);
-
-					clicked[move.first] = false;
-					clicked[move.second] = false;
-
-					plateau.RemovePairOfTiles(move.first, move.second);
-
-					itNextMove = plateau.GetMovesLeft().begin();
-					itPrevMove = plateau.GetMovesLeft().end();
-
-					Refresh(false);
-				}
-
-				RefreshMouseMap();
-			}
+			break;
 		}
 		else
 		{
+			plateau.ComputerStop();
 			if (0 <= selected && selected < 144)
 				clicked[selected] = false;
 			selected = -1;
@@ -646,9 +620,9 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 			thrLoadRandomBackground.join();
 			//futureLoadRandomBackground.get();
 			Refresh(true, true);
+			SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
+			break;
 		}
-		SDL_FlushEvents(SDL_MOUSEBUTTONDOWN, SDL_MOUSEBUTTONUP);
-		break;
 	case COMPUTER:
 		if (right)
 		{
@@ -784,11 +758,11 @@ void GraphicBoard::InterfaceClicked(const int index, const bool right)
 				const std::string path = saveDir + saveFilename;
 				if (!std::filesystem::exists(saveDir))
 					std::filesystem::create_directory(saveDir);
-				if(std::filesystem::exists(path))
+				if (std::filesystem::exists(path))
 					std::filesystem::remove(path);
 				std::ofstream saveFile(path);
 				saveFile << savedGame.first << std::endl;
-				for(const auto & move : savedGame.second)
+				for (const auto& move : savedGame.second)
 					saveFile << move << std::endl;
 				saveFile.close();
 				Refresh(true);
@@ -1249,7 +1223,7 @@ void GraphicBoard::RefreshMouseMap()
 	// Computer :
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 2;
-	if(Solving)
+	if (Solving)
 		RenderCopyMouseMap(ComputerOnBtn, coordonnees, COMPUTER, 0, SDL_FLIP_NONE);
 	else
 		RenderCopyMouseMap(ComputerOffBtn, coordonnees, COMPUTER, 0, SDL_FLIP_NONE);
@@ -1589,7 +1563,7 @@ void GraphicBoard::DisplayInterface()
 	// Computer
 	coordonnees.x = size.x - 20;
 	coordonnees.y = (size.y - 20) * 2;
-	if(Solving)
+	if (Solving)
 		SDL_RenderCopy(renderer, ComputerOnBtn, NULL, &coordonnees);
 	else
 		SDL_RenderCopy(renderer, ComputerOffBtn, NULL, &coordonnees);
@@ -1916,7 +1890,7 @@ void GraphicBoard::Loop()
 		case SDL_USEREVENT:
 			switch (event.user.code)
 			{
-			case 0 :
+			case 0:
 				plateau.ComputerStop();
 				Solving = false;
 				RefreshInterface();
