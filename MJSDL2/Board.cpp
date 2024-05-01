@@ -83,7 +83,7 @@ void Board::SortBoard(const uint8_t direction)
 		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 140; ++it);
 		if (it != vLogicalBoard.end())
 		{
-			auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
+			auto temp = *it;
 			vLogicalBoard.erase(it);
 			vLogicalBoard.insert(vLogicalBoard.begin(), temp);
 		}
@@ -97,21 +97,21 @@ void Board::SortBoard(const uint8_t direction)
 					return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
 				}
 			);*/
-			auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
+			auto temp = *it;
 			vLogicalBoard.erase(it);
 			vLogicalBoard.emplace_back(temp);
 		}
 		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 142; ++it);
 		if (it != vLogicalBoard.end())
 		{
-			auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
+			auto temp = *it;
 			vLogicalBoard.erase(it);
 			vLogicalBoard.emplace_back(temp);
 		}
 		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 143; ++it);
 		if (it != vLogicalBoard.end())
 		{
-			auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
+			auto temp = *it;
 			vLogicalBoard.erase(it);
 			vLogicalBoard.emplace_back(temp);
 		}
@@ -121,28 +121,28 @@ void Board::SortBoard(const uint8_t direction)
 		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 140; ++it);
 		if (it != vLogicalBoard.end())
 		{
-			auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
+			auto temp = *it;
 			vLogicalBoard.erase(it);
 			vLogicalBoard.emplace_back(temp);
 		}
 		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 141; ++it);
 		if (it != vLogicalBoard.end())
 		{
-			auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
+			auto temp = *it;
 			vLogicalBoard.erase(it);
 			vLogicalBoard.insert(vLogicalBoard.begin(), temp);
 		}
 		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 142; ++it);
 		if (it != vLogicalBoard.end())
 		{
-			auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
+			auto temp = *it;
 			vLogicalBoard.erase(it);
 			vLogicalBoard.insert(vLogicalBoard.begin(), temp);
 		}
 		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 143; ++it);
 		if (it != vLogicalBoard.end())
 		{
-			auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
+			auto temp = *it;
 			vLogicalBoard.erase(it);
 			vLogicalBoard.emplace_back(temp);
 		}
@@ -284,7 +284,7 @@ void Board::InitBoardSub(std::mt19937& e1)
 		--tempDominos[domino];
 		mOccupationBoard[arrIndexToCoord[index]] = index;
 		const auto& coord = arrIndexToBoardCoord[index];
-		vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+		vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 		mIndexToTile.emplace(index, Tile(domino));
 	}
 
@@ -550,10 +550,10 @@ bool Board::TakeBack(bool beginning)
 			const auto& secondTile = mIndexToRemovedTile.find(secondIndex)->second;
 
 			auto coord = arrIndexToBoardCoord[firstIndex];
-			vLogicalBoard.emplace_back(TileAndIndex(firstTile.Rank, firstIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(firstTile, firstIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 
 			coord = arrIndexToBoardCoord[secondIndex];
-			vLogicalBoard.emplace_back(TileAndIndex(secondTile.Rank, secondIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(secondTile, secondIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 
 			mIndexToTile.emplace(firstIndex, firstTile);
 			mIndexToRemovedTile.erase(firstIndex);
@@ -830,7 +830,7 @@ void Board::InitBoardLockedHorizontal(int test)
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			const auto coord = arrIndexToBoardCoord[index];
-			vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
 		break;
@@ -841,7 +841,7 @@ void Board::InitBoardLockedHorizontal(int test)
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			const auto coord = arrIndexToBoardCoord[index];
-			vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
 
@@ -851,7 +851,7 @@ void Board::InitBoardLockedHorizontal(int test)
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			const auto coord = arrIndexToBoardCoord[index];
-			vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
 		break;
@@ -862,7 +862,7 @@ void Board::InitBoardLockedHorizontal(int test)
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			const auto coord = arrIndexToBoardCoord[index];
-			vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
 
@@ -876,7 +876,7 @@ void Board::InitBoardLockedHorizontal(int test)
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			const auto coord = arrIndexToBoardCoord[index];
-			vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
 		for (; index < 12; ++index)
@@ -885,7 +885,7 @@ void Board::InitBoardLockedHorizontal(int test)
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			const auto coord = arrIndexToBoardCoord[index];
-			vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
 		break;
@@ -900,7 +900,7 @@ void Board::InitBoardLockedHorizontal(int test)
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			const auto coord = arrIndexToBoardCoord[index];
-			vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
 		for (; index < 8; ++index)
@@ -909,7 +909,7 @@ void Board::InitBoardLockedHorizontal(int test)
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			const auto coord = arrIndexToBoardCoord[index];
-			vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
 
@@ -919,7 +919,7 @@ void Board::InitBoardLockedHorizontal(int test)
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			const auto coord = arrIndexToBoardCoord[index];
-			vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
 		break;
@@ -950,7 +950,7 @@ void Board::InitBoardLockedHorizontal(int test)
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			const auto coord = arrIndexToBoardCoord[index];
-			vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
 		break;
@@ -981,7 +981,7 @@ void Board::InitBoardLockedHorizontal(int test)
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			const auto coord = arrIndexToBoardCoord[index];
-			vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
 		break;
@@ -1012,7 +1012,7 @@ void Board::InitBoardLockedHorizontal(int test)
 			--tempDominos[domino];
 			mOccupationBoard[arrIndexToCoord[index]] = index;
 			const auto coord = arrIndexToBoardCoord[index];
-			vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+			vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
 			mIndexToTile.emplace(index, Tile(domino));
 		}
 		break;

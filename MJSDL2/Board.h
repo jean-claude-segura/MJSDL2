@@ -22,12 +22,12 @@ public:
 	Tile(const Tile& tile) : Rank(tile.Rank), Pairing(tile.Pairing) {}
 
 	// Move constructor
-	Tile(Tile&& tile) noexcept : Rank(tile.Rank), Pairing(tile.Pairing) {}
+	Tile(const Tile&& tile) noexcept : Rank(tile.Rank), Pairing(tile.Pairing) {}
 
 	// Assignment operator
 	// Damn sort on vLogicalBoard was messing with the values...
 	// https://stackoverflow.com/questions/4136156/const-member-and-assignment-operator-how-to-avoid-the-undefined-behavior/63489092#63489092
-	Tile& operator=(Tile&& other) noexcept
+	Tile& operator=(const Tile&& other) noexcept
 	{
 		*const_cast<int*> (&Rank) = other.Rank;
 		*const_cast<int*> (&Pairing) = other.Pairing;
@@ -91,7 +91,7 @@ public:
 		DecX(tileIndex.DecX),
 		DecY(tileIndex.DecY) {}
 	// Move constructor
-	TileAndIndex(TileAndIndex&& tileIndex) noexcept :
+	TileAndIndex(const TileAndIndex&& tileIndex) noexcept :
 		TileObject(Tile(tileIndex.TileObject)),
 		Index(tileIndex.Index),
 		X(tileIndex.X),
@@ -102,7 +102,7 @@ public:
 
 	// Assignment operator
 	/**/
-	TileAndIndex& operator=(TileAndIndex&& other) noexcept
+	TileAndIndex& operator=(const TileAndIndex&& other) noexcept
 	{
 		*const_cast<Tile*> (&TileObject) = other.TileObject;
 		*const_cast<int*> (&Index) = other.Index;
