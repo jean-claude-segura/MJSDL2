@@ -42,6 +42,14 @@ Image by <a href="https://www.freepik.com/free-vector/flat-chinese-new-year-back
 
 <a href="https://www.flaticon.com/free-icons/next" title="next icons">Next icons created by Freepik - Flaticon</a>
 
+<a href="https://www.flaticon.com/free-icons/forward" title="forward icons">Forward icons created by Freepik - Flaticon</a>
+
+<a href="https://www.flaticon.com/free-icons/backward" title="backward icons">Backward icons created by Freepik - Flaticon</a>
+
+<a href="https://www.flaticon.com/free-icons/rewind" title="rewind icons">Rewind icons created by Freepik - Flaticon</a>
+
+<a href="https://www.flaticon.com/free-icons/forward" title="forward icons">Forward icons created by Freepik - Flaticon</a>
+
 The file "facedown.svg" is licensed under the <a href="https://en.wikipedia.org/wiki/Creative_Commons">Creative Commons</a>
 <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.en">Attribution-Share Alike 4.0 International</a> license (Based on Cangjie6's work).
 

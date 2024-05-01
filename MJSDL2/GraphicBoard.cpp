@@ -652,10 +652,10 @@ void GraphicBoard::LoadUI()
 
 	LoadButton(TurnBtn, "./interface/MJd3rv1-.svg");
 
-	LoadButton(TakeBackBtn, "./interface/blank.svg");
-	LoadButton(MoveForwardBtn, "./interface/blank.svg");
-	LoadButton(GoBeginningBtn, "./interface/blank.svg");
-	LoadButton(GoEndBtn, "./interface/blank.svg");
+	CreateButton(TakeBackBtn, "./interface/blank.svg", "./interface/backward.png", 270);
+	CreateButton(MoveForwardBtn, "./interface/blank.svg", "./interface/forwards.png", 270);
+	CreateButton(GoBeginningBtn, "./interface/blank.svg", "./interface/previous.png", 270);
+	CreateButton(GoEndBtn, "./interface/blank.svg", "./interface/following.png", 270);
 
 	CreateButton(RestartBtn, "./interface/blank.svg", "./interface/restart.svg");
 	CreateButton(HintBtn, "./interface/blank.svg", "./interface/magnifying-glass.svg");
