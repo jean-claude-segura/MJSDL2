@@ -521,8 +521,7 @@ void GraphicBoard::CreateButton(SDL_Texture*& button, const std::string& strPath
 	SDL_SetRenderTarget(renderer, button);
 
 	SDL_RenderCopy(renderer, texture_Back, NULL, NULL);
-	//SDL_Rect tgtRect{ -5, 5, w, h };
-	//SDL_Rect tgtRect{ -25, 0, wi / 4 , hi / 4};
+
 	SDL_Rect tgtRect{ 12, 40, 64, 64 };
 	SDL_RenderCopyEx(renderer, texture_Icon, NULL, &tgtRect, angle, NULL, SDL_FLIP_NONE);
 
@@ -601,8 +600,7 @@ void GraphicBoard::CreateButton(SDL_Texture*& button, const std::string& strPath
 	SDL_SetRenderTarget(renderer, button);
 
 	SDL_RenderCopy(renderer, texture_Back, NULL, NULL);
-	//SDL_Rect tgtRect{ -5, 5, w, h };
-	//SDL_Rect tgtRect{ -25, 0, wi / 4 , hi / 4};
+
 	SDL_Rect tgtRect{ -10, 15, 110, 110 };
 	SDL_RenderCopy(renderer, texture_Icon, NULL, &tgtRect);
 
