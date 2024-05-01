@@ -1,4 +1,5 @@
 Mah Jongg SDL2
+![You totally missed something great!](/resources/mjsdl2-screen.png "MJSDL2"))
 
 Inspiration from Mah Jongg V-G-A by Ron Balewski
 
