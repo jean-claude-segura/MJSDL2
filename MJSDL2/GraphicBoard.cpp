@@ -496,6 +496,49 @@ void GraphicBoard::LoadResources()
 	LoadRandomBackgroundVictory();
 }
 
+void GraphicBoard::CreateButton(SDL_Texture*& button, const std::string& strPathBack, const std::string& strPathIcon, const std::string& strPathCover)
+{
+	if (button != NULL)
+		SDL_DestroyTexture(button);
+	SDL_Texture* texture_Back = NULL;
+	LoadButton(texture_Back, strPathBack);
+	SDL_Texture* texture_Icon = NULL;
+	LoadButton(texture_Icon, strPathIcon);
+	SDL_Texture* texture_Cover = NULL;
+	LoadButton(texture_Cover, strPathCover);
+
+	Uint32 format;
+	int w, h;
+	SDL_BlendMode blendmode;
+
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+
+	SDL_QueryTexture(texture_Back, &format, NULL, &w, &h);
+
+	SDL_GetTextureBlendMode(texture_Back, &blendmode);
+
+	button = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, w, h);
+
+	SDL_SetTextureBlendMode(button, SDL_BLENDMODE_NONE);
+
+	SDL_SetRenderTarget(renderer, button);
+
+	SDL_RenderCopy(renderer, texture_Back, NULL, NULL);
+
+	SDL_Rect tgtRect{ -10, 15, 110, 110 };
+	SDL_RenderCopy(renderer, texture_Icon, NULL, &tgtRect);
+	
+	SDL_Rect tgtRectCover{ 12, 56, 65, 65 };
+	SDL_RenderCopyEx(renderer, texture_Cover, NULL, &tgtRectCover, 0, NULL, SDL_FLIP_VERTICAL);
+
+	SDL_SetRenderTarget(renderer, renderTarget);
+	SDL_SetTextureBlendMode(button, SDL_BLENDMODE_BLEND);
+
+	SDL_DestroyTexture(texture_Cover);
+	SDL_DestroyTexture(texture_Icon);
+	SDL_DestroyTexture(texture_Back);
+}
+
 void GraphicBoard::CreateButton(SDL_Texture*& button, const std::string& strPathBack, const std::string& strPathIcon)
 {
 	if (button != NULL)
@@ -507,13 +550,11 @@ void GraphicBoard::CreateButton(SDL_Texture*& button, const std::string& strPath
 
 	Uint32 format;
 	int w, h;
-	int wi, hi;
 	SDL_BlendMode blendmode;
 
 	auto renderTarget = SDL_GetRenderTarget(renderer);
 
 	SDL_QueryTexture(texture_Back, &format, NULL, &w, &h);
-	SDL_QueryTexture(texture_Icon, NULL, NULL, &wi, &hi);
 	SDL_GetTextureBlendMode(texture_Back, &blendmode);
 
 	button = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, w, h);
@@ -585,8 +626,8 @@ void GraphicBoard::LoadUI()
 	CreateButton(ComputerOffBtn, "./interface/blank.svg", "./interface/lightbulb.svg");
 
 	CreateButton(ExitBtn, "./interface/blank.svg", "./interface/exit-door.svg");
-	CreateButton(QuickSaveBtn, "./interface/blank.svg", "./interface/floppy-disk.svg");
-	CreateButton(QuickLoadBtn, "./interface/blank.svg", "./interface/floppy-disk.svg");
+	CreateButton(QuickSaveBtn, "./interface/blank.svg", "./interface/floppy-disk.svg", "./interface/download.png");
+	CreateButton(QuickLoadBtn, "./interface/blank.svg", "./interface/floppy-disk.svg", "./interface/upload.png");
 
 }
 
