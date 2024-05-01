@@ -61,7 +61,7 @@ inline uint8_t EvalMoveMaxBlock(
 	const std::vector<int>& vMove,
 	const std::map<int, Tile>& mIndexToTile);
 
-inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToRemovedTile, const std::vector<int>& vMove);
+inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToRemovedTile, const std::map<int, int>& arrGlobalOccurences, const std::vector<int>& vMove);
 
 // Simplified version for the init.
 // No need to restore anything.
@@ -650,7 +650,7 @@ inline bool SolveRecParallel(
 	auto ret = vLogicalBoard.empty();
 	if (!ret && !stopSolverNow)
 	{
-		if (!CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, vMove) && !vNewMoves.empty() && !stopSolverNow)
+		if (!CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, arrGlobalOccurences, vMove) && !vNewMoves.empty() && !stopSolverNow)
 		{
 			// For now there is only one async running...
 			if (!stopNowParallel(mIndexToTile
@@ -755,7 +755,7 @@ inline bool SolveRecParallel(
 	return ret;
 }
 
-inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToRemovedTile, const std::vector<int>& vMove)
+inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToRemovedTile, const std::map<int, int>& arrGlobalOccurences, const std::vector<int>& vMove)
 {
 	if (vMove.size() == 4)
 		return false;
@@ -794,7 +794,7 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 			int z = c1.Z;
 			int y = c1.Y;
 			std::array<std::array<std::array<TileAndIndex, 4>, 8>, 12> arrBoard;
-			std::map<int, int> arrGlobalOccurences {};
+
 			std::map<int, int> arrRowOccurences {};
 
 			auto beginning = -1;
@@ -810,7 +810,6 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 			{
 				if (tileAndIndex.Index < 140)
 					arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex;
-				++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
 				if (tileAndIndex.Y == c1.Y && tileAndIndex.Z == c1.Z) // Same plane, same row
 				{
 					++arrRowOccurences[tileAndIndex.TileObject.Pairing];
@@ -1448,6 +1447,15 @@ inline uint8_t EvalMoveMaxBlock(
 	return lockingValue;
 }
 
+inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard, const std::map<int, Tile>& mIndexToRemovedTile, const std::vector<int>& vMove)
+{
+	std::map<int, int> arrGlobalOccurences {};
+	for (const auto& tileAndIndex : vLogicalBoard)
+		++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
+
+	CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, arrGlobalOccurences, vMove);
+}
+
 // std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
 // std::vector<std::pair<std::vector<int>, int>>
 template <class T>
@@ -1907,7 +1915,7 @@ inline bool SolveRecAsyncInit(
 		std::cout << "*     " << lockStatus << "     *" << std::endl;
 		std::cout << "*************" << std::endl;
 #endif
-	}
+}
 	else
 	{
 		// I keep 2 for the main thread and this one.
@@ -2001,8 +2009,8 @@ inline bool SolveRecAsyncInit(
 #endif
 							));
 							++itMove;
-						}
 					}
+				}
 
 					int i = 0;
 					for (auto& solver : vSolvers)
@@ -2021,10 +2029,10 @@ inline bool SolveRecAsyncInit(
 						break;
 					if (stopSolverNow)
 						break;
-				}
+			}
 
 				GiveCoresBack(allowed_processor_count);
-			}
+		}
 			else
 			{
 				for (const auto& move : vSortedMoves)
@@ -2038,8 +2046,8 @@ inline bool SolveRecAsyncInit(
 						break;
 					if (stopSolverNow)
 						break;
-				}
 			}
+	}
 
 			mTranspositionsTable.clear();
 		}
@@ -2110,7 +2118,7 @@ inline bool TryHeuristics(const Board& plateau,
 #else
 			return true;
 #endif
-	}
+		}
 		if (vSolution.size() < vSolutionTemp.size())
 		{
 			vSolution.clear();
@@ -2154,9 +2162,9 @@ int64_t testAll(const Board& plateau)
 		ret = ret << 7;
 		ret |= func.first(plateau, vSolutionTemp) ? 1 : 0;
 		vSolutionTemp.clear();
-}
+	}
 
 	return ret;
-}
+	}
 #endif
 #endif

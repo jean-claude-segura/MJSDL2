@@ -59,7 +59,7 @@ bool Board::CompLogicalBoardUpRight(const TileAndIndex& left, const TileAndIndex
 
 void Board::SortBoard(const uint8_t direction)
 {
-	bool (*Comparateur)(const TileAndIndex&left, const TileAndIndex&right);
+	bool (*Comparateur)(const TileAndIndex & left, const TileAndIndex & right);
 	switch (direction)
 	{
 	default:
@@ -117,36 +117,36 @@ void Board::SortBoard(const uint8_t direction)
 		}
 	}
 	else if (direction == 1 || direction == 2)
+	{
+		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 140; ++it);
+		if (it != vLogicalBoard.end())
 		{
-			for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 140; ++it);
-			if (it != vLogicalBoard.end())
-			{
-				auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
-				vLogicalBoard.erase(it);
-				vLogicalBoard.emplace_back(temp);
-			}
-			for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 141; ++it);
-			if (it != vLogicalBoard.end())
-			{
-				auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
-				vLogicalBoard.erase(it);
-				vLogicalBoard.insert(vLogicalBoard.begin(), temp);
-			}
-			for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 142; ++it);
-			if (it != vLogicalBoard.end())
-			{
-				auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
-				vLogicalBoard.erase(it);
-				vLogicalBoard.insert(vLogicalBoard.begin(), temp);
-			}
-			for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 143; ++it);
-			if (it != vLogicalBoard.end())
-			{
-				auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
-				vLogicalBoard.erase(it);
-				vLogicalBoard.emplace_back(temp);
-			}
+			auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
+			vLogicalBoard.erase(it);
+			vLogicalBoard.emplace_back(temp);
 		}
+		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 141; ++it);
+		if (it != vLogicalBoard.end())
+		{
+			auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
+			vLogicalBoard.erase(it);
+			vLogicalBoard.insert(vLogicalBoard.begin(), temp);
+		}
+		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 142; ++it);
+		if (it != vLogicalBoard.end())
+		{
+			auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
+			vLogicalBoard.erase(it);
+			vLogicalBoard.insert(vLogicalBoard.begin(), temp);
+		}
+		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 143; ++it);
+		if (it != vLogicalBoard.end())
+		{
+			auto temp = TileAndIndex(it->TileObject, it->Index, it->X, it->Y, it->Z, it->DecX, it->DecY);
+			vLogicalBoard.erase(it);
+			vLogicalBoard.emplace_back(temp);
+		}
+	}
 }
 
 std::array<bool, 144> Board::InitRemovable()
@@ -248,7 +248,7 @@ bool Board::Save(std::pair<std::string, std::vector<std::string>>& savedGame)
 	return true;
 };
 
-void Board::InitBoardSub(std::mt19937 &e1)
+void Board::InitBoardSub(std::mt19937& e1)
 {
 	std::uniform_int_distribution<int> uniform_dist(0, 41);
 
@@ -341,7 +341,7 @@ void Board::RemoveTile(const int index)
 
 	std::vector<TileAndIndex>::iterator it = vLogicalBoard.begin();
 	for (; it != vLogicalBoard.end() && it->Index != index; ++it);
-	const auto & coord = arrIndexToCoord[it->Index];
+	const auto& coord = arrIndexToCoord[it->Index];
 	double x = coord.x;
 	double y = coord.y;
 	double z = coord.z;
@@ -390,8 +390,8 @@ void Board::RemoveTile(const int index)
 bool Board::RemovePairOfTiles(const int first, const int second)
 {
 	bool bRetour = false;
-	const auto & left = mIndexToTile.find(first)->second;
-	const auto & right = mIndexToTile.find(second)->second;
+	const auto& left = mIndexToTile.find(first)->second;
+	const auto& right = mIndexToTile.find(second)->second;
 	if (left.Pairing == right.Pairing)
 	{
 		RemoveTile(first);
@@ -408,7 +408,7 @@ void Board::BuildMoves(std::vector<TileAndIndex>& vRemovableBoard, std::vector<T
 {
 	if (itFirst != vRemovableBoard.end())
 	{
-		const auto & domino = (*itFirst).TileObject;
+		const auto& domino = (*itFirst).TileObject;
 		auto itNext = itFirst;
 		do
 		{
@@ -513,11 +513,15 @@ bool Board::IsLockedFromMove()
 	else
 	{
 		std::vector<int> vMove;
-		const auto & it = vHistory.back();
+		const auto& it = vHistory.back();
 		vMove.emplace_back(it.first);
 		vMove.emplace_back(it.second);
-		
-		bIsLockedFromMove = bIsLockedFromMove ? true : CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, vMove);
+
+		std::map<int, int> arrGlobalOccurences {};
+		for (const auto& tileAndIndex : vLogicalBoard)
+			++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
+
+		bIsLockedFromMove = bIsLockedFromMove ? true : CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, arrGlobalOccurences, vMove);
 		return bIsLockedFromMove;
 	}
 }
@@ -530,11 +534,11 @@ bool Board::TakeBack(bool beginning)
 	}
 	else
 	{
-		const auto & it = vHistory.back();
+		const auto& it = vHistory.back();
 		if (!beginning)
 			vForwardHistory.push_back(it);
 
-		for(auto it = vHistory.rbegin(); it != vHistory.rend(); ++it)
+		for (auto it = vHistory.rbegin(); it != vHistory.rend(); ++it)
 		{
 			if (beginning)
 				vForwardHistory.push_back(*it);
@@ -542,8 +546,8 @@ bool Board::TakeBack(bool beginning)
 			const auto firstIndex = it->first;
 			const auto secondIndex = it->second;
 
-			const auto & firstTile = mIndexToRemovedTile.find(firstIndex)->second;
-			const auto & secondTile = mIndexToRemovedTile.find(secondIndex)->second;
+			const auto& firstTile = mIndexToRemovedTile.find(firstIndex)->second;
+			const auto& secondTile = mIndexToRemovedTile.find(secondIndex)->second;
 
 			auto coord = arrIndexToBoardCoord[firstIndex];
 			vLogicalBoard.emplace_back(TileAndIndex(firstTile.Rank, firstIndex, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
@@ -580,7 +584,10 @@ bool Board::TakeBack(bool beginning)
 				vMove.emplace_back(it.first);
 				vMove.emplace_back(it.second);
 
-				bIsLockedFromMove = bIsLockedFromMove ? true : CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, vMove);
+				std::map<int, int> arrGlobalOccurences {};
+				for (const auto& tileAndIndex : vLogicalBoard)
+					++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
+				bIsLockedFromMove = bIsLockedFromMove ? true : CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, arrGlobalOccurences, vMove);
 			}
 
 			SetMoves();
@@ -631,7 +638,7 @@ bool Board::MoveForward(bool end)
 	}
 	else
 	{
-		const auto & it = vForwardHistory.back();
+		const auto& it = vForwardHistory.back();
 		const auto firstIndex = it.first;
 		const auto secondIndex = it.second;
 
@@ -644,7 +651,7 @@ bool Board::MoveForward(bool end)
 
 		IsLockedFromMove();
 
-		if(!end)
+		if (!end)
 			SetMoves();
 
 		return true;
