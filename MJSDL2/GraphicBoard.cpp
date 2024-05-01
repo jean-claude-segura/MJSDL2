@@ -496,6 +496,43 @@ void GraphicBoard::LoadResources()
 	LoadRandomBackgroundVictory();
 }
 
+void GraphicBoard::CreateButton(SDL_Texture*& button, const std::string& strPathBack, const std::string& strPathIcon, const double angle)
+{
+	if (button != NULL)
+		SDL_DestroyTexture(button);
+	SDL_Texture* texture_Back = NULL;
+	LoadButton(texture_Back, strPathBack);
+	SDL_Texture* texture_Icon = NULL;
+	LoadButton(texture_Icon, strPathIcon);
+
+	Uint32 format;
+	int w, h;
+	SDL_BlendMode blendmode;
+
+	auto renderTarget = SDL_GetRenderTarget(renderer);
+
+	SDL_QueryTexture(texture_Back, &format, NULL, &w, &h);
+	SDL_GetTextureBlendMode(texture_Back, &blendmode);
+
+	button = SDL_CreateTexture(renderer, format, SDL_TEXTUREACCESS_TARGET, w, h);
+
+	SDL_SetTextureBlendMode(button, SDL_BLENDMODE_NONE);
+
+	SDL_SetRenderTarget(renderer, button);
+
+	SDL_RenderCopy(renderer, texture_Back, NULL, NULL);
+	//SDL_Rect tgtRect{ -5, 5, w, h };
+	//SDL_Rect tgtRect{ -25, 0, wi / 4 , hi / 4};
+	SDL_Rect tgtRect{ 12, 40, 64, 64 };
+	SDL_RenderCopyEx(renderer, texture_Icon, NULL, &tgtRect, angle, NULL, SDL_FLIP_NONE);
+
+	SDL_SetRenderTarget(renderer, renderTarget);
+	SDL_SetTextureBlendMode(button, SDL_BLENDMODE_BLEND);
+
+	SDL_DestroyTexture(texture_Icon);
+	SDL_DestroyTexture(texture_Back);
+}
+
 void GraphicBoard::CreateButton(SDL_Texture*& button, const std::string& strPathBack, const std::string& strPathIcon, const std::string& strPathCover)
 {
 	if (button != NULL)
@@ -610,11 +647,13 @@ void GraphicBoard::LoadButton(SDL_Texture*& button, const std::string& strPath)
 
 void GraphicBoard::LoadUI()
 {
-	LoadButton(SudEstBtn, "./interface/blank.svg");
-	LoadButton(SudOuestBtn, "./interface/blank.svg");
-	LoadButton(NordEstBtn, "./interface/blank.svg");
-	LoadButton(NordOuestBtn, "./interface/blank.svg");
+	CreateButton(NordEstBtn, "./interface/blank.svg", "./interface/next.png", 270 + 45);
+	CreateButton(NordOuestBtn, "./interface/blank.svg", "./interface/next.png", 180 + 45);
+	CreateButton(SudOuestBtn, "./interface/blank.svg", "./interface/next.png", 45 + 90);
+	CreateButton(SudEstBtn, "./interface/blank.svg", "./interface/next.png", 45);
+
 	LoadButton(TurnBtn, "./interface/MJd3rv1-.svg");
+
 	LoadButton(TakeBackBtn, "./interface/blank.svg");
 	LoadButton(MoveForwardBtn, "./interface/blank.svg");
 	LoadButton(GoBeginningBtn, "./interface/blank.svg");

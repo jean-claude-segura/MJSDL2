@@ -83,6 +83,7 @@ private:
 	void LoadUI();
 	void LoadButton(SDL_Texture*& button, const std::string& strPath);
 	void CreateButton(SDL_Texture*& button, const std::string& strPathBack, const std::string& strPathIcon);
+	void CreateButton(SDL_Texture*& button, const std::string& strPathBack, const std::string& strPathIcon, const double angle);
 	void CreateButton(SDL_Texture*& button, const std::string& strPathBack, const std::string& strPathIcon, const std::string& strPathCover);
 
 private:
