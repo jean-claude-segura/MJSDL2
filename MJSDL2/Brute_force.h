@@ -613,7 +613,7 @@ inline bool SolveRecParallel(
 		vNewMoves.clear();
 		SetMoves(vLogicalBoard, arrRemovable, vNewMoves);
 
-		for (auto itMove = vNewMoves.begin(); itMove != vNewMoves.end(); ++itMove)
+		for (auto itMove = vNewMoves.begin(); itMove != vNewMoves.end(); )
 		{
 			const auto& vMove = *itMove;
 			const auto index = *vMove.begin();
@@ -637,6 +637,12 @@ inline bool SolveRecParallel(
 					++IndexesToRemoveFromSolutionCount;
 					vSolution.emplace_back(std::make_pair(vMove[2], vMove[3]));
 				}
+
+				itMove = vNewMoves.erase(itMove);
+			}
+			else
+			{
+				++itMove;
 			}
 		}
 	} while (loop);
@@ -1925,7 +1931,7 @@ inline bool SolveRecAsyncInit(
 			vMoves.clear();
 			SetMoves(vLogicalBoard, arrRemovable, vMoves);
 
-			for (auto itMove = vMoves.begin(); itMove != vMoves.end(); ++itMove)
+			for (auto itMove = vMoves.begin(); itMove != vMoves.end();)
 			{
 				const auto& vMove = *itMove;
 				const auto index = *vMove.begin();
@@ -1934,15 +1940,20 @@ inline bool SolveRecAsyncInit(
 				{
 					arrGlobalOccurences.erase(pairing);
 					loop = true;
+
 					for (const auto& move : vMove)
-					{
 						RemoveTile(move, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard);
-					}
+
 					vSolution.emplace_back(std::make_pair(vMove[0], vMove[1]));
+
 					if (vMove.size() == 4)
-					{
 						vSolution.emplace_back(std::make_pair(vMove[2], vMove[3]));
-					}
+
+					itMove = vMoves.erase(itMove);
+				}
+				else
+				{
+					++itMove;
 				}
 			}
 		} while (loop);
@@ -1996,9 +2007,9 @@ inline bool SolveRecAsyncInit(
 						if (solver.get())
 						{
 							stopSolverNow = true;
-							// Funny case when more than one found a solution...
+							// Funny case when more than one thread found a solution...
 							if (!ret)
-								vSolution = arrSolutions[i];
+								vSolution.insert(vSolution.end(), arrSolutions[i].begin(), arrSolutions[i].end());
 							ret = true;
 						}
 						i++;
@@ -2044,7 +2055,7 @@ inline bool SolveRecAsyncInit(
 	SDL_PushEvent(&event);
 #endif
 	return ret;
-}
+		}
 
 // Just to work on a copy.
 inline bool TryHeuristics(const Board& plateau,
@@ -2065,7 +2076,7 @@ inline bool TryHeuristics(const Board& plateau,
 #ifndef _DEBUG
 		return false;
 #endif
-	}
+}
 
 	std::vector<std::pair<bool (*)(Board plateau, std::vector<std::pair<int, int>>& vSolution), std::string>> vTries;
 
@@ -2096,7 +2107,7 @@ inline bool TryHeuristics(const Board& plateau,
 #else
 			return true;
 #endif
-		}
+	}
 		if (vSolution.size() < vSolutionTemp.size())
 		{
 			vSolution.clear();
@@ -2140,7 +2151,7 @@ int64_t testAll(const Board& plateau)
 		ret = ret << 7;
 		ret |= func.first(plateau, vSolutionTemp) ? 1 : 0;
 		vSolutionTemp.clear();
-	}
+}
 
 	return ret;
 }
