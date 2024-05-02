@@ -797,8 +797,6 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 			int y = c1.Y;
 			std::array<std::array<std::array<TileAndIndex, 4>, 8>, 12> arrBoard;
 
-			std::map<int, int> arrRowOccurences {};
-
 			auto beginning = -1;
 			auto end = -1;
 			auto leftPadlockPairing = -1;
@@ -814,7 +812,6 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 					arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex;
 				if (tileAndIndex.Y == c1.Y && tileAndIndex.Z == c1.Z) // Same plane, same row
 				{
-					++arrRowOccurences[tileAndIndex.TileObject.Pairing];
 					if (beginning == -1)
 						beginning = tileAndIndex.X;
 					beginning = std::min(beginning, tileAndIndex.X);
@@ -823,29 +820,11 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 				if (3 <= y && y <= 4 && z == 0)
 				{
 					if (tileAndIndex.Index == 0x8C)
-					{
 						leftPadlockPairing = tileAndIndex.TileObject.Pairing;
-
-						// Fake entries for the padlocks.
-						++mPairingCount[leftPadlockPairing];
-						mPairingFirst[leftPadlockPairing] = -1;
-					}
 					else if (tileAndIndex.Index == 0x8D)
-					{
 						rightPadlockPairing = tileAndIndex.TileObject.Pairing;
-
-						// Fake entries for the padlocks.
-						++mPairingCount[rightPadlockPairing];
-						mPairingLast[rightPadlockPairing] = 12;
-					}
 					else if (tileAndIndex.Index == 0x8E)
-					{
 						rightRightPadlockPairing = tileAndIndex.TileObject.Pairing;
-
-						// Fake entries for the padlocks.
-						++mPairingCount[rightRightPadlockPairing];
-						mPairingLast[rightRightPadlockPairing] = 13;
-					}
 				}
 			}
 
@@ -856,51 +835,75 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 			// BBAAA, BABAA but not BAABA!
 			auto horizontalLimits = std::make_pair(std::max(0, beginning), std::min(11, end)); // Just to re-use some code...
 
-			for (int x = horizontalLimits.first; x <= horizontalLimits.second; ++x)
+			std::vector<int> row;
+
+			if (3 <= y && y <= 4 && z == 0)
 			{
-				// First get the tile.
-				const auto& object = arrBoard[x][y][z].TileObject;
-				// Get the first occurence
-				if (!mPairingFirst.contains(object.Pairing))
-					mPairingFirst[object.Pairing] = x;
-				// Get the last occurence
-				if (!mPairingLast.contains(object.Pairing) || mPairingLast.find(object.Pairing)->second < x) // Because of the left and right blocker fake init before...
-					mPairingLast[object.Pairing] = x;
-				// Get the count of occurences
-				++mPairingCount[object.Pairing];
+				if(leftPadlockPairing != -1)
+					row.emplace_back(leftPadlockPairing);
+				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+					row.emplace_back(arrBoard[x][y][z].TileObject.Pairing);
+				if (rightPadlockPairing != -1)
+					row.emplace_back(rightPadlockPairing);
+
+				// Ponder
+				// Conditionnal pondering : may miss some lockings but it's better than fake ones.
+				if (leftPadlockPairing != -1 && rightPadlockPairing != -1)
+				{
+					int yPonder = y == 3 ? 4 : 3;
+
+					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+					{
+						// First get the tile.
+						const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
+						if (pairing == leftPadlockPairing)
+							row.insert(row.begin(), leftPadlockPairing);
+					}
+
+					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+					{
+						// First get the tile.
+						const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
+						if (pairing == rightPadlockPairing)
+							row.emplace_back(rightPadlockPairing);
+					}
+
+					if (rightRightPadlockPairing != -1)
+					{
+						for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+						{
+							// First get the tile.
+							const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
+							if (pairing == rightRightPadlockPairing)
+								row.emplace_back(rightRightPadlockPairing);
+						}
+					}
+				}
+
+				if (rightRightPadlockPairing != -1)
+					row.emplace_back(rightRightPadlockPairing);
+			}
+			else
+			{
+				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+					row.emplace_back(arrBoard[x][y][z].TileObject.Pairing);
 			}
 
-			// shouldn't be an issue because of the trimming right after but still...
-			if (!mPairingLast.contains(leftPadlockPairing))
-				mPairingLast[leftPadlockPairing] = -1;
-
-			if (!mPairingFirst.contains(rightPadlockPairing))
-				mPairingFirst[leftPadlockPairing] = 12;
-
-			if (!mPairingFirst.contains(leftPadlockPairing))
-				mPairingFirst[rightRightPadlockPairing] = 13;
+			for (int x = 0; x < row.size(); ++x)
+			{
+				// Get the first occurence
+				if (!mPairingFirst.contains(row[x]))
+					mPairingFirst[row[x]] = x;
+				// Get the last occurence
+				mPairingLast[row[x]] = x;
+				// Get the count of occurences
+				++mPairingCount[row[x]];
+			}
 
 			/* TO DO                                        */
 			/* Cross lockings                               */
 			/* Can't be done after because of the pondering */
 			/* TO DO                                        */
-
-			// Ponder
-			// Conditionnal pondering : may miss some lockings but it's better than fake ones.
-			if (3 <= y && y <= 4 && z == 0 && leftPadlockPairing != -1 && rightPadlockPairing != -1)
-			{
-				int yPonder = y == 3 ? 4 : 3;
-				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
-				{
-					// First get the tile.
-					const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
-					if (
-						(leftPadlockPairing != -1 && pairing == leftPadlockPairing) ||
-						(rightPadlockPairing != -1 && pairing == rightPadlockPairing) ||
-						(rightRightPadlockPairing != -1 && pairing == rightRightPadlockPairing))
-						++mPairingCount[pairing];
-				}
-			}
 
 			// Remove the useless ones :
 			for (const auto& item : mPairingCount)
@@ -1237,8 +1240,8 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 						if (pairing == rightRightPadlockPairing)
 							row.emplace_back(rightRightPadlockPairing);
 					}
+					
 					row.emplace_back(rightRightPadlockPairing);
-
 				}
 				else
 				{
