@@ -1455,7 +1455,7 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 	for (const auto& tileAndIndex : vLogicalBoard)
 		++arrGlobalOccurences[tileAndIndex.TileObject.Pairing];
 
-	CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, arrGlobalOccurences, vMove);
+	return CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, arrGlobalOccurences, vMove);
 }
 
 // std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
@@ -1911,6 +1911,7 @@ inline bool SolveRecAsyncInit(
 	int lockStatus = 0;
 	if (CheckIfLockedFromStart(vLogicalBoard, mIndexToTile, &lockStatus))
 	{
+		stopSolverNow = true;
 #ifdef _DEBUG
 		std::cout << "*************" << std::endl;
 		std::cout << "*  Locked.  *" << std::endl;
@@ -1920,6 +1921,7 @@ inline bool SolveRecAsyncInit(
 }
 	else
 	{
+		stopSolverNow = false;
 		// I keep 2 for the main thread and this one.
 		processor_count = std::thread::hardware_concurrency();
 

@@ -25,7 +25,6 @@ void TestEngine()
 #ifdef _DEBUG
 		uint64_t positions = 0ULL;
 #endif
-		stopSolverNow = false;
 		start = std::chrono::steady_clock::now();
 		std::future<bool> solver = std::async(
 			&SolveRecAsyncInit, plateau.GetMovesLeft(), plateau.getLogicalBoard(), plateau.getRemovable(), plateau.getTilesMap(), plateau.getOccupationBoard(), std::ref(vSolution)
