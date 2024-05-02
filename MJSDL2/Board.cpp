@@ -82,14 +82,14 @@ void Board::SortBoard(const uint8_t direction)
 	std::vector< TileAndIndex>::iterator it;
 	if (direction == 0 || direction == 3)
 	{
-		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 140; ++it);
+		it = std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(), [](const TileAndIndex& ref) { return ref.Index == 140; });
 		if (it != vLogicalBoard.end())
 		{
 			auto temp = *it;
 			vLogicalBoard.erase(it);
 			vLogicalBoard.insert(vLogicalBoard.begin(), temp);
 		}
-		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 141; ++it);
+		it = std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(), [](const TileAndIndex& ref) { return ref.Index == 141; });
 		if (it != vLogicalBoard.end())
 		{
 			/*auto t = std::make_tuple(12, 8, 0, 0, 0);
@@ -99,54 +99,44 @@ void Board::SortBoard(const uint8_t direction)
 					return (std::get<2>(t) == std::get<2>(in)) && (std::get<1>(t) == std::get<1>(in)) && (std::get<0>(t) == std::get<0>(in));
 				}
 			);*/
-			auto temp = *it;
-			vLogicalBoard.erase(it);
-			vLogicalBoard.emplace_back(temp);
+			std::rotate(it, it + 1, vLogicalBoard.end());
 		}
-		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 142; ++it);
+		it = std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(), [](const TileAndIndex& ref) { return ref.Index == 142; });
 		if (it != vLogicalBoard.end())
 		{
-			auto temp = *it;
-			vLogicalBoard.erase(it);
-			vLogicalBoard.emplace_back(temp);
+			std::rotate(it, it + 1, vLogicalBoard.end());
 		}
-		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 143; ++it);
+		it = std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(), [](const TileAndIndex& ref) { return ref.Index == 143; });
 		if (it != vLogicalBoard.end())
 		{
-			auto temp = *it;
-			vLogicalBoard.erase(it);
-			vLogicalBoard.emplace_back(temp);
+			std::rotate(it, it + 1, vLogicalBoard.end());
 		}
 	}
 	else if (direction == 1 || direction == 2)
 	{
-		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 140; ++it);
+		it = std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(), [](const TileAndIndex& ref) { return ref.Index == 140; });
 		if (it != vLogicalBoard.end())
 		{
-			auto temp = *it;
-			vLogicalBoard.erase(it);
-			vLogicalBoard.emplace_back(temp);
+			std::rotate(it, it + 1, vLogicalBoard.end());
 		}
-		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 141; ++it);
+		it = std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(), [](const TileAndIndex& ref) { return ref.Index == 141; });
 		if (it != vLogicalBoard.end())
 		{
 			auto temp = *it;
 			vLogicalBoard.erase(it);
 			vLogicalBoard.insert(vLogicalBoard.begin(), temp);
 		}
-		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 142; ++it);
+		it = std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(), [](const TileAndIndex& ref) { return ref.Index == 142; });
 		if (it != vLogicalBoard.end())
 		{
 			auto temp = *it;
 			vLogicalBoard.erase(it);
 			vLogicalBoard.insert(vLogicalBoard.begin(), temp);
 		}
-		for (it = vLogicalBoard.begin(); it != vLogicalBoard.end() && it->Index != 143; ++it);
+		it = std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(), [](const TileAndIndex& ref) { return ref.Index == 143; });
 		if (it != vLogicalBoard.end())
 		{
-			auto temp = *it;
-			vLogicalBoard.erase(it);
-			vLogicalBoard.emplace_back(temp);
+			std::rotate(it, it + 1, vLogicalBoard.end());
 		}
 	}
 }
