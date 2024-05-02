@@ -1141,8 +1141,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 		if (!mPairingFirst.contains(row[x]))
 			mPairingFirst[row[x]] = x;
 		// Get the last occurence
-		if (!mPairingLast.contains(row[x]))
-			mPairingLast[row[x]] = x;
+		mPairingLast[row[x]] = x;
 		// Get the count of occurences
 		++mPairingCount[row[x]];
 	}
@@ -1253,8 +1252,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 					if (!mPairingFirst.contains(row[x]))
 						mPairingFirst[row[x]] = x;
 					// Get the last occurence
-					if (!mPairingLast.contains(row[x]))
-						mPairingLast[row[x]] = x;
+					mPairingLast[row[x]] = x;
 					// Get the count of occurences
 					++mPairingCount[row[x]];
 				}
