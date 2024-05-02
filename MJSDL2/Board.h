@@ -357,7 +357,6 @@ public:
 #ifndef BENCHMARK
 	bool Test();
 	void InitBoardLockedHorizontal(int test);
-	bool TestLocked();
 #endif
 #endif
 	const std::vector<std::pair<int, int>>& GetSolution() { return vSolution; }

@@ -119,7 +119,6 @@ void GraphicBoard::Init()
 #ifdef _DEBUG	
 #ifndef BENCHMARK
 	//plateau.Test();
-	//plateau.TestLocked();
 #endif
 #endif
 

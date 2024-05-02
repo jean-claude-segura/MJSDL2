@@ -1036,42 +1036,5 @@ void Board::InitBoardLockedHorizontal(int test)
 
 	SetMoves();
 }
-
-bool Board::TestLocked()
-{
-	std::vector<std::pair<int, int>> Locked;
-	std::map<int, int> causes;
-	int cause;
-	for (int i = 0; i < 10000; ++i)
-	//int i = 2;
-	{
-		//InitBoardLockedHorizontal(i);
-		InitBoard();
-		if (CheckIfLockedFromStart(vLogicalBoard, mIndexToTile, &cause))
-		{
-			Locked.emplace_back(std::make_pair(i, cause));
-			causes[cause] += 1;
-		}
-	}
-
-	std::cout << std::endl;
-
-	if (!Locked.empty())
-	{
-		auto it = Locked.begin();
-		for (; it != Locked.end() - 1; ++it)
-		{
-			std::cout << std::dec << "(" << it->first << ";" << it->second << "), ";
-		}
-		std::cout << std::dec << "(" << it->first << ";" << it->second << ")." << std::endl;
-	}
-
-	std::cout << "Bloqués : " << std::dec << Locked.size() << "." << std::endl;
-
-	for (const auto& cause : causes)
-		std::cout << "Cause : (" << std::dec << cause.first << "; " << cause.second << ")." << std::endl;
-
-	return false;
-}
 #endif
 #endif
