@@ -2142,7 +2142,7 @@ inline bool TryHeuristics(const Board& plateau,
 }
 
 #if defined(_DEBUG) || defined(BENCHMARK)
-inline int64_t testAll(const Board& plateau)
+inline bool testAll(const Board& plateau, std::array <unsigned int, 9>& arrResult)
 {
 	std::vector<std::pair<bool (*)(Board plateau, std::vector<std::pair<int, int>>& vSolution), std::string>> vTries;
 
@@ -2159,12 +2159,16 @@ inline int64_t testAll(const Board& plateau)
 
 	std::vector<std::pair<int, int>> vSolutionTemp;
 
-	uint64_t ret = 0ULL;
+	bool ret = false;
+	int i = 0;
 	for (const auto& func : vTries)
 	{
-		ret = ret << 7;
-		ret |= func.first(plateau, vSolutionTemp) ? 1 : 0;
+		const auto tempRet = func.first(plateau, vSolutionTemp);
+		ret |= tempRet;
+		if(tempRet)
+			arrResult[i] = 1;
 		vSolutionTemp.clear();
+		++i;
 	}
 
 	return ret;

@@ -37,7 +37,7 @@ void TestEngine()
 			end = std::chrono::steady_clock::now();
 			++resolus;
 			std::chrono::duration<double> elapsed_seconds{end - start};
-			std::cout << "Réussite en " << elapsed_seconds.count() << " secondes." << std::endl;
+			std::cout << "Solved in " << elapsed_seconds.count() << " seconds." << std::endl;
 			duree_min = std::min(duree_min, elapsed_seconds.count());
 			duree_max = std::max(duree_max, elapsed_seconds.count());
 		}
@@ -47,7 +47,7 @@ void TestEngine()
 			std::chrono::duration<double> elapsed_seconds{end - start};
 			const auto Seed = plateau.getSeed();
 			vEchecs.emplace_back(Seed);
-			std::cout << "Echec : " << std::dec << Seed << ". Durée : " << elapsed_seconds.count() << " secondes." << std::endl;
+			std::cout << "Failed : " << std::dec << Seed << ". Compute time : " << elapsed_seconds.count() << " seconds." << std::endl;
 			echec_duree_min = std::min(echec_duree_min, elapsed_seconds.count());
 			echec_duree_max = std::max(echec_duree_max, elapsed_seconds.count());
 		}
@@ -55,20 +55,20 @@ void TestEngine()
 
 	auto globalend{ std::chrono::steady_clock::now() };
 
-	std::cout << "Nombre d'échecs : " << std::dec << vEchecs.size() << "." << std::endl;
-	std::cout << "Echec de : ";
+	std::cout << "Failures count : " << std::dec << vEchecs.size() << "." << std::endl;
+	std::cout << "Failures : ";
 	for (auto itEchec = vEchecs.begin(); itEchec != (vEchecs.end() - 1); ++itEchec)
 		std::cout << *itEchec << ", ";
 	std::cout << vEchecs.back() << "." << std::endl;
 
 	std::chrono::duration<double> elapsed_seconds{globalend - globalstart};
-	std::cout << "Durée totale : " << elapsed_seconds.count() << " secondes." << std::endl;
+	std::cout << "Total compute time : " << elapsed_seconds.count() << " seconds." << std::endl;
 
-	std::cout << "Durée minimale : " << duree_min << " secondes." << std::endl;
-	std::cout << "Durée maximale : " << duree_max << " secondes." << std::endl;
+	std::cout << "Minimal compute time for solved : " << duree_min << " seconds." << std::endl;
+	std::cout << "Maximal compute time for solved : " << duree_max << " seconds." << std::endl;
 
-	std::cout << "Durée échec minimale : " << echec_duree_min << " secondes." << std::endl;
-	std::cout << "Durée échec maximale : " << echec_duree_max << " secondes." << std::endl;
+	std::cout << "Minimal compute time for failed : " << echec_duree_min << " seconds." << std::endl;
+	std::cout << "Maximal compute time for failed : " << echec_duree_max << " seconds." << std::endl;
 }
 
 bool TestLocked()
@@ -101,7 +101,7 @@ bool TestLocked()
 		std::cout << std::dec << "(" << it->first << ";" << it->second << ")." << std::endl;
 	}
 
-	std::cout << "Bloqués : " << std::dec << Locked.size() << "." << std::endl;
+	std::cout << "Blocked : " << std::dec << Locked.size() << "." << std::endl;
 
 	for (const auto& cause : causes)
 		std::cout << "Cause : (" << std::dec << cause.first << "; " << cause.second << ")." << std::endl;
@@ -109,105 +109,51 @@ bool TestLocked()
 	return false;
 }
 
-bool Test()
+bool TestHeuristics()
 {
-	uint64_t ret = 0ULL;
 	int solved = 0;
 	std::stringstream strout;
-	std::vector<int> Locked;
-	int i = 0;
-	bool goOn = true;
-	do
+	std::vector<unsigned int> Locked;
+
+	std::array <unsigned int, 9> arrGlobalResult = {};
+	const unsigned int TOTAL_ATTEMPTS = 1000;
+	for(unsigned int attempts = 0; attempts < TOTAL_ATTEMPTS; ++attempts)
 	{
 		int cause;
 		Board plateau;
 		plateau.InitBoard();
+		std::array <unsigned int, 9> arrResult = {};
 		if (CheckIfLockedFromStart(plateau.getLogicalBoard(), plateau.getTilesMap(), &cause))
 		{
-			Locked.emplace_back(i++);
+			Locked.emplace_back(plateau.getSeed());
 			continue;
 		}
-		auto temp = testAll(plateau);
-		if (temp != 0ULL)
+		auto temp = testAll(plateau, arrResult);
+		if (temp )
 			++solved;
-		std::cout << std::dec << i << " : " << std::hex << temp << std::dec << std::endl;
-		ret += temp;
-		auto v9 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v8 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v7 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v6 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v5 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v4 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v3 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v2 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v1 = temp & 0b01111111;
-		temp = temp >> 7;
+		std::cout << std::dec << plateau.getSeed() << " : " << std::hex << temp << std::dec << std::endl;
 
 		strout << std::endl;
-		strout << std::dec << v1 << ", ";
-		strout << std::dec << v2 << ", ";
-		strout << std::dec << v3 << ", ";
-		strout << std::dec << v4 << ", ";
-		strout << std::dec << v5 << ", ";
-		strout << std::dec << v6 << ", ";
-		strout << std::dec << v7 << ", ";
-		strout << std::dec << v8 << ", ";
-		strout << std::dec << v9 << std::endl;
-		++i;
-
-		auto tempRet = ret;
-		for (int dec = 0; dec < 9 && goOn; ++dec)
+		for (int i = 0; i < 8; ++i)
 		{
-			auto rv1 = tempRet & 0b01111111;
-			tempRet = tempRet >> 7;
-			if (rv1 == 0b01111111)
-				goOn = false;
+			strout << std::dec << arrResult[i] << ", ";
+			arrGlobalResult[i] += arrResult[i];
 		}
-	} while (goOn);
+		strout << std::dec << arrResult[8] << std::endl;
+		arrGlobalResult[8] += arrResult[8];
+	}
 
 	std::cout << strout.str();
 
-	auto v9 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v8 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v7 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v6 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v5 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v4 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v3 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v2 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v1 = ret & 0b01111111;
-	ret = ret >> 7;
-
 	std::cout << std::endl;
-	std::cout << std::dec << v1 << ", ";
-	std::cout << std::dec << v2 << ", ";
-	std::cout << std::dec << v3 << ", ";
-	std::cout << std::dec << v4 << ", ";
-	std::cout << std::dec << v5 << ", ";
-	std::cout << std::dec << v6 << ", ";
-	std::cout << std::dec << v7 << ", ";
-	std::cout << std::dec << v8 << ", ";
-	std::cout << std::dec << v9 << std::endl;
 
-	auto pourcent = solved * 100. / (i - Locked.size());
+	for (int i = 0; i < 8; ++i)
+		std::cout << std::dec << arrGlobalResult[i] << ", ";
+	std::cout << std::dec << arrGlobalResult[8] << std::endl;
 
-	std::cout << "Résolus : " << std::dec << pourcent << "%" << std::endl;
+	auto pourcent = solved * 100. / (TOTAL_ATTEMPTS - Locked.size());
+
+	std::cout << "Solved : " << std::dec << pourcent << "%" << std::endl;
 
 	std::cout << std::endl;
 
@@ -220,14 +166,14 @@ bool Test()
 		}
 		std::cout << std::dec << *it << std::endl;
 	}
-	std::cout << "Bloqués : " << std::dec << Locked.size() << "." << std::endl;
+	std::cout << "Blocked : " << std::dec << Locked.size() << "." << std::endl;
 
 	return false;
 }
 
 int main()
 {
-	Test();
-	TestLocked();
-	TestEngine();
+	TestHeuristics();
+	//TestLocked();
+	//TestEngine();
 }
