@@ -253,31 +253,20 @@ void Board::InitBoardSub(std::mt19937& e1)
 	vSolution.clear();
 	bIsLockedFromMove = false;
 
-	int tempDominos[42] = {
-	4,4,4,4,4,4,4,4,4, // Bambous
-	4,4,4,4,4,4,4,4,4, // Cercles
-	4,4,4,4,4,4,4,4,4, // Caractères
-	4,4,4,4, // Vents
-	4,4,4, // Dragons
-	1,1,1,1, // Saisons
-	1,1,1,1 // Fleurs
-	};
+	std::vector<Tile> vTiles;
+	for (int i = 0; i < 42; ++i)
+		for (int j = 0; j < tileRepartition[i]; ++j)
+			vTiles.emplace_back(Tile(i));
+
+	std::shuffle(vTiles.begin(), vTiles.end(), e1);
 
 	for (int index = 0; index < 144; ++index)
 	{
-		int domino = 0;
-		do
-		{
-			domino = uniform_dist(e1);
-		} while (tempDominos[domino] == 0);
-#ifdef _DEBUG
-		int debugdom = tempDominos[domino];
-#endif
-		--tempDominos[domino];
+		const auto& domino = vTiles[index];
 		mOccupationBoard[arrIndexToCoord[index]] = index;
 		const auto& coord = arrIndexToBoardCoord[index];
-		vLogicalBoard.emplace_back(TileAndIndex(Tile(domino), index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
-		mIndexToTile.emplace(index, Tile(domino));
+		vLogicalBoard.emplace_back(TileAndIndex(domino, index, std::get<0>(coord), std::get<1>(coord), std::get<2>(coord), std::get<3>(coord), std::get<4>(coord)));
+		mIndexToTile.emplace(index, domino);
 	}
 
 	InitRemovable();

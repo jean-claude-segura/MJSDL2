@@ -378,6 +378,16 @@ private:
 	bool bIsLockedFromMove;
 	bool bIsLockedFromStart;
 	unsigned int Seed;
+	const int tileRepartition[42] =
+	{
+		4,4,4,4,4,4,4,4,4, // Bambous
+		4,4,4,4,4,4,4,4,4, // Cercles
+		4,4,4,4,4,4,4,4,4, // Caractères
+		4,4,4,4, // Vents
+		4,4,4, // Dragons
+		1,1,1,1, // Saisons
+		1,1,1,1 // Fleurs
+	};
 private:
 	std::array<bool, 144> InitRemovable();
 	void InitBoardSub(std::mt19937& e1);
