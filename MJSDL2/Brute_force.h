@@ -856,23 +856,6 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 			// BBAAA, BABAA but not BAABA!
 			auto horizontalLimits = std::make_pair(std::max(0, beginning), std::min(11, end)); // Just to re-use some code...
 
-			// Ponder
-			// Conditionnal pondering : may miss some lockings but it's better than fake ones.
-			if (3 <= y && y <= 4 && z == 0 && leftPadlockPairing != -1 && rightPadlockPairing != -1)
-			{
-				int yPonder = y == 3 ? 4 : 3;
-				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
-				{
-					// First get the tile.
-					const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
-					if (
-						(leftPadlockPairing != -1 && pairing == leftPadlockPairing) ||
-						(rightPadlockPairing != -1 && pairing == rightPadlockPairing) ||
-						(rightRightPadlockPairing != -1 && pairing == rightRightPadlockPairing))
-						++mPairingCount[pairing];
-				}
-			}
-
 			for (int x = horizontalLimits.first; x <= horizontalLimits.second; ++x)
 			{
 				// First get the tile.
@@ -896,6 +879,28 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 
 			if (!mPairingFirst.contains(leftPadlockPairing))
 				mPairingFirst[rightRightPadlockPairing] = 13;
+
+			/* TO DO                                        */
+			/* Cross lockings                               */
+			/* Can't be done after because of the pondering */
+			/* TO DO                                        */
+
+			// Ponder
+			// Conditionnal pondering : may miss some lockings but it's better than fake ones.
+			if (3 <= y && y <= 4 && z == 0 && leftPadlockPairing != -1 && rightPadlockPairing != -1)
+			{
+				int yPonder = y == 3 ? 4 : 3;
+				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+				{
+					// First get the tile.
+					const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
+					if (
+						(leftPadlockPairing != -1 && pairing == leftPadlockPairing) ||
+						(rightPadlockPairing != -1 && pairing == rightPadlockPairing) ||
+						(rightRightPadlockPairing != -1 && pairing == rightRightPadlockPairing))
+						++mPairingCount[pairing];
+				}
+			}
 
 			// Remove the useless ones :
 			for (const auto& item : mPairingCount)
