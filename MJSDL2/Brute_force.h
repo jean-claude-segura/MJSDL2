@@ -829,7 +829,6 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 						// Fake entries for the padlocks.
 						++mPairingCount[leftPadlockPairing];
 						mPairingFirst[leftPadlockPairing] = -1;
-						mPairingLast[leftPadlockPairing] = -1;
 					}
 					else if (tileAndIndex.Index == 0x8D)
 					{
@@ -837,8 +836,6 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 
 						// Fake entries for the padlocks.
 						++mPairingCount[rightPadlockPairing];
-						if (!mPairingFirst.contains(rightPadlockPairing))
-							mPairingFirst[rightPadlockPairing] = 12;
 						mPairingLast[rightPadlockPairing] = 12;
 					}
 					else if (tileAndIndex.Index == 0x8E)
@@ -847,8 +844,6 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 
 						// Fake entries for the padlocks.
 						++mPairingCount[rightRightPadlockPairing];
-						if (!mPairingFirst.contains(rightRightPadlockPairing))
-							mPairingFirst[rightRightPadlockPairing] = 13;
 						mPairingLast[rightRightPadlockPairing] = 13;
 					}
 				}
@@ -891,6 +886,16 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 				// Get the count of occurences
 				++mPairingCount[object.Pairing];
 			}
+
+			// shouldn't be an issue because of the trimming right after but still...
+			if (!mPairingLast.contains(leftPadlockPairing))
+				mPairingLast[leftPadlockPairing] = -1;
+
+			if (!mPairingFirst.contains(rightPadlockPairing))
+				mPairingFirst[leftPadlockPairing] = 12;
+
+			if (!mPairingFirst.contains(leftPadlockPairing))
+				mPairingFirst[rightRightPadlockPairing] = 13;
 
 			// Remove the useless ones :
 			for (const auto& item : mPairingCount)
@@ -1118,16 +1123,11 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	// Forced entries for the padlocks.
 	++mPairingCount[leftPadlockPairing];
 	mPairingFirst[leftPadlockPairing] = -1;
-	mPairingLast[leftPadlockPairing] = -1;
 
 	++mPairingCount[rightPadlockPairing];
-	if (!mPairingFirst.contains(rightPadlockPairing))
-		mPairingFirst[rightPadlockPairing] = 12 + 12;
 	mPairingLast[rightPadlockPairing] = 12 + 12;
 
 	++mPairingCount[rightRightPadlockPairing];
-	if (!mPairingFirst.contains(rightRightPadlockPairing))
-		mPairingFirst[rightRightPadlockPairing] = 13 + 12;
 	mPairingLast[rightRightPadlockPairing] = 13 + 12;
 
 	// Creating a fake 24 tiles line to include the padlocks obstruction from the beginning to the end.
@@ -1153,6 +1153,17 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 		// Get the count of occurences
 		++mPairingCount[object.Pairing];
 	}
+
+	// shouldn't be an issue because of the trimming right after but still...
+	if (!mPairingLast.contains(leftPadlockPairing))
+		mPairingLast[leftPadlockPairing] = -1;
+
+	if (!mPairingFirst.contains(rightPadlockPairing))
+		mPairingFirst[leftPadlockPairing] = 12;
+
+	if (!mPairingFirst.contains(leftPadlockPairing))
+		mPairingFirst[rightRightPadlockPairing] = 13;
+
 	// Remove the useless ones :
 	for (const auto& item : mPairingCount)
 	{
@@ -1212,16 +1223,11 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 					// Fake entries for the padlocks.
 					++mPairingCount[leftPadlockPairing];
 					mPairingFirst[leftPadlockPairing] = -1;
-					mPairingLast[leftPadlockPairing] = -1;
 
 					++mPairingCount[rightPadlockPairing];
-					if (!mPairingFirst.contains(rightPadlockPairing))
-						mPairingFirst[rightPadlockPairing] = 12;
 					mPairingLast[rightPadlockPairing] = 12;
 
 					++mPairingCount[rightRightPadlockPairing];
-					if (!mPairingFirst.contains(rightRightPadlockPairing))
-						mPairingFirst[rightRightPadlockPairing] = 13;
 					mPairingLast[rightRightPadlockPairing] = 13;
 
 					// Ponder
@@ -1248,6 +1254,17 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 					// Get the count of occurences
 					++mPairingCount[object.Pairing];
 				}
+
+				// shouldn't be an issue because of the trimming right after but still...
+				if (!mPairingLast.contains(leftPadlockPairing))
+					mPairingLast[leftPadlockPairing] = -1;
+
+				if (!mPairingFirst.contains(rightPadlockPairing))
+					mPairingFirst[leftPadlockPairing] = 12;
+
+				if (!mPairingFirst.contains(leftPadlockPairing))
+					mPairingFirst[rightRightPadlockPairing] = 13;
+
 				// Remove the useless ones :
 				for (const auto& item : mPairingCount)
 				{

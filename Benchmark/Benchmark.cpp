@@ -174,6 +174,6 @@ bool TestHeuristics()
 int main()
 {
 	TestHeuristics();
-	//TestLocked();
-	//TestEngine();
+	TestLocked();
+	TestEngine();
 }
