@@ -1135,7 +1135,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	row.emplace_back(rightPadlockPairing);
 	row.emplace_back(rightRightPadlockPairing);
 
-	for (int x = 0; x <= row.size(); ++x)
+	for (int x = 0; x < row.size(); ++x)
 	{
 		// Get the first occurence
 		if (!mPairingFirst.contains(row[x]))
@@ -1247,7 +1247,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 						row.emplace_back(arrBoard[x][y][z].TileObject.Pairing);
 				}
 
-				for (int x = 0; x <= row.size(); ++x)
+				for (int x = 0; x < row.size(); ++x)
 				{
 					// Get the first occurence
 					if (!mPairingFirst.contains(row[x]))
