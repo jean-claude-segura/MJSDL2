@@ -909,7 +909,7 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 			for (const auto& item : mPairingCount)
 			{
 				// Actually, I realized that AAA/BBB is an issue. AABABB, AABBAB, ABAABB, AABABB but not AAABBB. I'll try to think about something.
-				if (item.second != arrGlobalOccurences.find(item.first)->second)
+				if (item.second < arrGlobalOccurences.find(item.first)->second)
 				{
 					mPairingFirst.erase(item.first);
 					mPairingLast.erase(item.first);
@@ -1181,11 +1181,13 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 							return true;
 						}
 						// fBx < fAx && lBx < lAx
+						/*
 						if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
 						{
 							if (cause != NULL) { *cause = 5; };
 							return true;
 						}
+						*/
 					}
 				}
 			}
@@ -1268,7 +1270,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 					// ABBA BAAB : ok.
 					// AABB BBAA ABAB BABA : always locked
 					// I'll try to think about something.
-					if (item.second != 4)
+					if (item.second < 4)
 					{
 						mPairingFirst.erase(item.first);
 						mPairingLast.erase(item.first);
