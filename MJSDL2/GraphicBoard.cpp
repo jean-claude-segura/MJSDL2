@@ -116,12 +116,6 @@ void GraphicBoard::ThrowException(const int i)
 
 void GraphicBoard::Init()
 {
-#ifdef _DEBUG	
-#ifndef BENCHMARK
-	//plateau.Test();
-#endif
-#endif
-
 	SDL_SetMainReady();
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {

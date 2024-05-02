@@ -3,6 +3,8 @@
 
 Board::Board()
 {
+	bIsLockedFromMove = false;
+	bIsLockedFromStart = false;
 	Seed = 0;
 }
 
@@ -676,122 +678,7 @@ bool Board::GoEnd()
 	}
 }
 
-#ifdef _DEBUG
-#ifndef BENCHMARK
-bool Board::Test()
-{
-	uint64_t ret = 0ULL;
-	int solved = 0;
-	std::stringstream strout;
-	std::vector<int> Locked;
-	int i = 0;
-	bool goOn = true;
-	do
-	{
-		InitBoard();
-		if (CheckIfLockedFromStart(vLogicalBoard, mIndexToTile))
-		{
-			Locked.emplace_back(i++);
-			continue;
-		}
-		auto temp = testAll(*this);
-		if (temp != 0ULL)
-			++solved;
-		std::cout << std::dec << i << " : " << std::hex << temp << std::dec << std::endl;
-		ret += temp;
-		auto v9 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v8 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v7 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v6 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v5 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v4 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v3 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v2 = temp & 0b01111111;
-		temp = temp >> 7;
-		auto v1 = temp & 0b01111111;
-		temp = temp >> 7;
-
-		strout << std::endl;
-		strout << std::dec << v1 << ", ";
-		strout << std::dec << v2 << ", ";
-		strout << std::dec << v3 << ", ";
-		strout << std::dec << v4 << ", ";
-		strout << std::dec << v5 << ", ";
-		strout << std::dec << v6 << ", ";
-		strout << std::dec << v7 << ", ";
-		strout << std::dec << v8 << ", ";
-		strout << std::dec << v9 << std::endl;
-		++i;
-
-		auto tempRet = ret;
-		for (int dec = 0; dec < 9 && goOn; ++dec)
-		{
-			auto rv1 = tempRet & 0b01111111;
-			tempRet = tempRet >> 7;
-			if (rv1 == 0b01111111)
-				goOn = false;
-		}
-	} while (goOn);
-
-	std::cout << strout.str();
-
-	auto v9 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v8 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v7 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v6 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v5 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v4 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v3 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v2 = ret & 0b01111111;
-	ret = ret >> 7;
-	auto v1 = ret & 0b01111111;
-	ret = ret >> 7;
-
-	std::cout << std::endl;
-	std::cout << std::dec << v1 << ", ";
-	std::cout << std::dec << v2 << ", ";
-	std::cout << std::dec << v3 << ", ";
-	std::cout << std::dec << v4 << ", ";
-	std::cout << std::dec << v5 << ", ";
-	std::cout << std::dec << v6 << ", ";
-	std::cout << std::dec << v7 << ", ";
-	std::cout << std::dec << v8 << ", ";
-	std::cout << std::dec << v9 << std::endl;
-
-	auto pourcent = solved * 100. / (i - Locked.size());
-
-	std::cout << "Résolus : " << std::dec << pourcent << "%" << std::endl;
-
-	std::cout << std::endl;
-
-	if (!Locked.empty())
-	{
-		auto it = Locked.begin();
-		for (; it != Locked.end() - 1; ++it)
-		{
-			std::cout << std::dec << *it << ", ";
-		}
-		std::cout << std::dec << *it << std::endl;
-	}
-	std::cout << "Bloqués : " << std::dec << Locked.size() << "." << std::endl;
-
-	return false;
-}
-
+#if defined(_DEBUG) || defined(BENCHMARK)
 void Board::InitBoardLockedHorizontal(int test)
 {
 	// 0, 1, 2, 5, 7, 12, 18, 19, 24, 25, 27, 31, 34, 36, 44, 49, 50, 55, 61, 62, 64, 66
@@ -1036,5 +923,4 @@ void Board::InitBoardLockedHorizontal(int test)
 
 	SetMoves();
 }
-#endif
 #endif

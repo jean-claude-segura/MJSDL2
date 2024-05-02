@@ -2141,9 +2141,8 @@ inline bool TryHeuristics(const Board& plateau,
 	return false;
 }
 
-#ifdef _DEBUG
-#ifndef BENCHMARK
-int64_t testAll(const Board& plateau)
+#if defined(_DEBUG) || defined(BENCHMARK)
+inline int64_t testAll(const Board& plateau)
 {
 	std::vector<std::pair<bool (*)(Board plateau, std::vector<std::pair<int, int>>& vSolution), std::string>> vTries;
 
@@ -2170,5 +2169,4 @@ int64_t testAll(const Board& plateau)
 
 	return ret;
 	}
-#endif
 #endif

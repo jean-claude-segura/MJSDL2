@@ -353,11 +353,8 @@ public:
 	bool Load(std::pair<std::string, std::vector<std::string>>& savedGame);
 	bool Save(std::pair<std::string, std::vector<std::string>>& savedGame);
 	unsigned int getSeed() { return Seed; }
-#ifdef _DEBUG
-#ifndef BENCHMARK
-	bool Test();
+#if defined(_DEBUG) || defined(BENCHMARK)
 	void InitBoardLockedHorizontal(int test);
-#endif
 #endif
 	const std::vector<std::pair<int, int>>& GetSolution() { return vSolution; }
 	//const std::vector<std::pair<int, int>>& GetHistory() { return vHistory; }
