@@ -1125,49 +1125,27 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	auto rightPadlockPairing = mIndexToTile.find(0x8D)->second.Pairing;
 	auto rightRightPadlockPairing = mIndexToTile.find(0x8E)->second.Pairing;
 
-	// Forced entries for the padlocks.
-	++mPairingCount[leftPadlockPairing];
-	mPairingFirst[leftPadlockPairing] = -1;
-
-	++mPairingCount[rightPadlockPairing];
-	mPairingLast[rightPadlockPairing] = 12 + 12;
-
-	++mPairingCount[rightRightPadlockPairing];
-	mPairingLast[rightRightPadlockPairing] = 13 + 12;
-
-	// Creating a fake 24 tiles line to include the padlocks obstruction from the beginning to the end.
+	// Creating a fake 27 tiles line to include the padlocks obstruction from the beginning to the end.
+	std::vector<int> row;
+	row.emplace_back(leftPadlockPairing);
 	for (int x = 0; x < 12; ++x)
+		row.emplace_back(arrBoard[x][3][0].TileObject.Pairing);
+	for (int x = 0; x < 12; ++x)
+		row.emplace_back(arrBoard[x][4][0].TileObject.Pairing);
+	row.emplace_back(rightPadlockPairing);
+	row.emplace_back(rightRightPadlockPairing);
+
+	for (int x = 0; x <= row.size(); ++x)
 	{
-		// First get the tile.
-		auto& object = arrBoard[x][3][0].TileObject;
 		// Get the first occurence
-		if (!mPairingFirst.contains(object.Pairing))
-			mPairingFirst[object.Pairing] = x;
+		if (!mPairingFirst.contains(row[x]))
+			mPairingFirst[row[x]] = x;
 		// Get the last occurence
-		mPairingLast[object.Pairing] = x;
+		if (!mPairingLast.contains(row[x]))
+			mPairingLast[row[x]] = x;
 		// Get the count of occurences
-		++mPairingCount[object.Pairing];
-
-		// First get the tile.
-		object = arrBoard[x][4][0].TileObject;
-		// Get the first occurence
-		if (!mPairingFirst.contains(object.Pairing))
-			mPairingFirst[object.Pairing] = x + 12;
-		// Get the last occurence
-		mPairingLast[object.Pairing] = x + 12;
-		// Get the count of occurences
-		++mPairingCount[object.Pairing];
+		++mPairingCount[row[x]];
 	}
-
-	// shouldn't be an issue because of the trimming right after but still...
-	if (!mPairingLast.contains(leftPadlockPairing))
-		mPairingLast[leftPadlockPairing] = -1;
-
-	if (!mPairingFirst.contains(rightPadlockPairing))
-		mPairingFirst[leftPadlockPairing] = 12;
-
-	if (!mPairingFirst.contains(leftPadlockPairing))
-		mPairingFirst[rightRightPadlockPairing] = 13;
 
 	// Remove the useless ones :
 	for (const auto& item : mPairingCount)
@@ -1178,6 +1156,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 			mPairingLast.erase(item.first);
 		}
 	}
+
 	// Specific to padlocks. They have to be involved or the test is not relevant.
 	if (mPairingFirst.contains(0x8C) || mPairingFirst.contains(0x8D) || mPairingFirst.contains(0x8E))
 	{
@@ -1187,23 +1166,25 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 			--itEnd;
 			for (auto it = mPairingFirst.begin(); it != itEnd; ++it)
 			{
-				auto itNext = it;
-				for (++itNext; itNext != mPairingFirst.end(); ++itNext)
+				// Specific to padlocks. They have to be involved or the test is not relevant.
+				if(it->first == 0x8C || it->first == 0x8D || it->first == 0x8E)
 				{
-					// fAx < fBx && lAx < lBx
-					if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
+					auto itNext = it;
+					for (++itNext; itNext != mPairingFirst.end(); ++itNext)
 					{
-						if (cause != NULL) { *cause = 5; };
-						return true;
+						// fAx < fBx && lAx < lBx
+						if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
+						{
+							if (cause != NULL) { *cause = 5; };
+							return true;
+						}
+						// fBx < fAx && lBx < lAx
+						if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
+						{
+							if (cause != NULL) { *cause = 5; };
+							return true;
+						}
 					}
-					// fBx < fAx && lBx < lAx
-					/*
-					if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
-					{
-						if (cause != NULL) { *cause = 5; };
-						return true;
-					}
-					*/
 				}
 			}
 		}
@@ -1216,24 +1197,22 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 		{
 			auto horizontalLimits = arrHorizontalLimits[y][z];
 			// You need at least 8 slots to block 8 tiles...
-			if (horizontalLimits.second - horizontalLimits.first + 1 > 7)
+			if (horizontalLimits.second - horizontalLimits.first + 1 > 7) // No need to check for y = 3 or y = 5
 			{
 				// First pass : check potential issues
 				mPairingCount.clear();
 				mPairingFirst.clear();
 				mPairingLast.clear();
 
+				std::vector<int> row;
+
 				if (3 <= y && y <= 4 && z == 0)
 				{
-					// Fake entries for the padlocks.
-					++mPairingCount[leftPadlockPairing];
-					mPairingFirst[leftPadlockPairing] = -1;
+					row.emplace_back(leftPadlockPairing);
+					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+						row.emplace_back(arrBoard[x][y][z].TileObject.Pairing);
+					row.emplace_back(rightPadlockPairing);
 
-					++mPairingCount[rightPadlockPairing];
-					mPairingLast[rightPadlockPairing] = 12;
-
-					++mPairingCount[rightRightPadlockPairing];
-					mPairingLast[rightRightPadlockPairing] = 13;
 
 					// Ponder
 					int yPonder = y == 3 ? 4 : 3;
@@ -1241,45 +1220,60 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 					{
 						// First get the tile.
 						const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
-						if (pairing == leftPadlockPairing || pairing == rightPadlockPairing || pairing == rightRightPadlockPairing)
-							++mPairingCount[pairing];
+						if (pairing == leftPadlockPairing)
+							row.insert(row.begin(), leftPadlockPairing);
 					}
-				}
+					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+					{
+						// First get the tile.
+						const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
+						if (pairing == rightPadlockPairing)
+							row.emplace_back(rightPadlockPairing);
+					}
+					
+					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+					{
+						// First get the tile.
+						const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
+						if (pairing == rightRightPadlockPairing)
+							row.emplace_back(rightRightPadlockPairing);
+					}
+					row.emplace_back(rightRightPadlockPairing);
 
-				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+				}
+				else
 				{
-					// First get the tile.
-					const auto& object = arrBoard[x][y][z].TileObject;
-					// Get the first occurence
-					if (!mPairingFirst.contains(object.Pairing))
-						mPairingFirst[object.Pairing] = x;
-					// Get the last occurence
-					if (!mPairingLast.contains(object.Pairing) || mPairingLast.find(object.Pairing)->second < x) // Because of the left and right blocker fake init before...
-						mPairingLast[object.Pairing] = x;
-					// Get the count of occurences
-					++mPairingCount[object.Pairing];
+					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+						row.emplace_back(arrBoard[x][y][z].TileObject.Pairing);
 				}
 
-				// shouldn't be an issue because of the trimming right after but still...
-				if (!mPairingLast.contains(leftPadlockPairing))
-					mPairingLast[leftPadlockPairing] = -1;
-
-				if (!mPairingFirst.contains(rightPadlockPairing))
-					mPairingFirst[leftPadlockPairing] = 12;
-
-				if (!mPairingFirst.contains(leftPadlockPairing))
-					mPairingFirst[rightRightPadlockPairing] = 13;
+				for (int x = 0; x <= row.size(); ++x)
+				{
+					// Get the first occurence
+					if (!mPairingFirst.contains(row[x]))
+						mPairingFirst[row[x]] = x;
+					// Get the last occurence
+					if (!mPairingLast.contains(row[x]))
+						mPairingLast[row[x]] = x;
+					// Get the count of occurences
+					++mPairingCount[row[x]];
+				}
 
 				// Remove the useless ones :
 				for (const auto& item : mPairingCount)
 				{
-					// Actually, I realized that AAA/BBB is an issue. AABABB, AABBAB, ABAABB, AABABB but not AAABBB. I'll try to think about something.
+					// Actually, I realized that AAA || BBB can be an issue.
+					// With 3 of each :
+					// ABBA BAAB : ok.
+					// AABB BBAA ABAB BABA : always locked
+					// I'll try to think about something.
 					if (item.second != 4)
 					{
 						mPairingFirst.erase(item.first);
 						mPairingLast.erase(item.first);
 					}
 				}
+
 				if (mPairingFirst.size() > 1) // Ok, now we have an issue...
 				{
 					auto itEnd = mPairingFirst.end();
