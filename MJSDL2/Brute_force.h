@@ -589,6 +589,8 @@ inline bool SolveRecParallel(
 	std::map<int, Tile> mIndexToRemovedTile;
 	std::map<Coordinates, int> mOccupationBoardRemoved;
 
+	const auto pairing = mIndexToTile.find(*vMove.begin())->second.Pairing;
+	arrGlobalOccurences[pairing] -= vMove.size();
 	for (const auto& move : vMove)
 	{
 		RemoveTile(move,
