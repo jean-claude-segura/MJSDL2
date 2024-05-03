@@ -775,8 +775,8 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 		[c1, pairing](const TileAndIndex& ref) { return (c1 != ref) && (pairing == ref.TileObject.Pairing); });
 
 	// Pure vertical lock.
-	/*if ((c1.Index != 0x8F) && // For the master padlock, it's another story.
-		(c2.Index != 0x8F)) // For the master padlock, it's another story.*/
+	if ((c1.Index != 0x8F) && // For the master padlock, it's another story.
+		(c2.Index != 0x8F)) // For the master padlock, it's another story.
 	{
 		if (c1.X == c2.X && c1.Y == c2.Y && c1.DecX == c2.DecX && c1.DecY == c2.DecY)
 			return true;
