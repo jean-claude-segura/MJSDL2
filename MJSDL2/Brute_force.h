@@ -813,24 +813,23 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 		if ((c1.Index != 0x8F) && // For the master padlock, it's another story.
 			(c2.Index != 0x8F)) // For the master padlock, it's another story.
 		{
-			// If one tile under c1 has a counterpart above c2, it's over.
 			for (int z = 0; z < c1.Z; ++z)
 			{
 				const auto& item = arrBoard[c1.X][c1.Y][z];
 				const auto count = arrGlobalOccurences.find(item.TileObject.Pairing)->second;
 				if (count == 2)
 					for (int z = c2.Z + 1; z < 4; ++z)
-						if (arrBoard[c2.X][c2.Y][z].TileObject.Pairing == item.TileObject.Pairing)
+						if (arrBoard[c2.X][c2.Y][z].TileObject.Pairing == item.TileObject.Pairing) // If one tile under c1 has a counterpart above c2, it's over.
 							return true;
 			}
-			// If one tile under c2 has a counterpart above c1, it's over.
+			
 			for (int z = 0; z < c2.Z; ++z)
 			{
 				const auto& item = arrBoard[c2.X][c2.Y][z];
 				const auto count = arrGlobalOccurences.find(item.TileObject.Pairing)->second;
 				if (count == 2)
 					for (int z = c1.Z + 1; z < 4; ++z)
-						if (arrBoard[c1.X][c1.Y][z].TileObject.Pairing == item.TileObject.Pairing)
+						if (arrBoard[c1.X][c1.Y][z].TileObject.Pairing == item.TileObject.Pairing) // If one tile under c2 has a counterpart above c1, it's over.
 							return true;
 			}
 		}
@@ -845,7 +844,7 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 						const auto count = arrGlobalOccurences.find(item.TileObject.Pairing)->second;
 						if (count == 2)
 							for (int z = c2.Z + 1; z < 4; ++z)
-								if (arrBoard[c2.X][c2.Y][z].TileObject.Pairing == item.TileObject.Pairing)
+								if (arrBoard[c2.X][c2.Y][z].TileObject.Pairing == item.TileObject.Pairing) // If one tile under c1 has a counterpart above c2, it's over.
 									return true;
 					}
 		}
@@ -860,12 +859,11 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 						const auto count = arrGlobalOccurences.find(item.TileObject.Pairing)->second;
 						if (count == 2)
 							for (int z = c1.Z + 1; z < 4; ++z)
-								if (arrBoard[c1.X][c1.Y][z].TileObject.Pairing == item.TileObject.Pairing)
+								if (arrBoard[c1.X][c1.Y][z].TileObject.Pairing == item.TileObject.Pairing) // If one tile under c2 has a counterpart above c1, it's over.
 									return true;
 					}
 		}
 	}
-
 
 	if (c1.Y == c2.Y && c1.Z == c2.Z) // Same height, same row
 	{
