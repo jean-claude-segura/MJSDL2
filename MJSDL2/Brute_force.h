@@ -652,91 +652,88 @@ inline bool SolveRecParallel(
 	auto ret = vLogicalBoard.empty();
 	if (!ret && !stopSolverNow)
 	{
-		if (!CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, arrGlobalOccurences, vMove) && !vNewMoves.empty() && !stopSolverNow)
+		const auto failure = CheckIfLockedFromMove(vLogicalBoard, mIndexToRemovedTile, arrGlobalOccurences, vMove) && vNewMoves.empty();
+		const auto hashvalidation = !stopNowParallel(mIndexToTile
+#ifdef _DEBUG
+			, positions
+#endif
+		);
+		if (!stopSolverNow && !failure && hashvalidation)
 		{
-			// For now there is only one async running...
-			if (!stopNowParallel(mIndexToTile
-#ifdef _DEBUG
-				, positions
-#endif
-			))
+			std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
+			for (const auto& move : vNewMoves)
 			{
-				std::vector<std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>> vSortedMoves;
-				for (const auto& move : vNewMoves)
-				{
-					auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard);
-					auto jouables = evalBruteForceOrderingEval.first;
-					auto debloques = evalBruteForceOrderingEval.second;
-					auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
-					vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock)));
-				}
+				auto evalBruteForceOrderingEval = BruteForceOrderingEval(move, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard);
+				auto jouables = evalBruteForceOrderingEval.first;
+				auto debloques = evalBruteForceOrderingEval.second;
+				auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
+				vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock)));
+			}
 
-				std::sort(vSortedMoves.begin(), vSortedMoves.end(),
-					[](const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& left, const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& right)
-					{
-						return
-							left.first.size() > right.first.size() ||
-							left.first.size() == right.first.size() && std::get<0>(left.second) > std::get<0>(right.second) ||
-							(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) > std::get<1>(right.second)) ||
-							(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
-					});
-				const auto allowed_processor_count = AskForCores(vSortedMoves.size());
-				if (allowed_processor_count > 1)
+			std::sort(vSortedMoves.begin(), vSortedMoves.end(),
+				[](const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& left, const std::pair<std::vector<int>, std::tuple<int, int, uint8_t>>& right)
 				{
-					auto arrSolutions = std::make_unique<std::vector<std::pair<int, int>>[]>((unsigned int)allowed_processor_count);
-					const auto maxthread = std::min((unsigned int)vSortedMoves.size(), (unsigned int)allowed_processor_count);
+					return
+						left.first.size() > right.first.size() ||
+						left.first.size() == right.first.size() && std::get<0>(left.second) > std::get<0>(right.second) ||
+						(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) > std::get<1>(right.second)) ||
+						(left.first.size() == right.first.size() && std::get<0>(left.second) == std::get<0>(right.second) && std::get<1>(left.second) == std::get<1>(right.second) && std::get<2>(left.second) > std::get<2>(right.second));
+				});
+			const auto allowed_processor_count = AskForCores(vSortedMoves.size());
+			if (allowed_processor_count > 1)
+			{
+				auto arrSolutions = std::make_unique<std::vector<std::pair<int, int>>[]>((unsigned int)allowed_processor_count);
+				const auto maxthread = std::min((unsigned int)vSortedMoves.size(), (unsigned int)allowed_processor_count);
 
-					for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
+				for (auto itMove = vSortedMoves.begin(); itMove != vSortedMoves.end();)
+				{
+					std::vector< std::future<bool>> vSolvers;
+					for (int i = 0; i < maxthread; ++i)
 					{
-						std::vector< std::future<bool>> vSolvers;
-						for (int i = 0; i < maxthread; ++i)
+						if (itMove != vSortedMoves.end())
 						{
-							if (itMove != vSortedMoves.end())
-							{
-								vSolvers.emplace_back(std::async(&SolveRecParallelInit, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, arrGlobalOccurences, std::ref(arrSolutions[i])
+							vSolvers.emplace_back(std::async(&SolveRecParallelInit, itMove->first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, arrGlobalOccurences, std::ref(arrSolutions[i])
 #ifdef _DEBUG
-									, positions
+								, positions
 #endif
-								));
-								++itMove;
-							}
+							));
+							++itMove;
 						}
-
-						int i = 0;
-						for (auto& solver : vSolvers)
-						{
-							if (solver.get())
-							{
-								stopSolverNow = true;
-								// Funny case when more than one found a solution...
-								if (!ret)
-									vSolution.insert(vSolution.end(), arrSolutions[i].begin(), arrSolutions[i].end());
-								ret = true;
-							}
-							i++;
-						}
-
-						if (stopSolverNow)
-							break;
 					}
 
-					GiveCoresBack(allowed_processor_count);
-				}
-				else
-				{
-					for (const auto& move : vSortedMoves)
+					int i = 0;
+					for (auto& solver : vSolvers)
 					{
-						ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, arrGlobalOccurences, vSolution
-#ifdef _DEBUG
-							, ++positions
-#endif
-						);
-
-						if (ret)
+						if (solver.get())
+						{
 							stopSolverNow = true;
-						if (stopSolverNow)
-							break;
+							// Funny case when more than one found a solution...
+							if (!ret)
+								vSolution.insert(vSolution.end(), arrSolutions[i].begin(), arrSolutions[i].end());
+							ret = true;
+						}
+						GiveCoresBack(1);
+						i++;
 					}
+
+					if (stopSolverNow)
+						break;
+				}
+			}
+			else
+			{
+				for (const auto& move : vSortedMoves)
+				{
+					ret = SolveRecParallel(move.first, vLogicalBoard, arrRemovable, mIndexToTile, mOccupationBoard, arrGlobalOccurences, vSolution
+#ifdef _DEBUG
+						, ++positions
+#endif
+					);
+
+					if (ret)
+						stopSolverNow = true;
+					if (stopSolverNow)
+						break;
 				}
 			}
 		}
@@ -822,7 +819,7 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 						if (arrBoard[c2.X][c2.Y][z].TileObject.Pairing == item.TileObject.Pairing) // If one tile under c1 has a counterpart above c2, it's over.
 							return true;
 			}
-			
+
 			for (int z = 0; z < c2.Z; ++z)
 			{
 				const auto& item = arrBoard[c2.X][c2.Y][z];
@@ -1489,7 +1486,7 @@ inline uint8_t EvalMoveMaxBlock(
 		}
 		else
 		{
-			auto temp = arrIndexToBoardCoord[index];
+			const auto& temp = arrIndexToBoardCoord[index];
 			int x = std::get<0>(temp);
 			int y = std::get<1>(temp);
 			int z = std::get<2>(temp);
@@ -1502,35 +1499,18 @@ inline uint8_t EvalMoveMaxBlock(
 			for (curX = x + 1; curX < 12 && (mIndexToTile.contains(arrBoardCoordToIndex[curX][y][z])); ++curX, ++tempLockingValue);
 			if (tempLockingValue > 0)
 			{
-				if (z == 0 && (y == 3 || y == 4))
-				{
-					if ((x == 11 || curX == 12) && mIndexToTile.contains(0x8D))
-						lockingValue += mIndexToTile.contains(0x8E) ? tempLockingValue + 1 : tempLockingValue;
-					else
-						lockingValue += tempLockingValue - 1;
-				}
-				else
-				{
-					lockingValue += tempLockingValue - 1;
-				}
-
+				if (z == 0 && (y == 3 || y == 4) && (x == 11 || curX == 12) && mIndexToTile.contains(0x8D))
+					tempLockingValue += mIndexToTile.contains(0x8E) ? 2 : 1;
+				lockingValue += tempLockingValue - 1;
 			}
 			tempLockingValue = 0;
 			// Gauche
 			for (curX = x - 1; curX >= 0 && (mIndexToTile.contains(arrBoardCoordToIndex[curX][y][z])); --curX, ++tempLockingValue);
 			if (tempLockingValue > 0)
 			{
-				if (z == 0 && (y == 3 || y == 4))
-				{
-					if ((x == 0 || curX == -1) && mIndexToTile.contains(0x8C))
-						lockingValue += mIndexToTile.contains(0x8E) ? tempLockingValue + 1 : tempLockingValue;
-					else
-						lockingValue += tempLockingValue - 1;
-				}
-				else
-				{
-					lockingValue += tempLockingValue - 1;
-				}
+				if (z == 0 && (y == 3 || y == 4) && (x == 0 || curX == -1) && mIndexToTile.contains(0x8C))
+					tempLockingValue += mIndexToTile.contains(0x8E) ? 2 : 1;
+				lockingValue += tempLockingValue - 1;
 			}
 		}
 	}
@@ -2116,6 +2096,7 @@ inline bool SolveRecAsyncInit(
 								vSolution.insert(vSolution.end(), arrSolutions[i].begin(), arrSolutions[i].end());
 							ret = true;
 						}
+						GiveCoresBack(1);
 						i++;
 					}
 					if (ret)
@@ -2123,8 +2104,6 @@ inline bool SolveRecAsyncInit(
 					if (stopSolverNow)
 						break;
 				}
-
-				GiveCoresBack(allowed_processor_count);
 			}
 			else
 			{
@@ -2159,7 +2138,7 @@ inline bool SolveRecAsyncInit(
 	SDL_PushEvent(&event);
 #endif
 	return ret;
-	}
+}
 
 // Just to work on a copy.
 inline bool TryHeuristics(const Board& plateau,
