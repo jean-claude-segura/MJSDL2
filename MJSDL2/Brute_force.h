@@ -764,176 +764,248 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 
 	const auto pairing = mIndexToRemovedTile.find(vMove[0])->second.Pairing;
 
-	std::vector<TileAndIndex> vPairedIndex;
-	auto it = vLogicalBoard.begin();
-	for (; it != vLogicalBoard.end(); ++it)
-	{
-		if (it->TileObject.Pairing == pairing)
-		{
-			vPairedIndex.emplace_back(*it);
-			break;
-		}
-	}
-	if (it != vLogicalBoard.end())
-	{
-		for (++it; it != vLogicalBoard.end(); ++it)
-		{
-			if (it->TileObject.Pairing == pairing)
-			{
-				vPairedIndex.emplace_back(*it);
-				break;
-			}
-		}
+	// In case we removed the last ones.
+	if (!arrGlobalOccurences.contains(pairing))
+		return false;
 
-		// Pure vertical lock.
-		const auto& c1 = vPairedIndex[0];
-		const auto& c2 = vPairedIndex[1];
+	const auto& c1 = *std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(),
+		[pairing](const TileAndIndex& ref) { return (pairing == ref.TileObject.Pairing); });
+
+	const auto& c2 = *std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(),
+		[c1, pairing](const TileAndIndex& ref) { return (c1 != ref) && (pairing == ref.TileObject.Pairing); });
+
+	// Pure vertical lock.
+	/*if ((c1.Index != 0x8F) && // For the master padlock, it's another story.
+		(c2.Index != 0x8F)) // For the master padlock, it's another story.*/
+	{
 		if (c1.X == c2.X && c1.Y == c2.Y && c1.DecX == c2.DecX && c1.DecY == c2.DecY)
 			return true;
+	}
 
-		if (c1.Y == c2.Y && c1.Z == c2.Z) // Same plane, same row
+	std::array<std::array<std::array<TileAndIndex, 4>, 8>, 12> arrBoard;
+	for (const auto& tileAndIndex : vLogicalBoard)
+	{
+		if (tileAndIndex.Index < 140)
+			arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex;
+	}
+
+	// Vertical lock by master padlock.
+	if ((c1.Index == 0x8F) || (c2.Index == 0x8F)) // For the master padlock, it's another story.
+	{
+		if (
+			(c1.Index == 0x8F && 5 <= c2.X && c2.X <= 6 && 3 <= c2.Y && c2.Y <= 4) ||
+			(c2.Index == 0x8F && 5 <= c1.X && c1.X <= 6 && 3 <= c1.Y && c1.Y <= 4)
+			)
 		{
-			int z = c1.Z;
-			int y = c1.Y;
-			std::array<std::array<std::array<TileAndIndex, 4>, 8>, 12> arrBoard;
+			// You have to check 4 columns.
+			for (int x = 5; x < 7; ++x)
+				for (int y = 3; y < 5; ++y)
+					for (int z = 0; z < 4; ++z)
+						if (pairing == arrBoard[x][y][z].TileObject.Pairing)
+							return true;
+		}
+	}
 
-			auto beginning = -1;
-			auto end = -1;
-			auto leftPadlockPairing = -1;
-			auto rightPadlockPairing = -1;
-			auto rightRightPadlockPairing = -1;
-			std::map<int, int> mPairingCount;
-			std::map<int, int> mPairingFirst;
-			std::map<int, int> mPairingLast;
-
-			for (const auto& tileAndIndex : vLogicalBoard)
+	// Crossed vertical lock.
+	if ((c1.Index != 0x8C) && (c1.Index != 0x8D) && (c1.Index != 0x8E) && // There is nothing under or above the main padlock
+		(c2.Index != 0x8C) && (c2.Index != 0x8D) && (c2.Index != 0x8E)) // There is nothing under or above the main padlock
+	{
+		if ((c1.Index != 0x8F) && // For the master padlock, it's another story.
+			(c2.Index != 0x8F)) // For the master padlock, it's another story.
+		{
+			// If one tile under c1 has a counterpart above c2, it's over.
+			for (int z = 0; z < c1.Z; ++z)
 			{
-				if (tileAndIndex.Index < 140)
-					arrBoard[tileAndIndex.X][tileAndIndex.Y][tileAndIndex.Z] = tileAndIndex;
-				if (tileAndIndex.Y == c1.Y && tileAndIndex.Z == c1.Z) // Same plane, same row
-				{
-					if (beginning == -1)
-						beginning = tileAndIndex.X;
-					beginning = std::min(beginning, tileAndIndex.X);
-					end = std::max(end, tileAndIndex.X);
-				}
-				if (3 <= y && y <= 4 && z == 0)
-				{
-					if (tileAndIndex.Index == 0x8C)
-						leftPadlockPairing = tileAndIndex.TileObject.Pairing;
-					else if (tileAndIndex.Index == 0x8D)
-						rightPadlockPairing = tileAndIndex.TileObject.Pairing;
-					else if (tileAndIndex.Index == 0x8E)
-						rightRightPadlockPairing = tileAndIndex.TileObject.Pairing;
-				}
+				const auto& item = arrBoard[c1.X][c1.Y][z];
+				const auto count = arrGlobalOccurences.find(item.TileObject.Pairing)->second;
+				if (count == 2)
+					for (int z = c2.Z + 1; z < 4; ++z)
+						if (arrBoard[c2.X][c2.Y][z].TileObject.Pairing == item.TileObject.Pairing)
+							return true;
 			}
+			// If one tile under c2 has a counterpart above c1, it's over.
+			for (int z = 0; z < c2.Z; ++z)
+			{
+				const auto& item = arrBoard[c2.X][c2.Y][z];
+				const auto count = arrGlobalOccurences.find(item.TileObject.Pairing)->second;
+				if (count == 2)
+					for (int z = c1.Z + 1; z < 4; ++z)
+						if (arrBoard[c1.X][c1.Y][z].TileObject.Pairing == item.TileObject.Pairing)
+							return true;
+			}
+		}
+		else if (c1.Index == 0x8F) // For the master padlock, it's another story.
+		{
+			// You have to check 4 columns.
+			for (int x = 5; x < 7; ++x)
+				for (int y = 3; y < 5; ++y)
+					for (int z = 0; z < 4; ++z)
+					{
+						const auto& item = arrBoard[x][y][z];
+						const auto count = arrGlobalOccurences.find(item.TileObject.Pairing)->second;
+						if (count == 2)
+							for (int z = c2.Z + 1; z < 4; ++z)
+								if (arrBoard[c2.X][c2.Y][z].TileObject.Pairing == item.TileObject.Pairing)
+									return true;
+					}
+		}
+		else if (c2.Index == 0x8F) // For the master padlock, it's another story.
+		{
+			// You have to check 4 columns.
+			for (int x = 5; x < 7; ++x)
+				for (int y = 3; y < 5; ++y)
+					for (int z = 0; z < 4; ++z)
+					{
+						const auto& item = arrBoard[x][y][z];
+						const auto count = arrGlobalOccurences.find(item.TileObject.Pairing)->second;
+						if (count == 2)
+							for (int z = c1.Z + 1; z < 4; ++z)
+								if (arrBoard[c1.X][c1.Y][z].TileObject.Pairing == item.TileObject.Pairing)
+									return true;
+					}
+		}
+	}
 
-			// First pass : check potential issues
-			// 
-			// For 3 identical tiles :
-			// AAABB, AABAB but not ABAAB!
-			// BBAAA, BABAA but not BAABA!
-			auto horizontalLimits = std::make_pair(std::max(0, beginning), std::min(11, end)); // Just to re-use some code...
 
-			std::vector<int> row;
+	if (c1.Y == c2.Y && c1.Z == c2.Z) // Same height, same row
+	{
+		int z = c1.Z;
+		int y = c1.Y;
 
+		auto beginning = -1;
+		auto end = -1;
+		auto leftPadlockPairing = -1;
+		auto rightPadlockPairing = -1;
+		auto rightRightPadlockPairing = -1;
+		std::map<int, int> mPairingCount;
+		std::map<int, int> mPairingFirst;
+		std::map<int, int> mPairingLast;
+
+		for (const auto& tileAndIndex : vLogicalBoard)
+		{
+			if (tileAndIndex.Y == c1.Y && tileAndIndex.Z == c1.Z) // Same height, same row
+			{
+				if (beginning == -1)
+					beginning = tileAndIndex.X;
+				beginning = std::min(beginning, tileAndIndex.X);
+				end = std::max(end, tileAndIndex.X);
+			}
 			if (3 <= y && y <= 4 && z == 0)
 			{
-				if(leftPadlockPairing != -1)
-					row.emplace_back(leftPadlockPairing);
+				if (tileAndIndex.Index == 0x8C)
+					leftPadlockPairing = tileAndIndex.TileObject.Pairing;
+				else if (tileAndIndex.Index == 0x8D)
+					rightPadlockPairing = tileAndIndex.TileObject.Pairing;
+				else if (tileAndIndex.Index == 0x8E)
+					rightRightPadlockPairing = tileAndIndex.TileObject.Pairing;
+			}
+		}
+
+		// First pass : check potential issues
+		// 
+		// For 3 identical tiles :
+		// AAABB, AABAB but not ABAAB!
+		// BBAAA, BABAA but not BAABA!
+		auto horizontalLimits = std::make_pair(std::max(0, beginning), std::min(11, end)); // Just to re-use some code...
+
+		std::vector<int> row;
+
+		if (3 <= y && y <= 4 && z == 0)
+		{
+			if (leftPadlockPairing != -1)
+				row.emplace_back(leftPadlockPairing);
+			for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+				row.emplace_back(arrBoard[x][y][z].TileObject.Pairing);
+			if (rightPadlockPairing != -1)
+				row.emplace_back(rightPadlockPairing);
+
+			// Ponder
+			// Conditionnal pondering : may miss some lockings but it's better than fake ones.
+			if (leftPadlockPairing != -1 && rightPadlockPairing != -1)
+			{
+				int yPonder = y == 3 ? 4 : 3;
+
 				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
-					row.emplace_back(arrBoard[x][y][z].TileObject.Pairing);
-				if (rightPadlockPairing != -1)
-					row.emplace_back(rightPadlockPairing);
-
-				// Ponder
-				// Conditionnal pondering : may miss some lockings but it's better than fake ones.
-				if (leftPadlockPairing != -1 && rightPadlockPairing != -1)
 				{
-					int yPonder = y == 3 ? 4 : 3;
+					// First get the tile.
+					const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
+					if (pairing == leftPadlockPairing)
+						row.insert(row.begin(), leftPadlockPairing);
+				}
 
-					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
-					{
-						// First get the tile.
-						const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
-						if (pairing == leftPadlockPairing)
-							row.insert(row.begin(), leftPadlockPairing);
-					}
-
-					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
-					{
-						// First get the tile.
-						const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
-						if (pairing == rightPadlockPairing)
-							row.emplace_back(rightPadlockPairing);
-					}
-
-					if (rightRightPadlockPairing != -1)
-					{
-						for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
-						{
-							// First get the tile.
-							const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
-							if (pairing == rightRightPadlockPairing)
-								row.emplace_back(rightRightPadlockPairing);
-						}
-					}
+				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+				{
+					// First get the tile.
+					const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
+					if (pairing == rightPadlockPairing)
+						row.emplace_back(rightPadlockPairing);
 				}
 
 				if (rightRightPadlockPairing != -1)
-					row.emplace_back(rightRightPadlockPairing);
-			}
-			else
-			{
-				for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
-					row.emplace_back(arrBoard[x][y][z].TileObject.Pairing);
-			}
-
-			for (int x = 0; x < row.size(); ++x)
-			{
-				// Get the first occurence
-				if (!mPairingFirst.contains(row[x]))
-					mPairingFirst[row[x]] = x;
-				// Get the last occurence
-				mPairingLast[row[x]] = x;
-				// Get the count of occurences
-				++mPairingCount[row[x]];
-			}
-
-			/* TO DO                                        */
-			/* Cross lockings                               */
-			/* Can't be done after because of the pondering */
-			/* TO DO                                        */
-
-			// Remove the useless ones :
-			for (const auto& item : mPairingCount)
-			{
-				// Actually, I realized that AAA/BBB is an issue. AABABB, AABBAB, ABAABB, AABABB but not AAABBB. I'll try to think about something.
-				if (item.second < arrGlobalOccurences.find(item.first)->second)
 				{
-					mPairingFirst.erase(item.first);
-					mPairingLast.erase(item.first);
+					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+					{
+						// First get the tile.
+						const auto pairing = arrBoard[x][yPonder][0].TileObject.Pairing;
+						if (pairing == rightRightPadlockPairing)
+							row.emplace_back(rightRightPadlockPairing);
+					}
 				}
 			}
 
-			// There's at least one because that was the condition to be here in the first place.
-			// But one's not enough to have an issue...
-			if (mPairingFirst.size() > 1) // Ok, now we have an issue...
+			if (rightRightPadlockPairing != -1)
+				row.emplace_back(rightRightPadlockPairing);
+		}
+		else
+		{
+			for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
+				row.emplace_back(arrBoard[x][y][z].TileObject.Pairing);
+		}
+
+		for (int x = 0; x < row.size(); ++x)
+		{
+			// Get the first occurence
+			if (!mPairingFirst.contains(row[x]))
+				mPairingFirst[row[x]] = x;
+			// Get the last occurence
+			mPairingLast[row[x]] = x;
+			// Get the count of occurences
+			++mPairingCount[row[x]];
+		}
+
+		/* TO DO                                        */
+		/* Cross lockings                               */
+		/* Can't be done after because of the pondering */
+		/* TO DO                                        */
+
+		// Remove the useless ones :
+		for (const auto& item : mPairingCount)
+		{
+			// Actually, I realized that AAA/BBB is an issue. AABABB, AABBAB, ABAABB, AABABB but not AAABBB. I'll try to think about something.
+			if (item.second < arrGlobalOccurences.find(item.first)->second)
 			{
-				auto itEnd = mPairingFirst.end();
-				--itEnd;
-				for (auto it = mPairingFirst.begin(); it != itEnd; ++it)
+				mPairingFirst.erase(item.first);
+				mPairingLast.erase(item.first);
+			}
+		}
+
+		// There's at least one because that was the condition to be here in the first place.
+		// But one's not enough to have an issue...
+		if (mPairingFirst.size() > 1) // Ok, now we have an issue...
+		{
+			auto itEnd = mPairingFirst.end();
+			--itEnd;
+			for (auto it = mPairingFirst.begin(); it != itEnd; ++it)
+			{
+				auto itNext = it;
+				for (++itNext; itNext != mPairingFirst.end(); ++itNext)
 				{
-					auto itNext = it;
-					for (++itNext; itNext != mPairingFirst.end(); ++itNext)
-					{
-						// fAx < fBx && lAx < lBx
-						if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
-							return true;
-						// fBx < fAx && lBx < lAx
-						/*if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
-							return true;*/
-					}
+					// fAx < fBx && lAx < lBx
+					if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
+						return true;
+					// fBx < fAx && lBx < lAx
+					/*if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
+						return true;*/
 				}
 			}
 		}
@@ -1169,7 +1241,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 			for (auto it = mPairingFirst.begin(); it != itEnd; ++it)
 			{
 				// Specific to padlocks. They have to be involved or the test is not relevant.
-				if(it->first == 0x8C || it->first == 0x8D || it->first == 0x8E)
+				if (it->first == 0x8C || it->first == 0x8D || it->first == 0x8E)
 				{
 					auto itNext = it;
 					for (++itNext; itNext != mPairingFirst.end(); ++itNext)
@@ -1234,7 +1306,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 						if (pairing == rightPadlockPairing)
 							row.emplace_back(rightPadlockPairing);
 					}
-					
+
 					for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
 					{
 						// First get the tile.
@@ -1242,7 +1314,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 						if (pairing == rightRightPadlockPairing)
 							row.emplace_back(rightRightPadlockPairing);
 					}
-					
+
 					row.emplace_back(rightRightPadlockPairing);
 				}
 				else
@@ -1937,7 +2009,7 @@ inline bool SolveRecAsyncInit(
 		std::cout << "*     " << lockStatus << "     *" << std::endl;
 		std::cout << "*************" << std::endl;
 #endif
-}
+	}
 	else
 	{
 		stopSolverNow = false;
@@ -2032,8 +2104,8 @@ inline bool SolveRecAsyncInit(
 #endif
 							));
 							++itMove;
+						}
 					}
-				}
 
 					int i = 0;
 					for (auto& solver : vSolvers)
@@ -2052,10 +2124,10 @@ inline bool SolveRecAsyncInit(
 						break;
 					if (stopSolverNow)
 						break;
-			}
+				}
 
 				GiveCoresBack(allowed_processor_count);
-		}
+			}
 			else
 			{
 				for (const auto& move : vSortedMoves)
@@ -2069,8 +2141,8 @@ inline bool SolveRecAsyncInit(
 						break;
 					if (stopSolverNow)
 						break;
+				}
 			}
-	}
 
 			mTranspositionsTable.clear();
 		}
@@ -2089,7 +2161,7 @@ inline bool SolveRecAsyncInit(
 	SDL_PushEvent(&event);
 #endif
 	return ret;
-		}
+	}
 
 // Just to work on a copy.
 inline bool TryHeuristics(const Board& plateau,
@@ -2110,7 +2182,7 @@ inline bool TryHeuristics(const Board& plateau,
 #ifndef _DEBUG
 		return false;
 #endif
-}
+	}
 
 	std::vector<std::pair<bool (*)(Board plateau, std::vector<std::pair<int, int>>& vSolution), std::string>> vTries;
 
@@ -2184,12 +2256,12 @@ inline bool testAll(const Board& plateau, std::array <unsigned int, 9>& arrResul
 	{
 		const auto tempRet = func.first(plateau, vSolutionTemp);
 		ret |= tempRet;
-		if(tempRet)
+		if (tempRet)
 			arrResult[i] = 1;
 		vSolutionTemp.clear();
 		++i;
 	}
 
 	return ret;
-	}
+}
 #endif
