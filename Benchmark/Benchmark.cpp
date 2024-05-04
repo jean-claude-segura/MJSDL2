@@ -206,7 +206,7 @@ bool TestHeuristics()
 
 	auto pourcent = solved * 100. / (TOTAL_ATTEMPTS - Locked.size());
 
-	std::cout << "Solved : " << std::dec << pourcent << "%" << std::endl;
+	std::cout << "Solved : " << std::dec << solved << " (" << pourcent << "%)" << std::endl;
 
 	std::cout << std::endl;
 

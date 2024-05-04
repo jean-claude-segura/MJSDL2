@@ -1421,9 +1421,9 @@ inline uint8_t EvalMoveMaxBlock(
 			if (tempLockingValue > 0)
 			{
 				if (tempLockingValue == 12 && mIndexToTile.contains(0x8D))
-					lockingValue += mIndexToTile.contains(0x8E) ? tempLockingValue + 1 : tempLockingValue;
-				else
-					lockingValue += tempLockingValue - 1;
+					tempLockingValue += mIndexToTile.contains(0x8E) ? 2 : 1;
+
+				lockingValue += (tempLockingValue - 1) >> 1;
 			}
 
 			tempLockingValue = 0;
@@ -1433,9 +1433,9 @@ inline uint8_t EvalMoveMaxBlock(
 			if (tempLockingValue > 0)
 			{
 				if (tempLockingValue == 12 && mIndexToTile.contains(0x8D))
-					lockingValue += mIndexToTile.contains(0x8E) ? tempLockingValue + 1 : tempLockingValue;
-				else
-					lockingValue += tempLockingValue - 1;
+					tempLockingValue += mIndexToTile.contains(0x8E) ? 2 : 1;
+				
+				lockingValue += (tempLockingValue - 1) >> 1;
 			}
 			// Vertical locking value = z
 			//lockingValue += 0;
@@ -1448,14 +1448,18 @@ inline uint8_t EvalMoveMaxBlock(
 			// Gauche haut
 			for (int x = 11; x >= 0 && (mIndexToTile.contains(arrBoardCoordToIndex[x][3][0])); --x, ++tempLockingValue);
 			if (tempLockingValue > 0)
-				lockingValue += tempLockingValue == 12 && mIndexToTile.contains(0x8C) ? tempLockingValue : tempLockingValue - 1;
+				tempLockingValue = tempLockingValue == 12 && mIndexToTile.contains(0x8C) ? tempLockingValue : tempLockingValue - 1;
+
+			lockingValue += tempLockingValue >> 1;
 
 			tempLockingValue = 0;
 
 			// Gauche bas
 			for (int x = 11; x >= 0 && (mIndexToTile.contains(arrBoardCoordToIndex[x][4][0])); --x, ++tempLockingValue);
 			if (tempLockingValue > 0)
-				lockingValue += tempLockingValue == 12 && mIndexToTile.contains(0x8C) ? tempLockingValue : tempLockingValue - 1;
+				tempLockingValue = tempLockingValue == 12 && mIndexToTile.contains(0x8C) ? tempLockingValue : tempLockingValue - 1;
+
+			lockingValue += tempLockingValue >> 1;
 			// Vertical locking value = z
 			//lockingValue += 0;
 		}
@@ -1469,14 +1473,18 @@ inline uint8_t EvalMoveMaxBlock(
 				// Gauche haut
 				for (int x = 11; x >= 0 && (mIndexToTile.contains(arrBoardCoordToIndex[x][3][0])); --x, ++tempLockingValue);
 				if (tempLockingValue > 0)
-					lockingValue += tempLockingValue == 12 && mIndexToTile.contains(0x8C) ? tempLockingValue + 1 : tempLockingValue;
+					tempLockingValue = tempLockingValue == 12 && mIndexToTile.contains(0x8C) ? tempLockingValue + 1 : tempLockingValue;
+
+				lockingValue += tempLockingValue >> 1;
 
 				tempLockingValue = 0;
 
 				// Gauche bas
 				for (int x = 11; x >= 0 && (mIndexToTile.contains(arrBoardCoordToIndex[x][4][0])); --x, ++tempLockingValue);
 				if (tempLockingValue > 0)
-					lockingValue += tempLockingValue == 12 && mIndexToTile.contains(0x8C) ? tempLockingValue + 1 : tempLockingValue;
+					tempLockingValue = tempLockingValue == 12 && mIndexToTile.contains(0x8C) ? tempLockingValue + 1 : tempLockingValue;
+
+				lockingValue += tempLockingValue >> 1;
 			}
 			// Vertical locking value = z
 			//lockingValue += 0;
@@ -1506,7 +1514,7 @@ inline uint8_t EvalMoveMaxBlock(
 			{
 				if (z == 0 && (y == 3 || y == 4) && (x == 11 || curX == 12) && mIndexToTile.contains(0x8D))
 					tempLockingValue += mIndexToTile.contains(0x8E) ? 2 : 1;
-				lockingValue += tempLockingValue - 1;
+				lockingValue += (tempLockingValue - 1) >> 1;
 			}
 			tempLockingValue = 0;
 			// Gauche
@@ -1515,7 +1523,7 @@ inline uint8_t EvalMoveMaxBlock(
 			{
 				if (z == 0 && (y == 3 || y == 4) && (x == 0 || curX == -1) && mIndexToTile.contains(0x8C))
 					tempLockingValue += mIndexToTile.contains(0x8E) ? 2 : 1;
-				lockingValue += tempLockingValue - 1;
+				lockingValue += (tempLockingValue - 1) >> 1;
 			}
 		}
 	}
@@ -1678,12 +1686,12 @@ inline bool tryRandomHeuristics(Board plateau, std::vector<std::pair<int, int>>&
 				auto jouables = evalBruteForceOrderingEval.first;
 				auto debloques = evalBruteForceOrderingEval.second;
 				auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
-				//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock))); // 201
-				//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, jouables, evalEvalMoveMaxBlock))); // 215
-				vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, evalEvalMoveMaxBlock, debloques))); // 238
-				//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, evalEvalMoveMaxBlock, jouables))); // 199
-				//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(evalEvalMoveMaxBlock, debloques, jouables))); // 191
-				//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(evalEvalMoveMaxBlock, jouables, debloques))); // 187
+				//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock))); // 227
+				//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, jouables, evalEvalMoveMaxBlock))); // 219
+				vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, evalEvalMoveMaxBlock, debloques))); // 256
+				//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, evalEvalMoveMaxBlock, jouables))); // 206
+				//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(evalEvalMoveMaxBlock, debloques, jouables))); // 239
+				//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(evalEvalMoveMaxBlock, jouables, debloques))); // 248
 			}
 
 			std::sort(vSortedMoves.begin(), vSortedMoves.end(),
