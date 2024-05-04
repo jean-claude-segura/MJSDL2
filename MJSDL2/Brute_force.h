@@ -667,7 +667,8 @@ inline bool SolveRecParallel(
 				auto jouables = evalBruteForceOrderingEval.first;
 				auto debloques = evalBruteForceOrderingEval.second;
 				auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
-				vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock)));
+				//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock)));
+				vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, evalEvalMoveMaxBlock, debloques))); // 221
 			}
 
 			std::sort(vSortedMoves.begin(), vSortedMoves.end(),
@@ -1635,12 +1636,12 @@ inline bool tryRandomHeuristics(Board plateau, std::vector<std::pair<int, int>>&
 			auto jouables = evalBruteForceOrderingEval.first;
 			auto debloques = evalBruteForceOrderingEval.second;
 			auto evalEvalMoveMaxBlock = EvalMoveMaxBlock(move, mIndexToTile);
-			vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock))); // 25
-			//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, jouables, evalEvalMoveMaxBlock))); // 22
-			//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, evalEvalMoveMaxBlock, debloques))); // 23
-			//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, evalEvalMoveMaxBlock, jouables))); // 13
-			//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(evalEvalMoveMaxBlock, debloques, jouables))); // 17
-			//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(evalEvalMoveMaxBlock, jouables, debloques))); // 19
+			//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, debloques, evalEvalMoveMaxBlock))); // 203
+			//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, jouables, evalEvalMoveMaxBlock))); // 214
+			vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(jouables, evalEvalMoveMaxBlock, debloques))); // 221
+			//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(debloques, evalEvalMoveMaxBlock, jouables))); // 205
+			//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(evalEvalMoveMaxBlock, debloques, jouables))); // 179
+			//vSortedMoves.emplace_back(std::make_pair(move, std::make_tuple(evalEvalMoveMaxBlock, jouables, debloques))); // 182
 		}
 
 		std::sort(vSortedMoves.begin(), vSortedMoves.end(),
