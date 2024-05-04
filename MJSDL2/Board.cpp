@@ -292,9 +292,6 @@ void Board::InitBoardSub(std::mt19937& e1)
 void Board::InitBoard()
 {
 #ifdef _DEBUG
-	// 0, 1, 2, 5, 7, 12, 18, 19, 24, 25, 27, 31, 34, 36, 44, 49, 50, 55, 61, 62, 64, 66
-	// [0, 2, 21, 32]
-	// 9 is interesting.
 	static unsigned int seed = 0;
 	Seed = seed;
 	std::mt19937 e1(Seed);

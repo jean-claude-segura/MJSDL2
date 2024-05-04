@@ -765,11 +765,13 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 	if (!arrGlobalOccurences.contains(pairing))
 		return false;
 
-	const auto& c1 = *std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(),
+	const auto& it = std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(),
 		[pairing](const TileAndIndex& ref) { return (pairing == ref.TileObject.Pairing); });
 
-	const auto& c2 = *std::find_if(vLogicalBoard.begin(), vLogicalBoard.end(),
-		[c1, pairing](const TileAndIndex& ref) { return (c1 != ref) && (pairing == ref.TileObject.Pairing); });
+	const auto& c1 = *it;
+
+	const auto& c2 = *std::find_if(it + 1, vLogicalBoard.end(),
+		[pairing](const TileAndIndex& ref) { return (pairing == ref.TileObject.Pairing); });
 
 	// Pure vertical lock.
 	if ((c1.Index != 0x8F) && // For the master padlock, it's another story.
@@ -862,6 +864,7 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 		}
 	}
 
+	// Checking A XXXXXXXXXXXX B when all As and Bs are in the same row.
 	if (c1.Y == c2.Y && c1.Z == c2.Z) // Same height, same row
 	{
 		int z = c1.Z;
@@ -897,10 +900,6 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 		}
 
 		// First pass : check potential issues
-		// 
-		// For 3 identical tiles :
-		// AAABB, AABAB but not ABAAB!
-		// BBAAA, BABAA but not BAABA!
 		auto horizontalLimits = std::make_pair(std::max(0, beginning), std::min(11, end)); // Just to re-use some code...
 
 		std::vector<int> row;
@@ -968,15 +967,9 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 			++mPairingCount[row[x]];
 		}
 
-		/* TO DO                                        */
-		/* Cross lockings                               */
-		/* Can't be done after because of the pondering */
-		/* TO DO                                        */
-
 		// Remove the useless ones :
 		for (const auto& item : mPairingCount)
 		{
-			// Actually, I realized that AAA/BBB is an issue. AABABB, AABBAB, ABAABB, AABABB but not AAABBB. I'll try to think about something.
 			if (item.second < arrGlobalOccurences.find(item.first)->second)
 			{
 				mPairingFirst.erase(item.first);
@@ -995,11 +988,15 @@ inline bool CheckIfLockedFromMove(const std::vector<TileAndIndex>& vLogicalBoard
 				auto itNext = it;
 				for (++itNext; itNext != mPairingFirst.end(); ++itNext)
 				{
+					const auto& fAx = it->second;
+					const auto& fBx = itNext->second;
+					const auto& lAx = mPairingLast.find(it->first)->second;
+					const auto& lBx = mPairingLast.find(itNext->first)->second;
 					// fAx < fBx && lAx < lBx
-					if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
+					if (fAx < fBx && lAx < lBx)
 						return true;
 					// fBx < fAx && lBx < lAx
-					/*if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
+					/*if (fBx < fAx && lBx < lAx)
 						return true;*/
 				}
 			}
@@ -1107,7 +1104,8 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	}
 
 	std::vector<TileAndIndex> vStartPosTileIndex;
-	for (int z = 3; z >= 2; --z)
+	// Listing all columns which are is at least 3 tiles high.
+	for (int z = 0; z < 4; ++z)
 	{
 		for (int y = 0; y < 8; ++y)
 		{
@@ -1138,6 +1136,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	}
 
 	vStartPosTileIndex.clear();
+	// Listing all columns which are is 4 tiles high.
 	for (int z = 3, y = 0; y < 8; ++y)
 	{
 		auto horizontalLimits = arrHorizontalLimits[y][z];
@@ -1241,15 +1240,19 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 					auto itNext = it;
 					for (++itNext; itNext != mPairingFirst.end(); ++itNext)
 					{
+						const auto& fAx = it->second;
+						const auto& fBx = itNext->second;
+						const auto& lAx = mPairingLast.find(it->first)->second;
+						const auto& lBx = mPairingLast.find(itNext->first)->second;
 						// fAx < fBx && lAx < lBx
-						if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
+						if (fAx < fBx && lAx < lBx)
 						{
 							if (cause != NULL) { *cause = 5; };
 							return true;
 						}
 						// fBx < fAx && lBx < lAx
 						/*
-						if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
+						if (fBx < fAx && lBx < lAx)
 						{
 							if (cause != NULL) { *cause = 5; };
 							return true;
@@ -1353,17 +1356,21 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 						auto itNext = it;
 						for (++itNext; itNext != mPairingFirst.end(); ++itNext)
 						{
+							const auto& fAx = it->second;
+							const auto& fBx = itNext->second;
+							const auto& lAx = mPairingLast.find(it->first)->second;
+							const auto& lBx = mPairingLast.find(itNext->first)->second;
 							// fAx < fBx && lAx < lBx
-							if (it->second < itNext->second && mPairingLast.find(it->first)->second < mPairingLast.find(itNext->first)->second)
+							if (fAx < fBx && lAx < lBx)
 							{
 								if (cause != NULL) { *cause = 6; };
 								return true;
 							}
 							// fBx < fAx && lBx < lAx
 							/*
-							if (it->second > itNext->second && mPairingLast.find(it->first)->second > mPairingLast.find(itNext->first)->second)
+							if (fBx < fAx && lBx < lAx)
 							{
-								if (cause != NULL) { *cause = 7; };
+								if (cause != NULL) { *cause = 6; };
 								return true;
 							}
 							*/

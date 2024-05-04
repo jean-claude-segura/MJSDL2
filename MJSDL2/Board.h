@@ -279,26 +279,26 @@ constexpr std::array < std::array < std::pair<int, int>, 4>, 8> InitHorizontalLi
 		for (int y = 0; y < 8; ++y)
 		{
 			int x = 0;
-			int first = -1;
-			int second = -1;
+			int beginning = -1;
+			int end = -1;
 			for (; x < 12; ++x)
 			{
 				if (arrBaseTurtlePattern[x][y][z] != -1) {
-					first = x;
+					beginning = x;
 					break;
 				}
 			}
 			for (; x < 12; ++x)
 			{
-				second = x;
+				end = x;
 				if (arrBaseTurtlePattern[x][y][z] == -1)
 				{
-					--second;
+					--end;
 					break;
 				}
 			}
 
-			arrHorizontalLimits[y][z] = std::make_pair(first, second);
+			arrHorizontalLimits[y][z] = std::make_pair(beginning, end);
 		}
 	}
 

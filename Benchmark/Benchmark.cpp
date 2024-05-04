@@ -1,5 +1,23 @@
 #include "Benchmark.h"
 
+std::atomic<bool> goOn;
+
+// https://www.qtcentre.org/threads/9438-Updating-one-part-of-the-output-(C-Cout)?s=1865f1c0ed777361e7c02cd907a10bfb&p=50243#post50243
+void Feedback()
+{
+	const char* control = "\r";
+	const char* cursor = { "\\|/-" };
+	int i = 0;
+	while (goOn)
+	{
+		std::cout << control << cursor[i] << std::flush;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		++i;
+		i %= 4;
+	}
+	std::cout << std::endl;
+}
+
 void TestEngine()
 {
 	unsigned int resolus = 0;
@@ -76,7 +94,9 @@ bool TestLocked()
 	std::vector<std::pair<int, int>> Locked;
 	std::map<int, int> causes;
 	int cause;
-	for (int i = 0; i < 100000; ++i)
+	goOn = true;
+	std::thread thrFeedback {Feedback};
+	for (int i = 0; i < 1000000; ++i)
 		//int i = 2;
 	{
 		//InitBoardLockedHorizontal(i);
@@ -89,7 +109,8 @@ bool TestLocked()
 		}
 	}
 
-	std::cout << std::endl;
+	goOn = false;
+	thrFeedback.join();
 
 	if (!Locked.empty())
 	{
