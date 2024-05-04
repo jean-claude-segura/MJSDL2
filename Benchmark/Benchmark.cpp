@@ -1,6 +1,7 @@
 #include "Benchmark.h"
 
 std::atomic<bool> goOn;
+std::atomic<bool> tick;
 
 // https://www.qtcentre.org/threads/9438-Updating-one-part-of-the-output-(C-Cout)?s=1865f1c0ed777361e7c02cd907a10bfb&p=50243#post50243
 void Feedback()
@@ -14,6 +15,24 @@ void Feedback()
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		++i;
 		i %= 4;
+	}
+	std::cout << std::endl;
+}
+
+void FeedbackTick()
+{
+	const char* control = "\r";
+	const char* cursor = { "\\|/-" };
+	int i = 0;
+	while (goOn)
+	{
+		if(tick)
+		{
+			std::cout << control << cursor[i] << std::flush;
+			++i;
+			i %= 4;
+			tick = false;
+		}
 	}
 	std::cout << std::endl;
 }
@@ -136,41 +155,54 @@ bool TestHeuristics()
 	std::stringstream strout;
 	std::vector<unsigned int> Locked;
 
-	std::array <unsigned int, 9> arrGlobalResult = {};
+	std::array <unsigned int, 10> arrGlobalResult = {};
+	std::array <unsigned int, 10> arrUniqueResult = {};
 	const unsigned int TOTAL_ATTEMPTS = 1000;
+	goOn = true;
+	tick = false;
+	std::thread thrFeedback {FeedbackTick};
 	for(unsigned int attempts = 0; attempts < TOTAL_ATTEMPTS; ++attempts)
 	{
 		int cause;
 		Board plateau;
 		plateau.InitBoard();
-		std::array <unsigned int, 9> arrResult = {};
+		std::array <unsigned int, 10> arrResult = {};
 		if (CheckIfLockedFromStart(plateau.getLogicalBoard(), plateau.getTilesMap(), &cause))
 		{
 			Locked.emplace_back(plateau.getSeed());
+			tick = true;
 			continue;
 		}
 		auto temp = testAll(plateau, arrResult);
 		if (temp )
 			++solved;
-		std::cout << std::dec << plateau.getSeed() << " : " << std::hex << temp << std::dec << std::endl;
+		//std::cout << std::dec << plateau.getSeed() << " : " << std::hex << temp << std::dec << std::endl;
 
 		strout << std::endl;
-		for (int i = 0; i < 8; ++i)
+		int count = 0;
+		for (int i = 0; i < arrGlobalResult.size(); ++i)
 		{
-			strout << std::dec << arrResult[i] << ", ";
+			if (arrResult[i] == 1) ++count;
+
 			arrGlobalResult[i] += arrResult[i];
 		}
-		strout << std::dec << arrResult[8] << std::endl;
-		arrGlobalResult[8] += arrResult[8];
+		if(count == 1)
+			for (int i = 0; i < arrUniqueResult.size(); ++i)
+				if (arrResult[i] == 1) arrUniqueResult[i] = 1;
+
+		tick = true;
 	}
+
+	goOn = false;
+	tick = true;
+	thrFeedback.join();
 
 	std::cout << strout.str();
 
 	std::cout << std::endl;
 
-	for (int i = 0; i < 8; ++i)
-		std::cout << std::dec << arrGlobalResult[i] << ", ";
-	std::cout << std::dec << arrGlobalResult[8] << std::endl;
+	for (int i = 0; i < arrGlobalResult.size(); ++i)
+		std::cout << i << ":" << std::dec << arrGlobalResult[i] << ", " << arrUniqueResult[i] << std::endl;
 
 	auto pourcent = solved * 100. / (TOTAL_ATTEMPTS - Locked.size());
 
@@ -195,6 +227,6 @@ bool TestHeuristics()
 int main()
 {
 	TestHeuristics();
-	TestLocked();
-	TestEngine();
+	//TestLocked();
+	//TestEngine();
 }
