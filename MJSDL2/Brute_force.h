@@ -1078,7 +1078,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	int pairs = 0;
 	for (auto itIndex = vStartPos.begin(); itIndex != vStartPos.end(); ++itIndex)
 	{
-		auto c = arrIndexToBoardCoord[*itIndex];
+		const auto& c = arrIndexToBoardCoord[*itIndex];
 		auto x = std::get<0>(c);
 		auto y = std::get<1>(c);
 
@@ -1109,7 +1109,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	{
 		for (int y = 0; y < 8; ++y)
 		{
-			auto horizontalLimits = arrHorizontalLimits[y][z];
+			const auto& horizontalLimits = arrHorizontalLimits[y][z];
 			for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
 				vStartPosTileIndex.emplace_back(arrBoard[x][y][z]);
 		}
@@ -1139,7 +1139,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	// Listing all columns which are is 4 tiles high.
 	for (int z = 3, y = 0; y < 8; ++y)
 	{
-		auto horizontalLimits = arrHorizontalLimits[y][z];
+		const auto& horizontalLimits = arrHorizontalLimits[y][z];
 		for (int x = std::max(0, horizontalLimits.first); x <= horizontalLimits.second; ++x)
 			vStartPosTileIndex.emplace_back(arrBoard[x][y][z]);
 	}
@@ -1228,6 +1228,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	// Specific to padlocks. They have to be involved or the test is not relevant.
 	if (mPairingFirst.contains(0x8C) || mPairingFirst.contains(0x8D) || mPairingFirst.contains(0x8E))
 	{
+		// Locked with AXXXXXXB
 		if (mPairingFirst.size() > 1) // Ok, now we have an issue...
 		{
 			auto itEnd = mPairingFirst.end();
@@ -1269,7 +1270,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 	{
 		for (int y = 0; y < 8; ++y)
 		{
-			auto horizontalLimits = arrHorizontalLimits[y][z];
+			const auto& horizontalLimits = arrHorizontalLimits[y][z];
 			// You need at least 8 slots to block 8 tiles...
 			if (horizontalLimits.second - horizontalLimits.first + 1 > 7) // No need to check for y = 3 or y = 5
 			{
@@ -1335,11 +1336,6 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 				// Remove the useless ones :
 				for (const auto& item : mPairingCount)
 				{
-					// Actually, I realized that AAA || BBB can be an issue.
-					// With 3 of each :
-					// ABBA BAAB : ok.
-					// AABB BBAA ABAB BABA : always locked
-					// I'll try to think about something.
 					if (item.second < 4)
 					{
 						mPairingFirst.erase(item.first);
@@ -1347,6 +1343,7 @@ inline bool CheckIfLockedFromStart(const std::vector<TileAndIndex>& vLogicalBoar
 					}
 				}
 
+				// Locked with AXXXXXXB
 				if (mPairingFirst.size() > 1) // Ok, now we have an issue...
 				{
 					auto itEnd = mPairingFirst.end();

@@ -104,7 +104,7 @@ bool TestLocked()
 		plateau.InitBoard();
 		if (CheckIfLockedFromStart(plateau.getLogicalBoard(), plateau.getTilesMap(), &cause))
 		{
-			Locked.emplace_back(std::make_pair(i, cause));
+			Locked.emplace_back(std::make_pair(plateau.getSeed(), cause));
 			causes[cause] += 1;
 		}
 	}
