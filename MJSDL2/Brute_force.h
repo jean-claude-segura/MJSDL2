@@ -460,7 +460,8 @@ inline bool stopNowParallel(const std::map<int, Tile>& mIndexToTile
 		if (mTranspositionsTable.max_size() <= mTranspositionsTable.size())
 		{
 			mtxStopNow.unlock();
-			return true;
+			// you can go on but there is no more hash slot available.
+			return false;
 		}
 #endif
 		// I hope people will give up before the hash is really full...
